@@ -1,0 +1,109 @@
+#!/bin/bash
+
+# Copyright (C) 2010 by Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+#
+# This programme is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This programme is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the
+# Free Software Foundation, Inc.,
+# 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+
+set -e
+set -x
+
+test -z $1 && { echo usage: <x2go-git-project> [main|heuler]; exit -1; }
+
+PACKAGE=$1
+COMPONENT=${2-heuler}
+
+PACKAGE_DIR=$(pwd)/$PACKAGE
+DIST_SUPPORTED="debian ubuntu"
+PKGDIST="$(pwd)/../pkg-dist/$PACKAGE"
+
+# make sure our local working copy is up to date...
+test -d $PACKAGE_DIR/.git && { cd $PACKAGE_DIR && git reset --hard; git pull; } || git clone git://code.x2go.org/$PACKAGE.git
+cd $PACKAGE_DIR
+
+# by default we build for all current debian versions
+test -f BUILDS_FOR || cat > BUILDS_FOR <<EOF
+debian: sid wheezy squeeze lenny
+#ubuntu: lucid maverick natty
+EOF
+
+# pkgdist directory cleanup
+cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
+	l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
+	CODENAMES=$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])
+	echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
+		for l_CODENAME in $CODENAMES; do
+			mkdir -p $PKGDIST/$l_DIST/$l_CODENAME
+			rm -f $PKGDIST/$l_DIST/$l_CODENAME/$PACKAGE_*.changes
+			rm -f $PKGDIST/$l_DIST/$l_CODENAME/$PACKAGE_*.upload
+			rm -f $PKGDIST/$l_DIST/$l_CODENAME/$PACKAGE_*.build
+			rm -f $PKGDIST/$l_DIST/$l_CODENAME/$PACKAGE_*.dsc
+			rm -f $PKGDIST/$l_DIST/$l_CODENAME/$PACKAGE_*.tar.gz
+			rm -f $PKGDIST/$l_DIST/$l_CODENAME/$PACKAGE*.deb
+		done
+	}
+done
+
+
+# use pbuilder for building all variants of this package
+cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
+	l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
+	CODENAMES=$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])
+	echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
+		for l_CODENAME in $CODENAMES; do
+			TEMP_DIR="$(mktemp -d)"
+			git clone git://code.x2go.org/$PACKAGE.git $TEMP_DIR/
+			cd $TEMP_DIR/
+			# translate the version name for Debian releases
+			[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
+			[ "x$l_CODENAME" = "xwheezy" ] && VERSION=testing
+			[ "x$l_CODENAME" = "xsqueeze" ] && VERSION=stable
+			[ "x$l_CODENAME" = "xlenny" ] && VERSION=oldstable
+			
+			# modify the section for non-main package builds
+			[ "x$COMPONENT" = "xmain" ] || {
+				mv debian/control debian/control.tmp
+				cat debian/control.tmp | sed  "s#Section:[\ ]*\(.*\)#Section: $COMPONENT/\1#g" > debian/control
+			}
+			
+			# modify changelog for this build
+			DEBEMAIL=git-admin@x2go.org DEBFULLNAME="X2go Git Administrator" dch --distribution $VERSION --force-distribution -l "+$l_CODENAME" "Auto-built $l_DIST $l_CODENAME package for packages.x2go.org repository."
+			cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
+				sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 pdebuild --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME
+			}
+			cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
+				sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  pdebuild --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME
+			}
+			cd -
+			rm -Rf $TEMP_DIR
+		done
+		echo
+	}
+	echo
+done
+
+# dupload the new packages to the reprepro repository
+cd $PKGDIST
+cat $PACKAGE_DIR/BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
+	l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
+	CODENAMES=$(echo $line | cut -d":" -f2- | tr [A-Z] [a-z])
+	for l_CODENAME in $CODENAMES; do
+		cd $PKGDIST/$l_DIST/$l_CODENAME
+		dupload --to x2go-$l_DIST-$l_CODENAME $PACKAGE_*.changes
+		cd -
+	done
+done
+cd -
+

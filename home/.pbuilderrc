@@ -1,0 +1,23 @@
+#!/bin/bash
+DIST=${DIST-debian}
+CODENAME=${CODENAME-sid}
+ARCH=${ARCH-amd64}
+
+if [ "x$ARCH" = "xi386" ]; then
+	DEBBUILDOPTS="-B"
+fi
+
+if [ -n "${DIST}" ] && [ -n "${CODENAME}" ] && [ -n "${ARCH}" ]; then
+        if [ "x${DIST}" = "xubuntu" ]; then 
+                MIRRORSITE="http://de.archive.ubuntu.com/ubuntu"
+        else
+                MIRRORSITE="http://ftp.de.debian.org/debian"
+		OTHERMIRROR="deb http://code.x2go.org/debian $CODENAME main"
+        fi
+        BASETGZ="`dirname $BASETGZ`/base-$DIST-$CODENAME-$ARCH.tgz"
+        DISTRIBUTION="$CODENAME"
+        BUILDRESULT="/var/cache/pbuilder/$DIST-$CODENAME-$ARCH/result/"
+        APTCACHE="/var/cache/pbuilder/$DIST-$CODENAME-$ARCH/aptcache/"
+fi
+
+export OTHERMIRROR
