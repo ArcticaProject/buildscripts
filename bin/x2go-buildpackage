@@ -64,8 +64,9 @@ cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 	echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
 		for l_CODENAME in $CODENAMES; do
 			TEMP_DIR="$(mktemp -d)"
-			git clone git://code.x2go.org/$PACKAGE.git $TEMP_DIR/
-			cd $TEMP_DIR/
+			mkdir -p $TEMP_DIR/$PACKAGE
+			git clone git://code.x2go.org/$PACKAGE.git $TEMP_DIR/$PACKAGE/
+			cd $TEMP_DIR/$PACKAGE
 			# translate the version name for Debian releases
 			[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
 			[ "x$l_CODENAME" = "xwheezy" ] && VERSION=testing
