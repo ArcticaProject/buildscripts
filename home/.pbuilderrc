@@ -13,8 +13,7 @@ USE_DEBUILD_INTERNAL="yes"
 PRESERVE_BUILDPLACE="yes"
 
 if [ "x$ARCH" = "xi386" ]; then
-	DEBBUILDOPTS="-B"
-	DEBOOTSTRAPOPTS="--arch=$ARCH"
+        DEBBUILDOPTS="-B"
 fi
 
 if [ -n "${DIST}" ] && [ -n "${CODENAME}" ] && [ -n "${ARCH}" ]; then
@@ -22,13 +21,12 @@ if [ -n "${DIST}" ] && [ -n "${CODENAME}" ] && [ -n "${ARCH}" ]; then
                 MIRRORSITE="http://de.archive.ubuntu.com/ubuntu"
         else
                 MIRRORSITE="http://ftp.de.debian.org/debian"
-		OTHERMIRROR="deb http://code.x2go.org/debian $CODENAME main"
+                OTHERMIRROR="deb http://code.x2go.org/debian $CODENAME main"
         fi
         BASETGZ="$BASEDIRECTORY/base-$DIST-$CODENAME-$ARCH.tgz"
         DISTRIBUTION="$CODENAME"
         BUILDRESULT="$BASEDIRECTORY/$DIST-$CODENAME-$ARCH/result/"
         APTCACHE="$BASEDIRECTORY/$DIST-$CODENAME-$ARCH/aptcache/"
-        ARCHITECTURE="$ARCH"
 fi
 export OTHERMIRROR
 
