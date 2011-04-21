@@ -12,11 +12,11 @@ APTCACHEHARDLINK="no"
 USE_DEBUILD_INTERNAL="yes"
 PRESERVE_BUILDPLACE="yes"
 
-if [ "x$ARCH" = "xi386" ]; then
-        DEBBUILDOPTS="-B"
-fi
-
 if [ -n "${DIST}" ] && [ -n "${CODENAME}" ] && [ -n "${ARCH}" ]; then
+        if [ "x$ARCH" = "xi386" ]; then
+                DEBBUILDOPTS="-B"
+        fi
+
         if [ "x${DIST}" = "xubuntu" ]; then 
                 MIRRORSITE="http://de.archive.ubuntu.com/ubuntu"
         else
@@ -27,6 +27,7 @@ if [ -n "${DIST}" ] && [ -n "${CODENAME}" ] && [ -n "${ARCH}" ]; then
         DISTRIBUTION="$CODENAME"
         BUILDRESULT="$BASEDIRECTORY/$DIST-$CODENAME-$ARCH/result/"
         APTCACHE="$BASEDIRECTORY/$DIST-$CODENAME-$ARCH/aptcache/"
+        ARCHITECTURE="$ARCH"
 fi
 export OTHERMIRROR
 

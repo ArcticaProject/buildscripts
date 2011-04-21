@@ -34,7 +34,6 @@ export PBCURRENTCOMMANDLINEOPERATION="pdebuild"
 PKG_SOURCENAME=$(dpkg-parsechangelog|sed -n 's/^Source: //p')
 PKG_VERSION=$(dpkg-parsechangelog|sed -n 's/^Version: \(.*:\|\)//p')
 ARCHITECTURE=${ARCHITECTURE-$(dpkg-architecture -qDEB_HOST_ARCH)}
-DEBOOTSTRAPOPTS="--arch=$ARCHITECTURE"
 
 if [ "${USE_PDEBUILD_INTERNAL}" = 'yes' ]; then
     if [ ! readlink -f .. ]; then
