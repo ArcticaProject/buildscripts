@@ -1,0 +1,247 @@
+#! /bin/bash
+# pbuilder user-mode-linux hack.
+# 
+#   pbuilder -- personal Debian package builder
+#   Copyright (C) 2001-2007 Junichi Uekawa
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+#
+
+set -e
+
+function cleanup_function_trap () {
+    rm -f ${INSIDE_PBUILDER}
+    ${EXTRACLEANUP}
+}
+
+. /usr/lib/pbuilder/pbuilder-loadconfig
+
+OPERATION="$1"
+shift;
+. /usr/lib/pbuilder/pbuilder-uml-checkparams
+
+function usecow () {
+    PBUILDER_COWFILENAME="${BUILDPLACE}/$$.cow"
+    PBUILDER_COW="${PBUILDER_COWFILENAME},"
+    if ! touch "${PBUILDER_COWFILENAME}"; then
+	log "E: Cannot write-access to the COW file, check buildplace"
+	exit 1;
+    fi
+    rm -f "${PBUILDER_COWFILENAME}"
+}
+
+function cleancow () {
+    # clean the cow file
+    rm -f "${PBUILDER_COWFILENAME}"
+}
+
+function operate_uml () {
+    # opeartes on UML, and runs pbuilder $1
+    # use this script file to bootstrap the pbuilder inside the UML
+    INSIDE_PBUILDER=$(tempfile)
+    trap cleanup_function_trap exit sighup
+    UML_CHROOT_MOUNTPOINT=/var/cache/pbuilder/pbuilder-mnt
+    UML_CHROOT_BUILDRESULTMOUNTDIR=/var/cache/pbuilder/pbuilder-umlresult
+#The following script is ran inside UML as soon as it is started.
+
+    cat <<EOF > ${INSIDE_PBUILDER}
+#! /bin/bash
+
+###
+### BEGIN CODE EXECUTED INSIDE User-mode-linux
+###
+### note that ${VARIABLE}s are evaluated outside of user-mode-linux.
+### while \${VARIABLE}s are evaluated inside of user-mode-linux. 
+
+${UML_DEBUGMODE}
+
+mount -t proc /proc /proc
+mount -t tmpfs /tmp /tmp
+
+# create devices
+mount -t tmpfs tmpfs /dev
+mknod /dev/ubdb b 98 16
+#if ! fsck -p /dev/ubdb; then
+#  echo "W: Failed to fsck /dev/ubdb"
+#fi
+if ! mount -t ext2 /dev/ubdb ${UML_CHROOT_MOUNTPOINT}; then
+  echo "E: Cannot mount /dev/ubdb, is UML root image accessible as current user?" >&2 
+  exit 1
+fi
+mount --bind ${UML_CHROOT_MOUNTPOINT}/dev /dev
+
+# mount /lib/modules on the hostfs
+kernel_modules=\$(sed -ne 's\$.*/lib/modules.*hostfs.*defaults,ro,\([^[:space:]]*\).*\$\1\$p' ${UML_CHROOT_MOUNTPOINT}/etc/fstab)
+if [ -n "\${kernel_modules}" ] ; then
+	echo " -> Mount /lib/modules on the host \${kernel_modules}"
+	mount -t hostfs -o ro,\${kernel_modules} hostfs /lib/modules
+fi
+
+export LOGNAME="${LOGNAME}"
+export HOME="${HOME}"
+hostname "${UML_HOSTNAME}"
+if [ "${UML_MOUNT_TMPFS}" = "yes" ]; then
+  mount -t tmpfs ${UML_CHROOT_MOUNTPOINT}/tmp ${UML_CHROOT_MOUNTPOINT}/tmp
+else
+  # clean up tmp before playing with it.
+  rm -rf ${UML_CHROOT_MOUNTPOINT}/tmp
+  mkdir ${UML_CHROOT_MOUNTPOINT}/tmp
+  chmod 1777 ${UML_CHROOT_MOUNTPOINT}/tmp
+fi
+
+if [ "${UML_IP}" != 'dhcp' ]; then
+  cat <<IP > ${UML_CHROOT_MOUNTPOINT}/etc/network/interfaces
+auto lo
+iface lo inet loopback
+
+# The first network card - this entry was created during the Debian installation
+auto eth0
+iface eth0 inet static
+    address $UML_IP
+    netmask $UML_NETMASK
+    network $UML_NETWORK
+    broadcast $UML_BROADCAST
+    gateway $UML_GATEWAY
+
+IP
+fi
+
+cat <<SHELL > ${UML_CHROOT_MOUNTPOINT}/tmp/chrootshell
+#! /bin/bash
+${UML_DEBUGMODE}
+# the shell executed inside chroot inside UML
+    echo Starting network inside the chroot
+    mount -t proc /proc /proc
+    /etc/init.d/networking stop
+    /etc/init.d/networking start
+    umount /proc
+SHELL
+chmod a+x ${UML_CHROOT_MOUNTPOINT}/tmp/chrootshell
+chroot ${UML_CHROOT_MOUNTPOINT} /tmp/chrootshell
+
+#some variables need to be set from outside values, possibly
+export PATH="$PATH"
+export TMPDIR=/tmp
+unset EXTRAOPT || true
+declare -a EXTRAOPT
+if [ -n "${UML_DISTRIBUTION}" ]; then
+  EXTRAOPT[0]="--distribution"
+  EXTRAOPT[1]="${UML_DISTRIBUTION}"
+fi
+if [ -z "${UML_BUILDRESULT}" ]; then
+  BUILDRESULT=
+else
+  echo " -> Mount build result dir outside UML [${UML_BUILDRESULT}] as [${UML_CHROOT_BUILDRESULTMOUNTDIR}]"
+  BUILDRESULT=${UML_CHROOT_BUILDRESULTMOUNTDIR}
+  mkdir -p ${UML_CHROOT_BUILDRESULTMOUNTDIR} || true
+  mount -t hostfs none "${UML_CHROOT_BUILDRESULTMOUNTDIR}" -o "${UML_BUILDRESULT}"
+fi
+pbuilder "$1" ${UML_EXTRAOPT} \${EXTRAOPT[@]} --buildresult "\${BUILDRESULT}" --buildplace "${UML_CHROOT_MOUNTPOINT}" --internal-build-uml ${UML_DEBUGMODE:+--debug} ${BUILDING_DSC_FILE}  ${UML_EXECUTE_EXTRAOPT} 
+echo \$? > /proc/exitcode
+
+if [ -n "\${kernel_modules}" ] ; then
+	umount /lib/modules
+fi
+umount /dev
+umount ${UML_CHROOT_MOUNTPOINT}
+/sbin/halt -d -f 
+
+###
+### END CODE EXECUTED INSIDE User-mode-linux
+###
+EOF
+
+    chmod a+x ${INSIDE_PBUILDER}
+
+    if [ $( id -u ) = 0 ]; then
+	echo "W: You are uid=0. Don't run UML as uid=0, it's not supported." >&2 
+    fi
+
+    echo Invoking: "linux mem=${UML_MEM} eth0=${MY_ETH0} con0=fd:0,fd:1 con=pty root=/dev/root rootflags=/ rootfstype=hostfs ubd1=${PBUILDER_COW}${PBUILDER_UML_IMAGE} init=${INSIDE_PBUILDER} rw"
+    if linux mem=${UML_MEM} eth0=${MY_ETH0} con0=fd:0,fd:1 con=pty root=/dev/root rootflags=/ rootfstype=hostfs ubd1="${PBUILDER_COW}${PBUILDER_UML_IMAGE}" devfs=mount init=${INSIDE_PBUILDER} rw ; then
+	UML_EXITCODE=$?
+	echo " -> Successful exit from user-mode linux"
+    else
+	UML_EXITCODE=$?
+	echo " -> Exit code ${UML_EXITCODE}"
+    fi
+}
+
+
+
+
+BUILDING_DSC_FILE=$(readlink -f "$1") || true # ignore failure here
+EXTRACLEANUP=
+UML_EXITCODE=1
+case "${OPERATION}" in
+    build)
+	usecow
+	EXTRACLEANUP=cleancow
+	operate_uml build 
+	;;
+    update)
+	operate_uml update
+	;;
+    login)
+	if [ "${UML_LOGIN_NOCOW}" = "yes" ]; then
+	    echo " -> Not using COW filesystem for login session, modifications to this session will persist"
+	else
+	    usecow
+	    EXTRACLEANUP=cleancow
+	fi
+	operate_uml login
+	;;
+    execute)
+	if [ "${UML_LOGIN_NOCOW}" = "yes" ]; then
+	    echo " -> Not using COW filesystem for login session, modifications to this session will persist"
+	else
+	    usecow
+	    EXTRACLEANUP=cleancow
+	fi
+	shift;
+	UML_EXECUTE_EXTRAOPT="${UML_EXECUTE_EXTRAOPT} $@"
+	operate_uml execute 
+	;;
+    dumpconfig)
+	echo " -> start dump outside of UML"
+	echo "  -> set"
+	set;
+	echo "  -> env"
+	env;
+	echo " -> end dump outside of UML"
+	usecow
+	EXTRACLEANUP=cleancow
+	operate_uml dumpconfig
+	;;
+    create)
+	if [ -n "${UML_DISTRIBUTION}" ]; then
+	    if [ ! -d ~/.pbuilder-user-mode-linux ]; then
+		mkdir ~/.pbuilder-user-mode-linux
+	    fi
+	    sed "s/dist=.*/dist=${UML_DISTRIBUTION}/" /etc/rootstrap/rootstrap.conf >  ~/.pbuilder-user-mode-linux/rootstrap.conf
+	    if [ -f rootstrap.conf ]; then
+		sed "s/dist=.*/dist=${UML_DISTRIBUTION}/" rootstrap.conf >  ~/.pbuilder-user-mode-linux/rootstrap.conf
+	    fi
+	    cd ~/.pbuilder-user-mode-linux
+	fi
+	rootstrap -s ${ROOTSTRAP_IMAGESIZE:=1000} ${PBUILDER_UML_IMAGE}
+	operate_uml update
+	;;
+    *)
+	echo "Error: Unknown option [${OPERATION}] was specified " >&2 
+	;;
+esac
+
+exit ${UML_EXITCODE}
