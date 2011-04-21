@@ -1,10 +1,20 @@
 #!/bin/bash
+BASEDIRECTORY="/srv/pbuilder/cache"
+
 DIST=${DIST-debian}
 CODENAME=${CODENAME-sid}
 ARCH=${ARCH-amd64}
 
+BUILDRESULTUID=x2go-admin
+BUILDRESULTGID=x2go
+CCACHEDIR=
+APTCACHEHARDLINK="no"
+USE_DEBUILD_INTERNAL="yes"
+PRESERVE_BUILDPLACE="yes"
+
 if [ "x$ARCH" = "xi386" ]; then
 	DEBBUILDOPTS="-B"
+	DEBOOTSTRAPOPTS="--arch=$ARCH"
 fi
 
 if [ -n "${DIST}" ] && [ -n "${CODENAME}" ] && [ -n "${ARCH}" ]; then
@@ -14,10 +24,11 @@ if [ -n "${DIST}" ] && [ -n "${CODENAME}" ] && [ -n "${ARCH}" ]; then
                 MIRRORSITE="http://ftp.de.debian.org/debian"
 		OTHERMIRROR="deb http://code.x2go.org/debian $CODENAME main"
         fi
-        BASETGZ="`dirname $BASETGZ`/base-$DIST-$CODENAME-$ARCH.tgz"
+        BASETGZ="$BASEDIRECTORY/base-$DIST-$CODENAME-$ARCH.tgz"
         DISTRIBUTION="$CODENAME"
-        BUILDRESULT="/var/cache/pbuilder/$DIST-$CODENAME-$ARCH/result/"
-        APTCACHE="/var/cache/pbuilder/$DIST-$CODENAME-$ARCH/aptcache/"
+        BUILDRESULT="$BASEDIRECTORY/$DIST-$CODENAME-$ARCH/result/"
+        APTCACHE="$BASEDIRECTORY/$DIST-$CODENAME-$ARCH/aptcache/"
+        ARCHITECTURE="$ARCH"
 fi
-
 export OTHERMIRROR
+

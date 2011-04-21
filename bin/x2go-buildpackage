@@ -22,20 +22,27 @@ set -x
 
 test -z $1 && { echo usage: <x2go-git-project> [main|heuler]; exit -1; }
 
+PDEBUILD="pdebuild-user-mode-linux"
+TEMP_BASE="$HOME/tmp/"
+
 PACKAGE=$1
-COMPONENT=${2-heuler}
+CHECKOUT=${2-master}
+COMPONENT=${3-heuler}
 
 PACKAGE_DIR=$(pwd)/$PACKAGE
 DIST_SUPPORTED="debian ubuntu"
 PKGDIST="$(pwd)/../pkg-dist/$PACKAGE"
 
+# in any case remove the BUILDS_FOR file
+rm -f $PACKAGE_DIR/BUILDS_FOR
+
 # make sure our local working copy is up to date...
-test -d $PACKAGE_DIR/.git && { cd $PACKAGE_DIR && git reset --hard; git pull; } || git clone git://code.x2go.org/$PACKAGE.git
+test -d $PACKAGE_DIR/.git && { cd $PACKAGE_DIR && git reset --hard; git pull; git checkout $CHECKOUT; } || { git clone git://code.x2go.org/$PACKAGE.git && cd $PACKAGE_DIR && git checkout $CHECKOUT; }
 cd $PACKAGE_DIR
 
 # by default we build for all current debian versions
 test -f BUILDS_FOR || cat > BUILDS_FOR <<EOF
-debian: sid wheezy squeeze lenny
+debian: sid wheezy squeeze
 #ubuntu: lucid maverick natty
 EOF
 
@@ -63,10 +70,11 @@ cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 	CODENAMES=$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])
 	echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
 		for l_CODENAME in $CODENAMES; do
-			TEMP_DIR="$(mktemp -d)"
+			TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
 			mkdir -p $TEMP_DIR/$PACKAGE
-			git clone git://code.x2go.org/$PACKAGE.git $TEMP_DIR/$PACKAGE/
+			git clone git://code.x2go.org/$PACKAGE.git $TEMP_DIR/$PACKAGE/ 
 			cd $TEMP_DIR/$PACKAGE
+			git checkout $CHECKOUT
 			# translate the version name for Debian releases
 			[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
 			[ "x$l_CODENAME" = "xwheezy" ] && VERSION=testing
@@ -80,12 +88,12 @@ cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 			}
 			
 			# modify changelog for this build
-			DEBEMAIL=git-admin@x2go.org DEBFULLNAME="X2go Git Administrator" dch --distribution $VERSION --force-distribution -l "+$l_CODENAME" "Auto-built $l_DIST $l_CODENAME package for packages.x2go.org repository."
+			DEBEMAIL=git-admin@x2go.org DEBFULLNAME="X2go Git Administrator" dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT" "Auto-built $l_DIST $l_CODENAME package for packages.x2go.org repository."
 			cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
-				sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 pdebuild --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME
+				DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME
 			}
 			cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
-				sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  pdebuild --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME
+				DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME
 			}
 			cd -
 			rm -Rf $TEMP_DIR
