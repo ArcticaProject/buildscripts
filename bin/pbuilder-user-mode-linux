@@ -234,6 +234,9 @@ case "${OPERATION}" in
 	    if [ -f rootstrap.conf ]; then
 		sed "s/dist=.*/dist=${UML_DISTRIBUTION}/" rootstrap.conf >  ~/.pbuilder-user-mode-linux/rootstrap.conf
 	    fi
+	    if [ -f rootstrap.conf ]; then
+		sed "s/arch=.*/arch=${ARCHITECTURE}/" rootstrap.conf >  ~/.pbuilder-user-mode-linux/rootstrap.conf
+	    fi
 	    cd ~/.pbuilder-user-mode-linux
 	fi
 	rootstrap -s ${ROOTSTRAP_IMAGESIZE:=1000} ${PBUILDER_UML_IMAGE}
