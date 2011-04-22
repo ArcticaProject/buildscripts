@@ -230,16 +230,14 @@ case "${OPERATION}" in
 	    if [ ! -d ~/.pbuilder-user-mode-linux ]; then
 		mkdir ~/.pbuilder-user-mode-linux
 	    fi
-	    sed "s/dist=.*/dist=${UML_DISTRIBUTION}/" /etc/rootstrap/rootstrap.conf >  ~/.pbuilder-user-mode-linux/rootstrap.conf
+	    sed "s/dist=.*/dist=${UML_DISTRIBUTION}/" /etc/rootstrap/rootstrap.conf  | sed "s/arch=.*/arch=${ARCHITECTURE}/" >  ~/.pbuilder-user-mode-linux/rootstrap.conf
 	    if [ -f rootstrap.conf ]; then
-		sed "s/dist=.*/dist=${UML_DISTRIBUTION}/" rootstrap.conf >  ~/.pbuilder-user-mode-linux/rootstrap.conf
-	    fi
-	    if [ -f rootstrap.conf ]; then
-		sed "s/arch=.*/arch=${ARCHITECTURE}/" rootstrap.conf >  ~/.pbuilder-user-mode-linux/rootstrap.conf
+		sed "s/dist=.*/dist=${UML_DISTRIBUTION}/" rootstrap.conf | sed "s/arch=.*/arch=${ARCHITECTURE}/"  >  ~/.pbuilder-user-mode-linux/rootstrap.conf
 	    fi
 	    cd ~/.pbuilder-user-mode-linux
 	fi
 	rootstrap -s ${ROOTSTRAP_IMAGESIZE:=1000} ${PBUILDER_UML_IMAGE}
+	echo "DEBUG 1"; sleep 2
 	operate_uml update
 	;;
     *)
