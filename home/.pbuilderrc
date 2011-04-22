@@ -5,29 +5,46 @@ DIST=${DIST-debian}
 CODENAME=${CODENAME-sid}
 ARCH=${ARCH-amd64}
 
+# pbuilder options
+BASETGZ="$BASEDIRECTORY/base-$DIST-$CODENAME-$ARCH.tgz"
+DISTRIBUTION="$CODENAME"
+BUILDRESULT="$BASEDIRECTORY/$DIST-$CODENAME-$ARCH/result/"
+APTCACHE="$BASEDIRECTORY/$DIST-$CODENAME-$ARCH/aptcache/"
+
 BUILDRESULTUID=x2go-admin
 BUILDRESULTGID=x2go
+# this needs to be disabled
 CCACHEDIR=
-APTCACHEHARDLINK="no"
+APTCACHEHARDLINK="yes"
 USE_DEBUILD_INTERNAL="yes"
 PRESERVE_BUILDPLACE="yes"
 
-if [ -n "${DIST}" ] && [ -n "${CODENAME}" ] && [ -n "${ARCH}" ]; then
-        if [ "x$ARCH" = "xi386" ]; then
-                DEBBUILDOPTS="-B"
-        fi
+ARCHITECTURE="$ARCH"
 
-        if [ "x${DIST}" = "xubuntu" ]; then 
-                MIRRORSITE="http://de.archive.ubuntu.com/ubuntu"
-        else
-                MIRRORSITE="http://ftp.de.debian.org/debian"
-                OTHERMIRROR="deb http://code.x2go.org/debian $CODENAME main"
-        fi
-        BASETGZ="$BASEDIRECTORY/base-$DIST-$CODENAME-$ARCH.tgz"
-        DISTRIBUTION="$CODENAME"
-        BUILDRESULT="$BASEDIRECTORY/$DIST-$CODENAME-$ARCH/result/"
-        APTCACHE="$BASEDIRECTORY/$DIST-$CODENAME-$ARCH/aptcache/"
-        ARCHITECTURE="$ARCH"
+# pbuilder-uml option
+UML_DISTRIBUTION="$CODENAME"
+
+# qemubuilder options
+BASEPATH="$BASEDIRECTORY/base-$DIST-$CODENAME-$ARCH.qemu"
+KERNEL_IMAGE=/srv/pbuilder/qemu-kernels/$ARCH/vmlinuz
+INITRD=/srv/pbuilder/qemu-kernels/$ARCH/initrd.img
+ARCH_DISKDEVICE=sd
+if [ "x$ARCH" = "xarmel" ]; then
+	MEMORY_MEGS=256
+else
+	MEMORY_MEGS=512
 fi
+
+if [ "x$ARCH" != "xamd64" ]; then
+        BINARY_ARCH="yes"
+fi
+
+if [ "x${DIST}" = "xubuntu" ]; then 
+        MIRRORSITE="http://de.archive.ubuntu.com/ubuntu"
+elif [ "x${DIST}" = "xdebian" ]; then
+        MIRRORSITE="http://ftp.de.debian.org/debian"
+        OTHERMIRROR="deb http://code.x2go.org/debian $CODENAME main"
+fi
+
 export OTHERMIRROR
 
