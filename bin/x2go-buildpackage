@@ -22,7 +22,7 @@ set -x
 
 test -z $1 && { echo usage: <x2go-git-project> [main|heuler]; exit -1; }
 
-USE_SUDO=true
+USE_SUDO="yes"
 PDEBUILD="pdebuild --pbuilder qemubuilder"
 TEMP_BASE="$HOME/tmp/"
 
@@ -59,7 +59,7 @@ cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 			rm -f $PKGDIST/$l_DIST/$l_CODENAME/$PACKAGE_*.build
 			rm -f $PKGDIST/$l_DIST/$l_CODENAME/$PACKAGE_*.dsc
 			rm -f $PKGDIST/$l_DIST/$l_CODENAME/$PACKAGE_*.tar.gz
-			rm -f $PKGDIST/$l_DIST/$l_CODENAME/$PACKAGE*.deb
+			rm -f $PKGDIST/$l_DIST/$l_CODENAME/*.deb
 		done
 	}
 done
@@ -90,14 +90,17 @@ cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 			
 			# modify changelog for this build
 			DEBEMAIL=git-admin@x2go.org DEBFULLNAME="X2go Git Administrator" dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT" "Auto-built $l_DIST $l_CODENAME package for packages.x2go.org repository."
-			cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
-			test $USE_SUDO && {
-				sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME
+			test "x$USE_SUDO" = "xyes" && {
+				cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
+				    sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME
+				}
 				cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
 				    sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME
 				}
 			} || {
-				DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME
+				cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
+					DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME
+				}
 				cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
 				    DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME
 				}
