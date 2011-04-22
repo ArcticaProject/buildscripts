@@ -30,9 +30,9 @@ KERNEL_IMAGE=/srv/pbuilder/qemu-kernels/$ARCH/vmlinuz
 INITRD=/srv/pbuilder/qemu-kernels/$ARCH/initrd.img
 ARCH_DISKDEVICE=sd
 if [ "x$ARCH" = "xarmel" ]; then
-	MEMORY_MEGS=256
+        MEMORY_MEGS=256
 else
-	MEMORY_MEGS=512
+        MEMORY_MEGS=512
 fi
 
 if [ "x$ARCH" != "xamd64" ]; then
@@ -47,4 +47,3 @@ elif [ "x${DIST}" = "xdebian" ]; then
 fi
 
 export OTHERMIRROR
-
