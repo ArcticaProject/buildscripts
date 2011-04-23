@@ -17,10 +17,9 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
-set -e
-set -x
+test -z $1 && { echo "usage: <x2go-git-project> [git-checkout] {main,heuler}"; exit -1; }
 
-test -z $1 && { echo usage: <x2go-git-project> [main|heuler]; exit -1; }
+set -ex
 
 USE_SUDO="yes"
 PDEBUILD="pdebuild --pbuilder qemubuilder"
