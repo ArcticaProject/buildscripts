@@ -1,9 +1,12 @@
 #!/bin/bash
+
+set -x
+
 BASEDIRECTORY="/srv/pbuilder/cache"
 
-DIST=${DIST-debian}
-CODENAME=${CODENAME-sid}
-ARCH=${ARCH-amd64}
+DIST=${DIST:-debian}
+CODENAME=${CODENAME:-sid}
+ARCH=${ARCH:-amd64}
 
 # pbuilder options
 BASETGZ="$BASEDIRECTORY/base-$DIST-$CODENAME-$ARCH.tgz"
@@ -35,14 +38,10 @@ else
         MEMORY_MEGS=512
 fi
 
-if [ "x$ARCH" != "xamd64" ]; then
-        BINARY_ARCH="yes"
-fi
-
 if [ "x${DIST}" = "xubuntu" ]; then 
-        MIRRORSITE="http://de.archive.ubuntu.com/ubuntu"
+        MIRRORSITE="http://localhost:9999/ubuntu"
 elif [ "x${DIST}" = "xdebian" ]; then
-        MIRRORSITE="http://ftp.de.debian.org/debian"
+        MIRRORSITE="http://localhost:9999/debian"
         OTHERMIRROR="deb http://code.x2go.org/debian $CODENAME main"
 fi
 
