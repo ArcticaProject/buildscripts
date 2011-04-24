@@ -32,7 +32,7 @@ COMPONENT=${3-heuler}
 
 PACKAGE_DIR=$(pwd)/$PACKAGE
 DIST_SUPPORTED="debian ubuntu"
-PKGDIST="$(pwd)/../pkg-dist/$PACKAGE"
+PKGDIST="$HOME/pkg-dist/$PACKAGE"
 
 # in any case remove the BUILDS_FOR file
 rm -f $PACKAGE_DIR/BUILDS_FOR
