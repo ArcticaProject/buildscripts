@@ -24,6 +24,7 @@ set -ex
 USE_SUDO="yes"
 PDEBUILD="pdebuild --pbuilder qemubuilder"
 TEMP_BASE="$HOME/tmp/"
+mkdir -p "$TEMP_BASE"
 
 PACKAGE=$1
 CHECKOUT=${2-master}
@@ -45,6 +46,7 @@ test -f BUILDS_FOR || cat > BUILDS_FOR <<EOF
 debian: sid wheezy squeeze
 #ubuntu: lucid maverick natty
 EOF
+
 
 # pkgdist directory cleanup
 cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
