@@ -24,21 +24,26 @@ set -ex
 USE_SUDO="yes"
 PDEBUILD="pdebuild --pbuilder qemubuilder"
 TEMP_BASE="$HOME/tmp/"
-mkdir -p "$TEMP_BASE"
 
 PACKAGE=$1
 CHECKOUT=${2-master}
 COMPONENT=${3-heuler}
 
-PACKAGE_DIR=$(pwd)/$PACKAGE
+PACKAGE_DIR=$HOME/build/$PACKAGE
+
 DIST_SUPPORTED="debian ubuntu"
 PKGDIST="$HOME/pkg-dist/$PACKAGE"
+
+# creating paths
+mkdir -p "$TEMP_BASE"
+mkdir -p $PACKAGE_DIR
+mkdir -p $PKGDIST
 
 # in any case remove the BUILDS_FOR file
 rm -f $PACKAGE_DIR/BUILDS_FOR
 
 # make sure our local working copy is up to date...
-test -d $PACKAGE_DIR/.git && { cd $PACKAGE_DIR && git reset --hard; git pull; git checkout $CHECKOUT; } || { cd $PACKAGE_DIR && git clone git://code.x2go.org/$PACKAGE.git && git checkout $CHECKOUT; }
+test -d $PACKAGE_DIR/.git && { cd $PACKAGE_DIR && git reset --hard; git pull; git checkout $CHECKOUT; } || { cd $(dirname $PACKAGE_DIR) && git clone git://code.x2go.org/$PACKAGE.git && cd $PACKAGE && git checkout $CHECKOUT; }
 cd $PACKAGE_DIR
 
 # by default we build for all current debian versions
