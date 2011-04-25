@@ -30,9 +30,10 @@ test -z $1 || test -d ./.git || {
 }
 
 # remove old build-main tag on the remote server
-ssh -lx2go code.x2go.org "cd /srv/git/code.x2go.org/$GITPROJECT.git && git tag -d build-main || echo warn: $GITPROJECT.git was not yet tagged with build-main tag..."
+git pull origin
+ssh -lx2go code.x2go.org "cd /srv/git/code.x2go.org/$GITPROJECT.git && git tag -d build-main || echo warn: server-side Git project $GITPROJECT.git was not yet tagged with build-main tag..."
 # remove old build-main tag locally
-git tag -d build-main
+git tag -d build-main || echo "warn: local $GITPROJECT.git working copy was not yet tagged with build-main tag..."
 
-git tag -s build-main -m "debian/build-main tag"
+git tag -s build-main $REF -m "debian/build-main tag"
 git push --tags
