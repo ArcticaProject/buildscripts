@@ -39,6 +39,7 @@ PACKAGE_DIR=$HOME/build/$COMPONENT/$PACKAGE
 
 DIST_SUPPORTED="debian ubuntu"
 PKGDIST="$HOME/pkg-dist/$COMPONENT/$PACKAGE"
+OTHERMIRROR=${OTHERMIRROR:-"deb http://code.x2go.org/debian $CODENAME $COMPONENT"}
 
 # creating paths
 mkdir -p "$TEMP_BASE"

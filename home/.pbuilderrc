@@ -43,5 +43,4 @@ if [ "x${DIST}" = "xubuntu" ]; then
         MIRRORSITE="http://localhost:9999/ubuntu"
 elif [ "x${DIST}" = "xdebian" ]; then
         MIRRORSITE="http://localhost:3142/debian"
-        OTHERMIRROR=${OTHERMIRROR:-"deb http://code.x2go.org/debian $CODENAME $COMPONENT"}
 fi
