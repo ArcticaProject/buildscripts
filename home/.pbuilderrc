@@ -41,7 +41,8 @@ fi
 if [ "x${DIST}" = "xubuntu" ]; then 
         MIRRORSITE="http://localhost:9999/ubuntu"
 elif [ "x${DIST}" = "xdebian" ]; then
-        MIRRORSITE="http://localhost:9999/debian"
+        MIRRORSITE="http://ftp.de.debian.org/debian"
+	MIRRORSITE="http://localhost:3142/debian"
         OTHERMIRROR="deb http://code.x2go.org/debian $CODENAME main"
 fi
 

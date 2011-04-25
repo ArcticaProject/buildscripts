@@ -38,7 +38,7 @@ PKGDIST="$HOME/pkg-dist/$PACKAGE"
 rm -f $PACKAGE_DIR/BUILDS_FOR
 
 # make sure our local working copy is up to date...
-test -d $PACKAGE_DIR/.git && { cd $PACKAGE_DIR && git reset --hard; git pull; git checkout $CHECKOUT; } || { git clone git://code.x2go.org/$PACKAGE.git && cd $PACKAGE_DIR && git checkout $CHECKOUT; }
+test -d $PACKAGE_DIR/.git && { cd $PACKAGE_DIR && git reset --hard; git pull; git checkout $CHECKOUT; } || { cd $PACKAGE_DIR && git clone git://code.x2go.org/$PACKAGE.git && git checkout $CHECKOUT; }
 cd $PACKAGE_DIR
 
 # by default we build for all current debian versions
