@@ -7,6 +7,7 @@ BASEDIRECTORY="/srv/pbuilder/cache"
 DIST=${DIST:-debian}
 CODENAME=${CODENAME:-sid}
 ARCH=${ARCH:-amd64}
+COMPONENT="${COMPONENT:-heuler}"
 
 # pbuilder options
 BASETGZ="$BASEDIRECTORY/base-$DIST-$CODENAME-$ARCH.tgz"
@@ -41,9 +42,6 @@ fi
 if [ "x${DIST}" = "xubuntu" ]; then 
         MIRRORSITE="http://localhost:9999/ubuntu"
 elif [ "x${DIST}" = "xdebian" ]; then
-        MIRRORSITE="http://ftp.de.debian.org/debian"
-	MIRRORSITE="http://localhost:3142/debian"
-        OTHERMIRROR="deb http://code.x2go.org/debian $CODENAME heuler"
+        MIRRORSITE="http://localhost:3142/debian"
+        OTHERMIRROR=${OTHERMIRROR-"deb http://code.x2go.org/debian $CODENAME $COMPONENT"}
 fi
-
-export OTHERMIRROR
