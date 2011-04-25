@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Copyright (C) 2010-2011 by Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+#
+# Python X2go is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# Python X2go is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the
+# Free Software Foundation, Inc.,
+# 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+
+set -e
+
+GITPROJECT=$(basename $(pwd))
+REF=$1
+
+# we need to be within a working copy (base folder) and we need a <REF>!!!
+test -z $1 || test -d ./.git || { 
+  echo "usage: $(basename $0) <REF>"
+  echo "Calls this command from within the base folder of an X2go Git project's working copy..."
+  exit -1
+}
+
+# remove old build-main tag on the remote server
+ssh -lx2go code.x2go.org "cd /srv/git/code.x2go.org/$GITPROJECT.git && git tag -d build-main || echo warn: $GITPROJECT.git was not yet tagged with build-main tag..."
+# remove old build-main tag locally
+git tag -d build-main
+
+git tag -s build-main -m "debian/build-main tag"
+git push --tags
