@@ -52,13 +52,18 @@ pyhoca-gui main build-main
 x2gothinclient main heuler tmpfs
 "
 
+COMPONENT=${1:-""}
+
 # build the newest code... (nightly-builds)
-for pkg comp checkout in $LIB_PACKAGES_HEULER + $APP_PACKAGES_HEULER; do
-    x2go-buildpackage $pkg $comp $checkout
-done
+[ "x$COMPONENT" = "xheuler" ] || [ -z $COMPONENT ] && {
+    for pkg comp checkout in $LIB_PACKAGES_HEULER + $APP_PACKAGES_HEULER; do
+        x2go-buildpackage $pkg $comp $checkout
+    done
+}
 
 # build all packages tagged as ,,build-main'Ä
-for pkg comp checkout in $LIB_PACKAGES_MAIN + $APP_PACKAGES_MAIN; do
-    x2go-buildpackage $pkg $comp $checkout
-done
-
+[ "x$COMPONENT" = "xmain" ] || [ -z $COMPONENT ] && {
+    for pkg comp checkout in $LIB_PACKAGES_MAIN + $APP_PACKAGES_MAIN; do
+        x2go-buildpackage $pkg $comp $checkout
+    done
+}
