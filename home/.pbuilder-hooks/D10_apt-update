@@ -1,6 +1,0 @@
-#!/bin/bash
-
-echo Calling $0
-
-echo $OTHERMIRROR > /etc/apt/sources.list.d/other.list
-apt-get update
