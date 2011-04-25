@@ -81,7 +81,7 @@ cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 		for l_CODENAME in $CODENAMES; do
 			TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
 			mkdir -p $TEMP_DIR/$PACKAGE
-			git clone git://code.x2go.org/$PACKAGE.git $TEMP_DIR/$PACKAGE/ 
+			git clone --local $PACKAGE_DIR $TEMP_DIR/$PACKAGE/ 
 			cd $TEMP_DIR/$PACKAGE
 			git checkout $CHECKOUT
 			# translate the version name for Debian releases
