@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e
+
+for pkg in "$@"; do
+	ssh -lx2go code.x2go.org "cd /srv/git/code.x2go.org && ./setup-repository $pkg '$pkg upstream project'"
+	ssh -lx2go-admin code.x2go.org "cd /srv/git/code.x2go.org && ./update-repository-posixacls $pkg"
+	cd "$pkg"
+	echo "$pkg: MASTER BRANCH" && git push ssh://x2go@code.x2go.org:32032/srv/git/code.x2go.org/$pkg master 
+	#echo "$pkg: RELEASE BRANCH" && git push ssh://x2go@code.x2go.org:32032/srv/git/code.x2go.org/$pkg release
+	#echo "$pkg: PRISTINE-TAR" && git push ssh://x2go@code.x2go.org:32032/srv/git/code.x2go.org/$pkg pristine-tar
+	echo "$pkg: PUSHING TAGS" && git push --tags ssh://x2go@code.x2go.org:32032/srv/git/code.x2go.org/$pkg
+	cd ..
+done
