@@ -1,0 +1,47 @@
+#!/bin/bash 
+
+LIB_PACKAGES_HEULER="
+nxcomp heuler master
+nxcompext heuler master
+nxcompshad heuler master
+python-x2go heuler master
+"
+LIB_PACKAGES_MAIN="
+nxcomp main build-main
+nxcompext main build-main
+nxcompshad main build-main
+python-x2go main build-main
+"
+
+APP_PACKAGES_HEULER="
+x2goserver heuler master
+x2goagent heuler master
+x2goclient heuler master
+nxproxy heuler master
+cups-x2go heuler master
+x2godesktopsharing heuler master
+x2gognomebindings heuler master
+pyhoca-gui heuler master
+"
+APP_PACKAGES_MAIN="
+x2goserver main build-main
+x2goagent main build-main
+x2goclient main build-main
+nxproxy main build-main
+cups-x2go main build-main
+x2godesktopsharing main build-main
+x2gognomebindings main build-main
+pyhoca-gui main build-main
+x2gothinclient main heuler tmpfs
+"
+
+# build the newest code... (nightly-builds)
+for pkg comp checkout in $LIB_PACKAGES_HEULER + $APP_PACKAGES_HEULER; do
+    x2go-buildpackage $pkg $comp $checkout
+done
+
+# build all packages tagged as ,,build-main'Ä
+for pkg comp checkout in $LIB_PACKAGES_MAIN + $APP_PACKAGES_MAIN; do
+    x2go-buildpackage $pkg $comp $checkout
+done
+
