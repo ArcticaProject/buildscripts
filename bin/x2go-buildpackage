@@ -27,14 +27,18 @@ TEMP_BASE="$HOME/tmp/"
 
 PACKAGE=$1
 COMPONENT=${2:-${COMPONENT:-heuler}}
-[ "x$COMPONENT" = "xmain" ] && CHECKOUT=${3:-build-main} || CHECKOUT=${3:-master}
+[ "x$COMPONENT" = "xmain" ] && {
+        CHECKOUT=${3:-build-main} 
+} || { 
+        CHECKOUT=${3:-master}
+	DATE="~${DATE:-$(date +%Y%m%d)}."
+}
+[ "x$DATE" = "xtoday" ] && DATE="~$(date +%Y%m%d)."
 
-PACKAGE_DIR=$HOME/build/$PACKAGE
+PACKAGE_DIR=$HOME/build/$COMPONENT/$PACKAGE
 
 DIST_SUPPORTED="debian ubuntu"
-PKGDIST="$HOME/pkg-dist/$PACKAGE"
-
-[ "x$DATE" = "xtoday" ] && DATE="$(date +%Y%m%d)~" || DATE=""
+PKGDIST="$HOME/pkg-dist/$COMPONENT/$PACKAGE"
 
 # creating paths
 mkdir -p "$TEMP_BASE"
@@ -45,7 +49,7 @@ mkdir -p $PKGDIST
 rm -f $PACKAGE_DIR/BUILDS_FOR
 
 # make sure our local working copy is up to date...
-test -d $PACKAGE_DIR/.git && { cd $PACKAGE_DIR && git reset --hard; git pull; git checkout $CHECKOUT; } || { cd $(dirname $PACKAGE_DIR) && git clone git://code.x2go.org/$PACKAGE.git && cd $PACKAGE && git checkout $CHECKOUT; }
+test -d $PACKAGE_DIR/.git && { cd $PACKAGE_DIR && git reset --hard; git pull; git checkout $CHECKOUT || git checkout master; } || { cd $(dirname $PACKAGE_DIR) && git clone git://code.x2go.org/$PACKAGE.git && cd $PACKAGE && git checkout $CHECKOUT || git checkout master; }
 cd $PACKAGE_DIR
 
 # by default we build for all current debian versions
@@ -85,7 +89,7 @@ cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 			mkdir -p $TEMP_DIR/$PACKAGE
 			git clone --local $PACKAGE_DIR $TEMP_DIR/$PACKAGE/ 
 			cd $TEMP_DIR/$PACKAGE
-			git checkout $CHECKOUT
+			git checkout $CHECKOUT || git checkout master
 			# translate the version name for Debian releases
 			[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
 			[ "x$l_CODENAME" = "xwheezy" ] && VERSION=testing
@@ -99,7 +103,7 @@ cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 			}
 			
 			# modify changelog for this build
-			DEBEMAIL=git-admin@x2go.org DEBFULLNAME="X2go Git Administrator" dch --distribution $VERSION --force-distribution -l "+$DATE~$l_CODENAME~$COMPONENT" "Auto-built $l_DIST $l_CODENAME package for packages.x2go.org repository."
+			DEBEMAIL=git-admin@x2go.org DEBFULLNAME="X2go Git Administrator" dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE" "Auto-built $l_DIST $l_CODENAME package for packages.x2go.org repository."
 			mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
 			[ "x$USE_SUDO" != "xyes" ] && {
 				cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
