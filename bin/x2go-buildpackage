@@ -17,7 +17,7 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
-test -z $1 && { echo "usage: <x2go-git-project> [git-checkout] {main,heuler}"; exit -1; }
+test -z $1 && { echo "usage: <x2go-git-project> {main,heuler} [<git-checkout>]"; exit -1; }
 
 set -ex
 
@@ -26,13 +26,15 @@ PDEBUILD="pdebuild --pbuilder qemubuilder"
 TEMP_BASE="$HOME/tmp/"
 
 PACKAGE=$1
-CHECKOUT=${2-master}
-COMPONENT=${3-heuler}
+COMPONENT=${2:-${COMPONENT:-heuler}}
+[ "x$COMPONENT" = "xmain" ] && CHECKOUT=${3:-build-main} || CHECKOUT=${3:-master}
 
 PACKAGE_DIR=$HOME/build/$PACKAGE
 
 DIST_SUPPORTED="debian ubuntu"
 PKGDIST="$HOME/pkg-dist/$PACKAGE"
+
+[ "x$DATE" = "xtoday" ] && DATE="$(date +%Y%m%d)~" || DATE=""
 
 # creating paths
 mkdir -p "$TEMP_BASE"
@@ -97,7 +99,7 @@ cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 			}
 			
 			# modify changelog for this build
-			DEBEMAIL=git-admin@x2go.org DEBFULLNAME="X2go Git Administrator" dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT" "Auto-built $l_DIST $l_CODENAME package for packages.x2go.org repository."
+			DEBEMAIL=git-admin@x2go.org DEBFULLNAME="X2go Git Administrator" dch --distribution $VERSION --force-distribution -l "+$DATE~$l_CODENAME~$COMPONENT" "Auto-built $l_DIST $l_CODENAME package for packages.x2go.org repository."
 			mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
 			[ "x$USE_SUDO" != "xyes" ] && {
 				cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
@@ -109,10 +111,10 @@ cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 			}
 			[ "x$USE_SUDO" = "xyes" ] && {
 				cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
-				    sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/amd64
+				    sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/amd64
 				}
 				cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
-				    sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/i386 -- --binary-arch
+				    sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/i386 -- --binary-arch
 				}
 			}
 			cd -
