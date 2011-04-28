@@ -105,7 +105,7 @@ cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 			# modify changelog for this build
 			DEBEMAIL=git-admin@x2go.org DEBFULLNAME="X2go Git Administrator" dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE" "Auto-built $l_DIST $l_CODENAME package for packages.x2go.org repository."
 			mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
-			OTHERMIRROR="deb http://code.x2go.org/debian $l_CODENAME $COMPONENT"}
+			OTHERMIRROR="deb http://code.x2go.org/debian $l_CODENAME $COMPONENT"
 			[ "x$USE_SUDO" != "xyes" ] && {
 				cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
 					DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/amd64
