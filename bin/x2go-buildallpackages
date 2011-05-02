@@ -18,37 +18,37 @@
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
 LIB_PACKAGES_HEULER="
-nxcomp heuler master
-nxcompext heuler master
-nxcompshad heuler master
-python-x2go heuler master
+nxcomp heuler master\n
+nxcompext heuler master\n
+nxcompshad heuler master\n
+python-x2go heuler master\n
 "
 LIB_PACKAGES_MAIN="
-nxcomp main build-main
-nxcompext main build-main
-nxcompshad main build-main
-python-x2go main build-main
+nxcomp main build-main\n
+nxcompext main build-main\n
+nxcompshad main build-main\n
+python-x2go main build-main\n
 "
 
 APP_PACKAGES_HEULER="
-x2goserver heuler master
-x2goagent heuler master
-x2goclient heuler master
-nxproxy heuler master
-cups-x2go heuler master
-x2godesktopsharing heuler master
-x2gognomebindings heuler master
+x2goserver heuler master\n
+x2goagent heuler master\n
+x2goclient heuler master\n
+nxproxy heuler master\n
+cups-x2go heuler master\n
+x2godesktopsharing heuler master\n
+x2gognomebindings heuler master\n
 pyhoca-gui heuler master
 "
 APP_PACKAGES_MAIN="
-x2goserver main build-main
-x2goagent main build-main
-x2goclient main build-main
-nxproxy main build-main
-cups-x2go main build-main
-x2godesktopsharing main build-main
-x2gognomebindings main build-main
-pyhoca-gui main build-main
+x2goserver main build-main\n
+x2goagent main build-main\n
+x2goclient main build-main\n
+nxproxy main build-main\n
+cups-x2go main build-main\n
+x2godesktopsharing main build-main\n
+x2gognomebindings main build-main\n
+pyhoca-gui main build-main\n
 x2gothinclient main heuler tmpfs
 "
 
@@ -56,14 +56,14 @@ COMPONENT=${1:-""}
 
 # build the newest code... (nightly-builds)
 [ "x$COMPONENT" = "xheuler" ] || [ -z $COMPONENT ] && {
-    echo $LIB_PACKAGES_HEULER + $APP_PACKAGES_HEULER | while read pkg comp checkout; do
-        x2go-buildpackage $pkg $comp $checkout
+    echo -e $LIB_PACKAGES_HEULER + $APP_PACKAGES_HEULER | while read pkg comp checkout; do
+	x2go-buildpackage $pkg $comp $checkout
     done
 }
 
 # build all packages tagged as ,,build-main'Ä
 [ "x$COMPONENT" = "xmain" ] || [ -z $COMPONENT ] && {
-    echo $LIB_PACKAGES_MAIN + $APP_PACKAGES_MAIN | while read pkg comp checkout; do
-        x2go-buildpackage $pkg $comp $checkout
+    echo -e $LIB_PACKAGES_MAIN + $APP_PACKAGES_MAIN | while read pkg comp checkout; do
+	x2go-buildpackage $pkg $comp $checkout
     done
 }
