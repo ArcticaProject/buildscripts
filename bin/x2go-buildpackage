@@ -25,32 +25,47 @@ USE_SUDO="yes"
 PDEBUILD="pdebuild --pbuilder qemubuilder"
 TEMP_BASE="$HOME/tmp/"
 
-PACKAGE=$1
+# first argv is the name of the Git project
+PROJECT=$1
+
+# grab repository component/area from command line (2nd argv)
 COMPONENT=${2:-${COMPONENT:-heuler}}
-[ "x$COMPONENT" = "xmain" ] && {
-        CHECKOUT=${3:-build-main} 
-} || { 
-        CHECKOUT=${3:-master}
+if [ "x$COMPONENT" = "xmain" ]; then
+	CHECKOUT=${3:-build-main}
+elif [ "x$COMPONENT" = "xheuler" ]; then
+	CHECKOUT=${3:-master}
 	DATE="~${DATE:-$(date +%Y%m%d)}."
-}
+else
+	echo "error: no such package are for X2go packages. Aborting..."
+fi
+# the DATE might be given as ,,today'' from the command line
 [ "x$DATE" = "xtoday" ] && DATE="~$(date +%Y%m%d)."
 
-PACKAGE_DIR=$HOME/build/$COMPONENT/$PACKAGE
-
+# setting paths
+PROJECT_DIR=$HOME/build/$COMPONENT/$PROJECT
 DIST_SUPPORTED="debian ubuntu"
-PKGDIST="$HOME/pkg-dist/$COMPONENT/$PACKAGE"
+PKGDIST="$HOME/pkg-dist/$COMPONENT/$PROJECT"
 
 # creating paths
 mkdir -p "$TEMP_BASE"
-mkdir -p $PACKAGE_DIR
+mkdir -p $PROJECT_DIR
 mkdir -p $PKGDIST
 
 # in any case remove the BUILDS_FOR file
-rm -f $PACKAGE_DIR/BUILDS_FOR
+rm -f $PROJECT_DIR/BUILDS_FOR
 
 # make sure our local working copy is up to date...
-test -d $PACKAGE_DIR/.git && { cd $PACKAGE_DIR && git reset --hard; git pull; git checkout $CHECKOUT || git checkout master; } || { cd $(dirname $PACKAGE_DIR) && git clone git://code.x2go.org/$PACKAGE.git && cd $PACKAGE && git checkout $CHECKOUT || git checkout master; }
-cd $PACKAGE_DIR
+if [ -d $PROJECT_DIR/.git ]; then 
+	cd $PROJECT_DIR && git reset --hard
+	git pull origin $CHECKOUT
+	git checkout $CHECKOUT || git checkout -b $CHECKOUT
+else
+	cd $(dirname $PROJECT_DIR)
+	git clone git://code.x2go.org/$PROJECT.git
+	cd $PROJECT 
+	git checkout $CHECKOUT || git checkout -b $CHECKOUT;
+fi
+cd $PROJECT_DIR
 
 # by default we build for all current debian versions
 test -f BUILDS_FOR || cat > BUILDS_FOR <<EOF
@@ -67,11 +82,11 @@ cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 		for l_CODENAME in $CODENAMES; do
 			for l_ARCH in amd64 i386; do
 				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME
-				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PACKAGE_*.changes
-				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PACKAGE_*.upload
-				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PACKAGE_*.build
-				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PACKAGE_*.dsc
-				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PACKAGE_*.tar.gz
+				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.changes
+				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.upload
+				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.build
+				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.dsc
+				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.tar.gz
 				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/*.deb
 			done
 		done
@@ -86,9 +101,9 @@ cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 	echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
 		for l_CODENAME in $CODENAMES; do
 			TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
-			mkdir -p $TEMP_DIR/$PACKAGE
-			git clone --local $PACKAGE_DIR $TEMP_DIR/$PACKAGE/ 
-			cd $TEMP_DIR/$PACKAGE
+			mkdir -p $TEMP_DIR/$PROJECT
+			git clone --local $PROJECT_DIR $TEMP_DIR/$PROJECT/ 
+			cd $TEMP_DIR/$PROJECT
 			git checkout $CHECKOUT || git checkout master
 			# translate the version name for Debian releases
 			[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
@@ -132,13 +147,13 @@ done
 
 # dupload the new packages to the reprepro repository
 cd $PKGDIST
-cat $PACKAGE_DIR/BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
+cat $PROJECT_DIR/BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 	l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
 	CODENAMES=$(echo $line | cut -d":" -f2- | tr [A-Z] [a-z])
 	for l_CODENAME in $CODENAMES; do
 		for l_ARCH in amd64 i386; do 
 			cd $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH
-			ls $PACKAGE_*.changes &>/dev/null && dupload --to x2go-$l_DIST-$l_CODENAME $PACKAGE_*.changes
+			ls $PROJECT_*.changes &>/dev/null && dupload --to x2go-$l_DIST-$l_CODENAME $PROJECT_*.changes
 			cd -
 		done
 	done
