@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the
 # Free Software Foundation, Inc.,
-# 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+# 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 
 set -e
 
@@ -23,7 +23,7 @@ GITPROJECT=$(basename $(pwd))
 REF=$1
 
 # we need to be within a working copy (base folder) and we need a <REF>!!!
-test -z $1 || test -d ./.git || { 
+test -z $1 || test -d ./.git || {
   echo "usage: $(basename $0) <REF>"
   echo "Call this command from within the base folder of an X2go Git project's working copy..."
   exit -1
