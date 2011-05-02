@@ -37,6 +37,7 @@ elif [ "x$COMPONENT" = "xheuler" ]; then
 	DATE="~${DATE:-$(date +%Y%m%d)}."
 else
 	echo "error: no such package are for X2go packages. Aborting..."
+        exit -1
 fi
 # the DATE might be given as ,,today'' from the command line
 [ "x$DATE" = "xtoday" ] && DATE="~$(date +%Y%m%d)."
