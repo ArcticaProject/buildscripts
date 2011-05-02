@@ -29,7 +29,7 @@ test -z $1 || test -d ./.git || {
   exit -1
 }
 
-# update the build-main branch with our new blessed reference
+# update the build-main branch with our newest blessed reference
 git pull
 git pull build-main
 git push origin $REF:build-main
