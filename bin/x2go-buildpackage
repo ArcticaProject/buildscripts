@@ -21,143 +21,167 @@ test -z $1 && { echo "usage: <x2go-git-project> {main,heuler} [<git-checkout>]";
 
 set -ex
 
-USE_SUDO="yes"
-PDEBUILD="pdebuild --pbuilder qemubuilder"
-TEMP_BASE="$HOME/tmp/"
+set_vars() {
+	USE_SUDO="yes"
+	PDEBUILD="pdebuild --pbuilder qemubuilder"
+	TEMP_BASE="$HOME/tmp/"
 
-# first argv is the name of the Git project
-PROJECT=$1
+	# first argv is the name of the Git project
+	PROJECT=$1
 
-# grab repository component area from command line (2nd argv) or guess it
-COMPONENT=${2:-${COMPONENT:-heuler}}
-if [ "x$COMPONENT" = "xmain" ]; then
-	CHECKOUT=${3:-build-main}
-elif [ "x$COMPONENT" = "xheuler" ]; then
-	CHECKOUT=${3:-master}
-	DATE="~${DATE:-$(date +%Y%m%d)}."
-else
-	echo "error: no such package component area for X2go packages. Aborting..."
-        exit -1
-fi
-# the DATE might be given as ,,today'' from the command line
-[ "x$DATE" = "xtoday" ] && DATE="~$(date +%Y%m%d)."
+	# grab repository component area from command line (2nd argv) or guess it
+	COMPONENT=${2:-${COMPONENT:-heuler}}
+	if [ "x$COMPONENT" = "xmain" ]; then
+		CHECKOUT=${3:-build-main}
+	elif [ "x$COMPONENT" = "xheuler" ]; then
+		CHECKOUT=${3:-master}
+		DATE="~${DATE:-$(date +%Y%m%d)}."
+	else
+		echo "error: no such package component area for X2go packages. Aborting..."
+		exit -1
+	fi
+	# the DATE might be given as ,,today'' from the command line
+	[ "x$DATE" = "xtoday" ] && DATE="~$(date +%Y%m%d)."
 
-# setting paths
-PROJECT_DIR=$HOME/build/$COMPONENT/$PROJECT
-DIST_SUPPORTED="debian ubuntu"
-PKGDIST="$HOME/pkg-dist/$COMPONENT/$PROJECT"
+	# setting paths
+	PROJECT_DIR=$HOME/build/$COMPONENT/$PROJECT
+	DIST_SUPPORTED="debian ubuntu"
+	PKGDIST="$HOME/pkg-dist/$COMPONENT/$PROJECT"
 
-# creating paths
-mkdir -p "$TEMP_BASE"
-mkdir -p $PROJECT_DIR
-mkdir -p $PKGDIST
+	# creating paths
+	mkdir -p "$TEMP_BASE"
+	mkdir -p $PROJECT_DIR
+	mkdir -p $PKGDIST
 
-# in any case remove the BUILDS_FOR file
-rm -f $PROJECT_DIR/BUILDS_FOR
+	return 0
+}
 
-# make sure our local working copy is up to date...
-if [ -d $PROJECT_DIR/.git ]; then 
-	cd $PROJECT_DIR && git reset --hard
-	git pull origin $CHECKOUT
-	git checkout $CHECKOUT || git checkout -b $CHECKOUT
-else
-	cd $(dirname $PROJECT_DIR)
-	git clone git://code.x2go.org/$PROJECT.git
-	cd $PROJECT 
-	git checkout $CHECKOUT || git checkout -b $CHECKOUT;
-fi
-cd $PROJECT_DIR
+clear_pkgdist() {
 
-# by default we build for all current debian versions
-test -f BUILDS_FOR || cat > BUILDS_FOR <<EOF
+	# pkgdist directory cleanup
+	cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
+		l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
+		CODENAMES=$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])
+		echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
+			for l_CODENAME in $CODENAMES; do
+				for l_ARCH in amd64 i386; do
+					mkdir -p $PKGDIST/$l_DIST/$l_CODENAME
+					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.changes
+					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.upload
+					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.build
+					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.dsc
+					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.tar.gz
+					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/*.deb
+				done
+			done
+		}
+	done
+	return 0
+}
+
+prepare_workspace() {
+	# in any case remove the BUILDS_FOR file
+	rm -f $PROJECT_DIR/BUILDS_FOR
+
+	# make sure our local working copy is up to date...
+	if [ -d $PROJECT_DIR/.git ]; then 
+		cd $PROJECT_DIR && git reset --hard
+		git pull origin $CHECKOUT
+		git checkout $CHECKOUT || git checkout -b $CHECKOUT
+	else
+		cd $(dirname $PROJECT_DIR)
+		git clone git://code.x2go.org/$PROJECT.git
+		cd $PROJECT 
+		git checkout $CHECKOUT || git checkout -b $CHECKOUT;
+	fi
+	cd $PROJECT_DIR
+
+	# by default we build for all current debian versions
+	test -f BUILDS_FOR || cat > BUILDS_FOR <<EOF
 debian: sid wheezy squeeze
 #ubuntu: lucid maverick natty
 EOF
+	return 0
+}
 
+build_packages() {
+	# use pbuilder for building all variants of this package
+	cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
+		l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
+		CODENAMES=$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])
+		echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
+			for l_CODENAME in $CODENAMES; do
+				TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
+				mkdir -p $TEMP_DIR/$PROJECT
+				git clone --local $PROJECT_DIR $TEMP_DIR/$PROJECT/ 
+				cd $TEMP_DIR/$PROJECT
+				git checkout $CHECKOUT || git checkout master
+				# translate the version name for Debian releases
+				[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
+				[ "x$l_CODENAME" = "xwheezy" ] && VERSION=testing
+				[ "x$l_CODENAME" = "xsqueeze" ] && VERSION=stable
+				[ "x$l_CODENAME" = "xlenny" ] && VERSION=oldstable
+				
+				# modify the section for non-main package builds
+				[ "x$COMPONENT" = "xmain" ] || {
+					mv debian/control debian/control.tmp
+					cat debian/control.tmp | sed  "s#Section:[\ ]*\(.*\)#Section: $COMPONENT/\1#g" > debian/control
+				}
+				
+				# modify changelog for this build
+				DEBEMAIL=git-admin@x2go.org DEBFULLNAME="X2go Git Administrator" dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE" "Auto-built $l_DIST $l_CODENAME package for packages.x2go.org repository."
+				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
+				OTHERMIRROR="deb http://packages.x2go.org/debian $l_CODENAME $COMPONENT"
+				[ "x$USE_SUDO" != "xyes" ] && {
+					cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
+						DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/amd64
+					}
+					cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
+						DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/i386 -- --binary-arch
+					}
+				}
+				[ "x$USE_SUDO" = "xyes" ] && {
+					cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
+					    sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/amd64
+					}
+					cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
+					    sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/i386 -- --binary-arch
+					}
+				}
+				cd -
+				rm -Rf $TEMP_DIR
+			done
+			echo
+		}
+		echo
+	done
+	return 0
+}
 
-# pkgdist directory cleanup
-cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
-	l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
-	CODENAMES=$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])
-	echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
+upload_packages() {
+	# dupload the new packages to the reprepro repository
+	cd $PKGDIST
+	cat $PROJECT_DIR/BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
+		l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
+		CODENAMES=$(echo $line | cut -d":" -f2- | tr [A-Z] [a-z])
 		for l_CODENAME in $CODENAMES; do
-			for l_ARCH in amd64 i386; do
-				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME
-				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.changes
-				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.upload
-				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.build
-				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.dsc
-				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.tar.gz
-				rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/*.deb
+			for l_ARCH in amd64 i386; do 
+				cd $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH
+				ls $PROJECT_*.changes &>/dev/null && dupload --to x2go-$l_DIST-$l_CODENAME $PROJECT_*.changes
+				cd -
 			done
 		done
-	}
-done
-
-
-# use pbuilder for building all variants of this package
-cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
-	l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
-	CODENAMES=$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])
-	echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
-		for l_CODENAME in $CODENAMES; do
-			TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
-			mkdir -p $TEMP_DIR/$PROJECT
-			git clone --local $PROJECT_DIR $TEMP_DIR/$PROJECT/ 
-			cd $TEMP_DIR/$PROJECT
-			git checkout $CHECKOUT || git checkout master
-			# translate the version name for Debian releases
-			[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
-			[ "x$l_CODENAME" = "xwheezy" ] && VERSION=testing
-			[ "x$l_CODENAME" = "xsqueeze" ] && VERSION=stable
-			[ "x$l_CODENAME" = "xlenny" ] && VERSION=oldstable
-			
-			# modify the section for non-main package builds
-			[ "x$COMPONENT" = "xmain" ] || {
-				mv debian/control debian/control.tmp
-				cat debian/control.tmp | sed  "s#Section:[\ ]*\(.*\)#Section: $COMPONENT/\1#g" > debian/control
-			}
-			
-			# modify changelog for this build
-			DEBEMAIL=git-admin@x2go.org DEBFULLNAME="X2go Git Administrator" dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE" "Auto-built $l_DIST $l_CODENAME package for packages.x2go.org repository."
-			mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
-			OTHERMIRROR="deb http://packages.x2go.org/debian $l_CODENAME $COMPONENT"
-			[ "x$USE_SUDO" != "xyes" ] && {
-				cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
-					DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/amd64
-				}
-				cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
-					DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/i386 -- --binary-arch
-				}
-			}
-			[ "x$USE_SUDO" = "xyes" ] && {
-				cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
-				    sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/amd64
-				}
-				cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
-				    sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/i386 -- --binary-arch
-				}
-			}
-			cd -
-			rm -Rf $TEMP_DIR
-		done
-		echo
-	}
-	echo
-done
-
-# dupload the new packages to the reprepro repository
-cd $PKGDIST
-cat $PROJECT_DIR/BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
-	l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
-	CODENAMES=$(echo $line | cut -d":" -f2- | tr [A-Z] [a-z])
-	for l_CODENAME in $CODENAMES; do
-		for l_ARCH in amd64 i386; do 
-			cd $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH
-			ls $PROJECT_*.changes &>/dev/null && dupload --to x2go-$l_DIST-$l_CODENAME $PROJECT_*.changes
-			cd -
-		done
 	done
-done
-cd -
+	cd -
+	return 0
+}
 
+### MAIN ###
+set_vars $@ && {
+	cd $PROJECT_DIR && x2go-pkgneedsbuild && {
+		clear_pkgdist
+		prepare_workspace && {
+			build_packages && upload_packages
+		}
+	}
+}
