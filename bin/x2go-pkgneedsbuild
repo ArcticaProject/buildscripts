@@ -44,5 +44,4 @@ CHECKOUT=${1:-master}
 		git branch -D tmp-$TIMESTAMP >/dev/null
 		exit 0
 	}
-
-} && exit 0
+} || exit 0
