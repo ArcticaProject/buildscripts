@@ -28,7 +28,7 @@ TEMP_BASE="$HOME/tmp/"
 # first argv is the name of the Git project
 PROJECT=$1
 
-# grab repository component/area from command line (2nd argv)
+# grab repository component area from command line (2nd argv) or guess it
 COMPONENT=${2:-${COMPONENT:-heuler}}
 if [ "x$COMPONENT" = "xmain" ]; then
 	CHECKOUT=${3:-build-main}
@@ -36,7 +36,7 @@ elif [ "x$COMPONENT" = "xheuler" ]; then
 	CHECKOUT=${3:-master}
 	DATE="~${DATE:-$(date +%Y%m%d)}."
 else
-	echo "error: no such package are for X2go packages. Aborting..."
+	echo "error: no such package component area for X2go packages. Aborting..."
         exit -1
 fi
 # the DATE might be given as ,,today'' from the command line
