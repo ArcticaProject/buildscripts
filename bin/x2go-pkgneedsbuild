@@ -17,7 +17,7 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 
-set -xe
+set -e
 
 CHECKOUT=${1:-master}
 
@@ -27,20 +27,20 @@ DATE=$(date +%s)
 CURRENT_BRANCH=$(git branch | grep "*" | awk '{print $2}')
 
 # switch to branch given as $CHECKOUT, if it does not exist locally, create it...
-git checkout $CHECKOUT || git checkout -b $CHECKOUT
+git checkout $CHECKOUT &>/dev/null || git checkout -b $CHECKOUT >/dev/null
 
 # switch to a tmp branch...
-git checkout -b tmp-$DATE
+git checkout -b tmp-$DATE &>/dev/null
 
 # pull $CHECKOUT from origin into the tmp branch
 LANG=en_US.UTF-8 git pull origin $CHECKOUT 2>/dev/null | egrep "^Already up-to-date.$" &>/dev/null && {
 	# drop the tmp branch
-	git checkout $CURRENT_BRANCH
-	git branch -D tmp-$DATE
+	git checkout $CURRENT_BRANCH &>/dev/null
+	git branch -D tmp-$DATE >/dev/null
 	exit 1
 } || {
 	# drop the tmp branch
-	git checkout $CURRENT_BRANCH
-	git branch -D tmp-$DATE
+	git checkout $CURRENT_BRANCH &>/dev/null
+	git branch -D tmp-$DATE >/dev/null
 	exit 0
 }
