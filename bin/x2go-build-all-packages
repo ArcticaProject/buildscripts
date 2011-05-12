@@ -58,13 +58,25 @@ COMPONENT=${1:-""}
 # build the newest code... (nightly-builds)
 [ "x$COMPONENT" = "xheuler" ] || [ -z $COMPONENT ] && {
     echo -e $LIB_PACKAGES_HEULER + $APP_PACKAGES_HEULER | while read pkg comp checkout; do
-	x2go-buildpackage $pkg $comp $checkout && x2go-packageupload $pkg $comp $checkout
+	if [ "x$(basename $0)" = "xx2go-build-all-packages" ]; then
+		x2go-build-package $pkg $comp $checkout
+	elif [ "x$(basename $0)" = "xx2go-upload-all-packages" ]; then
+		x2go-upload-package $pkg $comp $checkout
+	elif [ "x$(basename $0)" = "xx2go-build+upload-all-packages" ]; then
+		x2go-build-package $pkg $comp $checkout && x2go-upload-package $pkg $comp $checkout
+	fi
     done
 }
 
 # build all packages tagged as ,,build-main'Ä
 [ "x$COMPONENT" = "xmain" ] || [ -z $COMPONENT ] && {
     echo -e $LIB_PACKAGES_MAIN + $APP_PACKAGES_MAIN | while read pkg comp checkout; do
-	x2go-buildpackage $pkg $comp $checkout && x2go-packageupload $pkg $comp $checkout
+	if [ "x$(basename $0)" = "xx2go-build-all-packages" ]; then
+		x2go-build-package $pkg $comp $checkout
+	elif [ "x$(basename $0)" = "xx2go-upload-all-packages" ]; then
+		x2go-upload-package $pkg $comp $checkout
+	elif [ "x$(basename $0)" = "xx2go-build+upload-all-packages" ]; then
+		x2go-build-package $pkg $comp $checkout && x2go-upload-package $pkg $comp $checkout
+	fi
     done
 }
