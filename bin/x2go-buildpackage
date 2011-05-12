@@ -162,30 +162,12 @@ build_packages() {
 	return 0
 }
 
-upload_packages() {
-	# dupload the new packages to the reprepro repository
-	cd $PKGDIST
-	cat $PROJECT_DIR/BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
-		l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
-		CODENAMES=${CODENAMES:-$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])}
-		for l_CODENAME in $CODENAMES; do
-			for l_ARCH in amd64 i386; do 
-				cd $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH
-				ls $PROJECT_*.changes &>/dev/null && dupload --to x2go-$l_DIST-$l_CODENAME $PROJECT_*.changes
-				cd -
-			done
-		done
-	done
-	cd -
-	return 0
-}
-
 ### MAIN ###
 set_vars $@ && {
 	cd $PROJECT_DIR && x2go-pkgneedsbuild $CHECKOUT && {
 		clear_pkgdist
 		prepare_workspace && {
-			build_packages && upload_packages
+			build_packages
 		}
 	}
 }
