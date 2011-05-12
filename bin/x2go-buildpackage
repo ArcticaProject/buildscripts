@@ -30,10 +30,10 @@ set_vars() {
 	PROJECT=$1
 
 	# grab repository component area from command line (2nd argv) or guess it
-	ARGV2_COMPONENT=$(echo $2 | cut -d"/" -f1)
-	ARGV2_CODENAME=$(echo $2 | cut -d"/" -f2)
+	ARGV2_COMPONENT=$(echo "$2/" | cut -d"/" -f1)
+	ARGV2_CODENAME=$(echo "$2/" | cut -d"/" -f2)
 	COMPONENT=${ARGV2_COMPONENT:-${COMPONENT:-heuler}}
-	CODENAMES=${ARGV2_CODENAME:-${CODENAME_ONLY:-sid}}
+	CODENAMES=${ARGV2_CODENAME:-${CODENAMES}}
 	if [ "x$COMPONENT" = "xmain" ]; then
 		CHECKOUT=${3:-build-main}
 	elif [ "x$COMPONENT" = "xheuler" ]; then
