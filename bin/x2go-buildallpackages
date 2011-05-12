@@ -38,7 +38,8 @@ nxproxy heuler master\n
 cups-x2go heuler master\n
 x2godesktopsharing heuler master\n
 x2gognomebindings heuler master\n
-pyhoca-gui heuler master
+pyhoca-gui heuler master\n
+x2gothinclient heuler tmpfs
 "
 APP_PACKAGES_MAIN="
 x2goserver main build-main\n
@@ -49,7 +50,7 @@ cups-x2go main build-main\n
 x2godesktopsharing main build-main\n
 x2gognomebindings main build-main\n
 pyhoca-gui main build-main\n
-x2gothinclient main heuler tmpfs
+x2gothinclient heuler tmpfs
 "
 
 COMPONENT=${1:-""}
