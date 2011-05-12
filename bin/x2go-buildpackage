@@ -38,13 +38,13 @@ set_vars() {
 		CHECKOUT=${3:-build-main}
 	elif [ "x$COMPONENT" = "xheuler" ]; then
 		CHECKOUT=${3:-master}
-		DATE="~${DATE:-$(date +%Y%m%d)}."
+		DATE="~${DATE:-$(date +%Y%m%d)}"
 	else
 		echo "error: no such package component area for X2go packages. Aborting..."
 		exit -1
 	fi
 	# the DATE might be given as ,,today'' from the command line
-	[ "x$DATE" = "xtoday" ] && DATE="~$(date +%Y%m%d)."
+	[ "x$DATE" = "xtoday" ] && DATE="~$(date +%Y%m%d)"
 
 	# setting paths
 	PROJECT_DIR=$HOME/build/$COMPONENT/$PROJECT
@@ -119,6 +119,7 @@ build_packages() {
 				git clone --local $PROJECT_DIR $TEMP_DIR/$PROJECT/ 
 				cd $TEMP_DIR/$PROJECT
 				git checkout $CHECKOUT || git checkout master
+				GITREV=$(x2go-gitrevno)
 				# translate the version name for Debian releases
 				[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
 				[ "x$l_CODENAME" = "xwheezy" ] && VERSION=testing
@@ -132,7 +133,7 @@ build_packages() {
 				}
 				
 				# modify changelog for this build
-				DEBEMAIL=git-admin@x2go.org DEBFULLNAME="X2go Git Administrator" dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE" "Auto-built $l_DIST $l_CODENAME package for packages.x2go.org repository."
+				DEBEMAIL=git-admin@x2go.org DEBFULLNAME="X2go Git Administrator" dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE~$GITREV~build" "Auto-built $l_DIST $l_CODENAME package for packages.x2go.org repository."
 				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
 				OTHERMIRROR="deb http://packages.x2go.org/debian $l_CODENAME $COMPONENT"
 				[ "x$USE_SUDO" != "xyes" ] && {
