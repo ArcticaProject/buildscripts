@@ -17,7 +17,7 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
-test -z $1 && { echo "usage: <x2go-git-project> {main,heuler} [<git-checkout>]"; exit -1; }
+test -z $1 && { echo "usage: <x2go-git-project> {main,main/<codename>,heuler,heuler/<codename>} [<git-checkout>]"; exit -1; }
 
 set -ex
 
@@ -30,7 +30,10 @@ set_vars() {
 	PROJECT=$1
 
 	# grab repository component area from command line (2nd argv) or guess it
-	COMPONENT=${2:-${COMPONENT:-heuler}}
+	ARGV2_COMPONENT=$(echo $2 | cut -d"/" -f1)
+	ARGV2_CODENAME=$(echo $2 | cut -d"/" -f2)
+	COMPONENT=${$ARGV2_COMPONENT:-${COMPONENT:-heuler}}
+	CODENAMES=${$ARGV2_CODENAME:-${CODENAME_ONLY:-sid}}
 	if [ "x$COMPONENT" = "xmain" ]; then
 		CHECKOUT=${3:-build-main}
 	elif [ "x$COMPONENT" = "xheuler" ]; then
@@ -108,7 +111,7 @@ build_packages() {
 	# use pbuilder for building all variants of this package
 	cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 		l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
-		CODENAMES=$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])
+		CODENAMES=${$CODENAMES:-$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])}
 		echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
 			for l_CODENAME in $CODENAMES; do
 				TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
