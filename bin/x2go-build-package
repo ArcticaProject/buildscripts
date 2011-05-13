@@ -182,7 +182,7 @@ upload_packages() {
 
 ### MAIN ###
 set_vars $@ && {
-	if [ "x$(basename $0)" = "xx2go-build-package" ]; then
+	if [ "x$(basename $0)" = "xx2go-build-package" ] || [ "x$(basename $0)" = "xx2go-build+upload-package" ]; then
 		cd $PROJECT_DIR && x2go-pkgneedsbuild $CHECKOUT && {
 			clear_pkgdist
 			prepare_workspace && {
