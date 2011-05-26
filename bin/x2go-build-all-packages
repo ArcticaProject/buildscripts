@@ -18,12 +18,14 @@
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
 LIB_PACKAGES_HEULER="
+x2go-keyring heuler master\n
 nxcomp heuler master\n
 nxcompext heuler master\n
 nxcompshad heuler master\n
 python-x2go heuler master\n
 "
 LIB_PACKAGES_MAIN="
+x2go-keyring main master\n
 nxcomp main build-main\n
 nxcompext main build-main\n
 nxcompshad main build-main\n
@@ -38,7 +40,9 @@ nxproxy heuler master\n
 cups-x2go heuler master\n
 x2godesktopsharing heuler master\n
 x2gognomebindings heuler master\n
+x2gotrinitybindings heuler master\n
 pyhoca-gui heuler master\n
+pyhoca-cli heuler master\n
 x2gothinclient heuler tmpfs
 "
 APP_PACKAGES_MAIN="
@@ -50,7 +54,8 @@ cups-x2go main build-main\n
 x2godesktopsharing main build-main\n
 x2gognomebindings main build-main\n
 pyhoca-gui main build-main\n
-x2gothinclient heuler tmpfs
+pyhoca-cli main build-main\n
+x2gothinclient main tmpfs
 "
 
 COMPONENT=${1:-""}
@@ -68,7 +73,7 @@ COMPONENT=${1:-""}
     done
 }
 
-# build all packages tagged as ,,build-main'Ä
+# build all packages tagged as build-main
 [ "x$COMPONENT" = "xmain" ] || [ -z $COMPONENT ] && {
     echo -e $LIB_PACKAGES_MAIN + $APP_PACKAGES_MAIN | while read pkg comp checkout; do
 	if [ "x$(basename $0)" = "xx2go-build-all-packages" ]; then
