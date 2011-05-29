@@ -53,6 +53,8 @@ nxproxy main build-main\n
 cups-x2go main build-main\n
 x2godesktopsharing main build-main\n
 x2gognomebindings main build-main\n
+x2goplasmoidbindings main master\n
+x2gotrinitybindings main master\n
 pyhoca-gui main build-main\n
 pyhoca-cli main build-main\n
 x2gothinclient main tmpfs
