@@ -34,6 +34,7 @@ set_vars() {
 	ARGV2_CODENAME=$(echo "$2/" | cut -d"/" -f2)
 	COMPONENT=${ARGV2_COMPONENT:-${COMPONENT:-heuler}}
 	CODENAMES=${ARGV2_CODENAME:-${CODENAMES}}
+	[ -n $CODENAMES ] && FORCE_BUILD=0 || FORCE_BUILD=-1
 	if [ "x$COMPONENT" = "xmain" ]; then
 		CHECKOUT=${3:-build-main}
 	elif [ "x$COMPONENT" = "xheuler" ]; then
@@ -183,7 +184,7 @@ upload_packages() {
 ### MAIN ###
 set_vars $@ && {
 	if [ "x$(basename $0)" = "xx2go-build-package" ] || [ "x$(basename $0)" = "xx2go-build+upload-package" ]; then
-		cd $PROJECT_DIR && x2go-pkgneedsbuild $CHECKOUT && {
+		cd $PROJECT_DIR && x2go-pkgneedsbuild $CHECKOUT || $FORCE_BUILD && {
 			clear_pkgdist
 			prepare_workspace && {
 				build_packages
