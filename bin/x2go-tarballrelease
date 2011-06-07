@@ -22,7 +22,9 @@
 set -e
 
 RELEASE="$1"
-test -n "$RELEASE" || { echo "usage: $(basename "$0") <release-version>"; exit 1; }
+test -n "$RELEASE" || { echo "usage: $(basename "$0") <release-version> [<checkout>]"; exit 1; }
+
+CHECKOUT="${2:-master}"
 
 PROJECT="$(basename $PWD)"
 TARGETDIR=".."
@@ -34,6 +36,7 @@ echo $MANIFEST
 
 trap "rm -f \"${MANIFEST}\"; rm -rf \"${TEMP_DIR}\"" 0
 git clone . "$TEMP_DIR/${PROJECT}_$RELEASE"
+( set -e; cd "$TEMP_DIR/${PROJECT}_$RELEASE/" && git checkout ${CHECKOUT} 2>/dev/null || true )
 ( set -e; cd "$TEMP_DIR" && rm -Rf "${PROJECT}_$RELEASE/.git"* )
 ( set -e; cd "$TEMP_DIR" && find "${PROJECT}_$RELEASE" -type f | sed 's/^\.*\/*//' | sort > "$MANIFEST" )
 tar c -C "$TEMP_DIR" --owner 0 --group 0 --numeric-owner --no-recursion --files-from "$MANIFEST" | gzip -n > "$TARGETDIR/${PROJECT}_$RELEASE.tar.gz"
