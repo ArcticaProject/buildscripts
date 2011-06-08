@@ -34,7 +34,7 @@ set_vars() {
 	ARGV2_CODENAME=$(echo "$2/" | cut -d"/" -f2)
 	COMPONENT=${ARGV2_COMPONENT:-${COMPONENT:-heuler}}
 	CODENAMES=${ARGV2_CODENAME:-${CODENAMES}}
-	[ -n $CODENAMES ] && FORCE_BUILD=0 || FORCE_BUILD=-1
+	[ -n "$ARGV2_CODENAME" ] && FORCE_BUILD=0 || FORCE_BUILD=-1
 	if [ "x$COMPONENT" = "xmain" ]; then
 		CHECKOUT=${3:-build-main}
 	elif [ "x$COMPONENT" = "xheuler" ]; then
