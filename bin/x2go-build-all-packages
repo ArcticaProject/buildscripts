@@ -40,6 +40,7 @@ nxproxy heuler master\n
 cups-x2go heuler master\n
 x2godesktopsharing heuler master\n
 x2gognomebindings heuler master\n
+x2goplasmabindings heuler master\n
 x2gotrinitybindings heuler master\n
 pyhoca-gui heuler master\n
 pyhoca-cli heuler master\n
@@ -53,7 +54,7 @@ nxproxy main build-main\n
 cups-x2go main build-main\n
 x2godesktopsharing main build-main\n
 x2gognomebindings main build-main\n
-x2goplasmoidbindings main master\n
+x2goplasmabindings main master\n
 x2gotrinitybindings main master\n
 pyhoca-gui main build-main\n
 pyhoca-cli main build-main\n
