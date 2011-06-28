@@ -44,7 +44,7 @@ x2goplasmabindings heuler master\n
 x2gotrinitybindings heuler master\n
 pyhoca-gui heuler master\n
 pyhoca-cli heuler master\n
-x2gothinclient heuler tmpfs
+x2gothinclient heuler master
 "
 APP_PACKAGES_MAIN="
 x2goserver main build-main\n
@@ -58,7 +58,7 @@ x2goplasmabindings main master\n
 x2gotrinitybindings main master\n
 pyhoca-gui main build-main\n
 pyhoca-cli main build-main\n
-x2gothinclient main tmpfs
+x2gothinclient main build-main
 "
 
 COMPONENT=${1:-""}
