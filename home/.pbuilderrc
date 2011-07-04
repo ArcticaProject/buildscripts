@@ -31,12 +31,13 @@ UML_DISTRIBUTION="$CODENAME"
 # qemubuilder options
 BASEPATH="$BASEDIRECTORY/base-$DIST-$CODENAME-$ARCH.qemu"
 KERNEL_IMAGE=/srv/pbuilder/qemu-kernels/$ARCH/vmlinuz
-INITRD=/srv/pbuilder/qemu-kernels/$ARCH/initrd.img
 ARCH_DISKDEVICE=sd
 if [ "x$ARCH" = "xarmel" ]; then
 	MEMORY_MEGS=256
+	INITRD=""
 else
 	MEMORY_MEGS=512
+	INITRD=/srv/pbuilder/qemu-kernels/$ARCH/initrd.img
 fi
 
 if [ "x${DIST}" = "xubuntu" ]; then 
