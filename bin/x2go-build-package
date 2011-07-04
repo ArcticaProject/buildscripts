@@ -53,8 +53,8 @@ set_vars() {
 	PKGDIST="$HOME/pkg-dist/$COMPONENT/$PROJECT"
 
 	# build for other architectures than amd64/i386
-	EXTRA_ARCHS="${EXTRA_ARCHS:-''}"
-	EXTRA_ARCHS_ONLY="${EXTRA_ARCHS_ONLY:-''}"
+	EXTRA_ARCHS="${EXTRA_ARCHS:-}"
+	EXTRA_ARCHS_ONLY="${EXTRA_ARCHS_ONLY:-}"
 
 	# creating paths
 	mkdir -p "$TEMP_BASE"
@@ -72,15 +72,26 @@ clear_pkgdist() {
 		CODENAMES=${CODENAMES:-$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])}
 		echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
 			for l_CODENAME in $CODENAMES; do
-				for l_ARCH in amd64 i386; do
+				if [ "x$EXTRA_ARCHS_ONLY" = "x" ]; then
+					for l_ARCH in amd64 i386; do
+						mkdir -p $PKGDIST/$l_DIST/$l_CODENAME
+						rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.changes
+						rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.upload
+						rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.build
+						rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.dsc
+						rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.tar.gz
+						rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/*.deb
+					done
+				fi
+				for l_EXTRA_ARCH in $EXTRA_ARCHS; do 
 					mkdir -p $PKGDIST/$l_DIST/$l_CODENAME
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.changes
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.upload
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.build
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.dsc
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.tar.gz
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/*.deb
-				done
+					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.changes
+					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.upload
+					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.build
+					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.dsc
+					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.tar.gz
+					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/*.deb
+				done	
 			done
 		}
 	done
@@ -142,7 +153,7 @@ build_packages() {
 				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
 				OTHERMIRROR="deb http://packages.x2go.org/debian $l_CODENAME $COMPONENT"
 				[ "x$USE_SUDO" != "xyes" ] && {
-					test -n $EXTRA_ARCHS_ONLY && {
+					[ "x$EXTRA_ARCHS_ONLY" = "x" ] && {
 						cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
 							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/amd64
 						}
@@ -157,7 +168,7 @@ build_packages() {
 					done
 				}
 				[ "x$USE_SUDO" = "xyes" ] && {
-					test -n $EXTRA_ARCHS_ONLY && {
+					[ "x$EXTRA_ARCHS_ONLY" = "x" ] && {
 						cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
 							sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k F4A7678C9C6B0B2B --buildresult $PKGDIST/$l_DIST/$l_CODENAME/amd64
 						}
@@ -188,8 +199,15 @@ upload_packages() {
 		l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
 		CODENAMES=${CODENAMES:-$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])}
 		for l_CODENAME in $CODENAMES; do
-			for l_ARCH in amd64 i386; do 
-				cd $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH
+			if [ "x$EXTRA_ARCHS_ONLY" = "x" ]; then	
+				for l_ARCH in amd64 i386; do 
+					cd $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH
+					ls $PROJECT_*.changes &>/dev/null && dupload --to x2go-$l_DIST-$l_CODENAME $PROJECT_*.changes
+					cd -
+				done
+			fi
+			for l_EXTRA_ARCH in $EXTRA_ARCHS; do 
+				cd $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH
 				ls $PROJECT_*.changes &>/dev/null && dupload --to x2go-$l_DIST-$l_CODENAME $PROJECT_*.changes
 				cd -
 			done
