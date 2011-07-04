@@ -108,6 +108,8 @@ prepare_workspace() {
 		cd $PROJECT_DIR && git reset --hard
 		git checkout --force $CHECKOUT || git checkout --force -b $CHECKOUT
 		git pull origin $CHECKOUT
+		# and again, get the $CHECKOUT refspec in pure state
+		git reset --hard
 	else
 		cd $(dirname $PROJECT_DIR)
 		git clone git://code.x2go.org/$PROJECT.git
