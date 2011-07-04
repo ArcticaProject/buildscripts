@@ -107,7 +107,7 @@ prepare_workspace() {
 	if [ -d $PROJECT_DIR/.git ]; then 
 		cd $PROJECT_DIR && git reset --hard
 		git pull origin $CHECKOUT
-		git checkout $CHECKOUT || git checkout -b $CHECKOUT
+		git checkout origin $CHECKOUT || git checkout -b $CHECKOUT
 	else
 		cd $(dirname $PROJECT_DIR)
 		git clone git://code.x2go.org/$PROJECT.git
