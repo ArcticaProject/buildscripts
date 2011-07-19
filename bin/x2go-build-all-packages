@@ -17,14 +17,14 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
-LIB_PACKAGES_HEULER="
+LIB_PACKAGES_HEULER="\
 x2go-keyring heuler master\n
 nxcomp heuler master\n
 nxcompext heuler master\n
 nxcompshad heuler master\n
 python-x2go heuler master\n
 "
-LIB_PACKAGES_MAIN="
+LIB_PACKAGES_MAIN="\
 x2go-keyring main master\n
 nxcomp main build-main\n
 nxcompext main build-main\n
@@ -32,7 +32,7 @@ nxcompshad main build-main\n
 python-x2go main build-main\n
 "
 
-APP_PACKAGES_HEULER="
+APP_PACKAGES_HEULER="\
 x2goserver heuler master\n
 x2goagent heuler master\n
 x2goclient heuler master\n
@@ -46,7 +46,7 @@ pyhoca-gui heuler master\n
 pyhoca-cli heuler master\n
 x2gothinclient heuler master
 "
-APP_PACKAGES_MAIN="
+APP_PACKAGES_MAIN="\
 x2goserver main build-main\n
 x2goagent main build-main\n
 x2goclient main build-main\n
@@ -65,7 +65,7 @@ COMPONENT=${1:-""}
 
 # build the newest code... (nightly-builds)
 [ "x$COMPONENT" = "xheuler" ] || [ -z $COMPONENT ] && {
-    echo -e $LIB_PACKAGES_HEULER + $APP_PACKAGES_HEULER | while read pkg comp checkout; do
+    echo -e $LIB_PACKAGES_HEULER $APP_PACKAGES_HEULER | while read pkg comp checkout; do
 	if [ "x$(basename $0)" = "xx2go-build-all-packages" ]; then
 		x2go-build-package $pkg $comp $checkout
 	elif [ "x$(basename $0)" = "xx2go-upload-all-packages" ]; then
@@ -78,7 +78,7 @@ COMPONENT=${1:-""}
 
 # build all packages tagged as build-main
 [ "x$COMPONENT" = "xmain" ] || [ -z $COMPONENT ] && {
-    echo -e $LIB_PACKAGES_MAIN + $APP_PACKAGES_MAIN | while read pkg comp checkout; do
+    echo -e $LIB_PACKAGES_MAIN $APP_PACKAGES_MAIN | while read pkg comp checkout; do
 	if [ "x$(basename $0)" = "xx2go-build-all-packages" ]; then
 		x2go-build-package $pkg $comp $checkout
 	elif [ "x$(basename $0)" = "xx2go-upload-all-packages" ]; then
