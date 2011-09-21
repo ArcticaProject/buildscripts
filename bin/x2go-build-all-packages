@@ -39,6 +39,7 @@ x2goclient heuler master\n
 nxproxy heuler master\n
 cups-x2go heuler master\n
 x2godesktopsharing heuler master\n
+x2goadmincenter heuler master\n
 x2gognomebindings heuler master\n
 x2golxdebindings heuler master\n
 x2goplasmabindings heuler master\n
