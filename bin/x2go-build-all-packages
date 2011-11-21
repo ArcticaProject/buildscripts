@@ -19,9 +19,7 @@
 
 LIB_PACKAGES_HEULER="\
 x2go-keyring heuler master\n
-nxcomp heuler master\n
-nxcompext heuler master\n
-nxcompshad heuler master\n
+nx-libs heuler master\n
 python-x2go heuler master\n
 "
 LIB_PACKAGES_MAIN="\
