@@ -1,0 +1,60 @@
+#!/bin/bash 
+
+# Copyright (C) 2011 by Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+#
+# This is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the
+# Free Software Foundation, Inc.,
+# 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+
+LIB_PACKAGES_NIGHTLY="\
+itzks-keyring nightly master\n
+"
+LIB_PACKAGES_MAIN="\
+itzks-keyring main build-main\n
+"
+
+APP_PACKAGES_HEULER="\
+scratch nightly master\n
+"
+APP_PACKAGES_MAIN="\
+scratch main build-main\n
+"
+
+COMPONENT=${1:-""}
+
+# build the newest code... (nightly-builds)
+[ "x$COMPONENT" = "xnightly" ] || [ -z $COMPONENT ] && {
+    echo -e $LIB_PACKAGES_HEULER $APP_PACKAGES_HEULER | while read pkg comp checkout; do
+	if [ "x$(basename $0)" = "xitzks-build-all-packages" ]; then
+		itzks-build-package $pkg $comp $checkout
+	elif [ "x$(basename $0)" = "xitzks-upload-all-packages" ]; then
+		itzks-upload-package $pkg $comp $checkout
+	elif [ "x$(basename $0)" = "xitzks-build+upload-all-packages" ]; then
+		itzks-build-package $pkg $comp $checkout && itzks-upload-package $pkg $comp $checkout
+	fi
+    done
+}
+
+# build all packages tagged as build-main
+[ "x$COMPONENT" = "xmain" ] || [ -z $COMPONENT ] && {
+    echo -e $LIB_PACKAGES_MAIN $APP_PACKAGES_MAIN | while read pkg comp checkout; do
+	if [ "x$(basename $0)" = "xitzks-build-all-packages" ]; then
+		itzks-build-package $pkg $comp $checkout
+	elif [ "x$(basename $0)" = "xitzks-upload-all-packages" ]; then
+		itzks-upload-package $pkg $comp $checkout
+	elif [ "x$(basename $0)" = "xitzks-build+upload-all-packages" ]; then
+		itzks-build-package $pkg $comp $checkout && itzks-upload-package $pkg $comp $checkout
+	fi
+    done
+}
