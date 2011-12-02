@@ -24,7 +24,7 @@ LIB_PACKAGES_MAIN="\
 itzks-keyring main build-main\n
 "
 
-APP_PACKAGES_HEULER="\
+APP_PACKAGES_NIGHTLY="\
 scratch nightly master\n
 "
 APP_PACKAGES_MAIN="\
@@ -35,7 +35,7 @@ COMPONENT=${1:-""}
 
 # build the newest code... (nightly-builds)
 [ "x$COMPONENT" = "xnightly" ] || [ -z $COMPONENT ] && {
-    echo -e $LIB_PACKAGES_HEULER $APP_PACKAGES_HEULER | while read pkg comp checkout; do
+    echo -e $LIB_PACKAGES_NIGHTLY $APP_PACKAGES_NIGHTLY | while read pkg comp checkout; do
 	if [ "x$(basename $0)" = "xitzks-build-all-packages" ]; then
 		itzks-build-package $pkg $comp $checkout
 	elif [ "x$(basename $0)" = "xitzks-upload-all-packages" ]; then

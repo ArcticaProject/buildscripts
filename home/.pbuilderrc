@@ -7,7 +7,7 @@ BASEDIRECTORY="/srv/pbuilder/cache"
 DIST=${DIST:-debian}
 CODENAME=${CODENAME:-sid}
 ARCH=${ARCH:-amd64}
-COMPONENT="${COMPONENT:-heuler}"
+COMPONENT="${COMPONENT:-nightly}"
 
 # pbuilder options
 BASETGZ="$BASEDIRECTORY/base-$DIST-$CODENAME-$ARCH.tgz"

@@ -17,7 +17,7 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
-test -z $1 && { echo "usage: <itzks-git-project> {main,main/<codename>,heuler,heuler/<codename>} [<git-checkout>]"; exit -1; }
+test -z $1 && { echo "usage: <itzks-git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
 
 set -ex
 
@@ -32,7 +32,7 @@ set_vars() {
 	# grab repository component area from command line (2nd argv) or guess it
 	ARGV2_COMPONENT=$(echo "$2/" | cut -d"/" -f1)
 	ARGV2_CODENAME=$(echo "$2/" | cut -d"/" -f2)
-	COMPONENT=${ARGV2_COMPONENT:-${COMPONENT:-heuler}}
+	COMPONENT=${ARGV2_COMPONENT:-${COMPONENT:-nightly}}
 	CODENAMES=${ARGV2_CODENAME:-${CODENAMES}}
 	[ -n "$ARGV2_CODENAME" ] && FORCE_BUILD=0 || FORCE_BUILD=-1
 	if [ "x$COMPONENT" = "xmain" ]; then
