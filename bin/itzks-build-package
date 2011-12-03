@@ -21,6 +21,8 @@ test -z $1 && { echo "usage: <itzks-git-project> {main,main/<codename>,nightly,n
 
 set -ex
 
+GIT_SERVER="code.it-zukunft-schule.de"
+
 set_vars() {
 	USE_SUDO="yes"
 	PDEBUILD="pdebuild --pbuilder qemubuilder"
@@ -112,7 +114,7 @@ prepare_workspace() {
 		git reset --hard
 	else
 		cd $(dirname $PROJECT_DIR)
-		git clone git://code.das-netzwerkteam.de/itzks/$PROJECT.git
+		git clone git://$GIT_SERVER/$PROJECT.git
 		cd $PROJECT 
 		git checkout --force $CHECKOUT || git checkout --force -b $CHECKOUT;
 	fi
