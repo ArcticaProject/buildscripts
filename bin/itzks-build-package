@@ -21,7 +21,9 @@ test -z $1 && { echo "usage: <itzks-git-project> {main,main/<codename>,nightly,n
 
 set -ex
 
-GIT_SERVER="code.it-zukunft-schule.de"
+export GIT_SERVER="code.it-zukunft-schule.de"
+export DEBEMAIL=itzks-packages@it-zukunft-schule.de
+export DEBFULLNAME="ITZKS Packages"
 
 set_vars() {
 	USE_SUDO="yes"
@@ -154,7 +156,7 @@ build_packages() {
 				}
 				
 				# modify changelog for this build
-				DEBEMAIL=itzks-packages@it-zukunft-schule.de DEBFULLNAME="NWT Git Administrator" dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE~$GITREV~build" "Auto-built $l_DIST $l_CODENAME package for packages.it-zukunft-schule.de repository."
+				dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE~$GITREV~build" "Auto-built $l_DIST $l_CODENAME package for packages.it-zukunft-schule.de repository."
 				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
 				OTHERMIRROR="deb http://packages.it-zukunft-schule.de/debian $l_CODENAME $COMPONENT"
 				[ "x$USE_SUDO" != "xyes" ] && {
