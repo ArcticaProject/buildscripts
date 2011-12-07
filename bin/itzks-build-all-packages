@@ -18,17 +18,17 @@
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
 LIB_PACKAGES_NIGHTLY="\
-itzks-keyring nightly master\n
+itzks-keyring nightly master
 "
 LIB_PACKAGES_MAIN="\
-itzks-keyring main build-main\n
+itzks-keyring main build-main
 "
 
 APP_PACKAGES_NIGHTLY="\
-scratch nightly master\n
+scratch nightly master
 "
 APP_PACKAGES_MAIN="\
-scratch main build-main\n
+scratch main build-main
 "
 
 COMPONENT=${1:-""}
