@@ -32,7 +32,8 @@ set_vars() {
 	TEMP_BASE="$HOME/tmp/"
 
 	# first argv is the name of the Git project
-	PROJECT=$1
+	PROJECT=$(basename $1)
+	PROJECT_PATH=$1
 
 	# grab repository component area from command line (2nd argv) or guess it
 	ARGV2_COMPONENT=$(echo "$2/" | cut -d"/" -f1)
@@ -117,7 +118,7 @@ prepare_workspace() {
 		git reset --hard
 	else
 		cd $(dirname $PROJECT_DIR)
-		git clone git://$GIT_SERVER/$PROJECT.git
+		git clone git://$GIT_SERVER/$PROJECT_PATH.git
 		cd $PROJECT 
 		git checkout --force $CHECKOUT || git checkout --force -b $CHECKOUT;
 	fi
