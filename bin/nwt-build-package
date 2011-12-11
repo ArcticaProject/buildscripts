@@ -126,8 +126,8 @@ prepare_workspace() {
 
 	# by default we build for all current debian versions
 	test -f BUILDS_FOR || cat > BUILDS_FOR <<EOF
-debian: squeeze wheezy sid
-#ubuntu: lucid maverick natty
+debian: lenny squeeze wheezy sid
+ubuntu: lucid precise
 EOF
 	return 0
 }
