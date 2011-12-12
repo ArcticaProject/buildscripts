@@ -24,7 +24,7 @@ set -ex
 export GIT_SERVER="code.das-netzwerkteam.de"
 export DEBEMAIL=debian@das-netzwerkteam.de
 export DEBFULLNAME="NWT Packages"
-export GPG_KEY="4D19BF142E58A25A"
+export GPG_KEY="4DC41CF116990FF8"
 
 set_vars() {
 	USE_SUDO="yes"
