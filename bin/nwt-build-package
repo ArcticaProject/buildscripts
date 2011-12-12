@@ -24,7 +24,7 @@ set -ex
 export GIT_SERVER="code.das-netzwerkteam.de"
 export DEBEMAIL=debian@das-netzwerkteam.de
 export DEBFULLNAME="NWT Packages"
-export GPG_KEY=""
+export GPG_KEY="4D19BF142E58A25A"
 
 set_vars() {
 	USE_SUDO="yes"
@@ -160,7 +160,8 @@ build_packages() {
 				# modify changelog for this build
 				dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE~$GITREV~build" "Auto-built $l_DIST $l_CODENAME package for packages.das-netzwerkteam.de repository."
 				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
-				OTHERMIRROR="deb http://packages.das-netzwerkteam.de/debian $l_CODENAME $COMPONENT"
+				#OTHERMIRROR="deb http://packages.das-netzwerkteam.de/debian $l_CODENAME $COMPONENT"
+				OTHERMIRROR=""
 				[ "x$USE_SUDO" != "xyes" ] && {
 					[ "x$EXTRA_ARCHS_ONLY" = "x" ] && {
 						cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
