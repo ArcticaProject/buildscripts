@@ -136,7 +136,7 @@ EOF
 
 build_packages() {
 	# use pbuilder for building all variants of this package
-	cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
+	cat $PROJECT_DIR/BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 		l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
 		CODENAMES=${CODENAMES:-$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])}
 		echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
