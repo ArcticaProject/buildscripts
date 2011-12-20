@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -xe
+
+GIT_USER=
+GIT_HOSTNAME=
+GIT_SSH_PORT=22
+
+PREFIX=$(echo $0 | cut -d"-" -f1)
+. ~/.buildscripts/$PREFIX.conf
+
+
+for pkg in "$@"; do
+	subdir=$(dirname $pkg)/
+	pkg=$(basename $pkg)
+	ssh -l$GIT_USER $GIT_HOSTNAME "cd ~/git && ./setup-repository ${subdir}${pkg} '$pkg upstream project'"
+	ssh -l$GIT_USER $GIT_HOSTNAME "cd ~/git && ./update-repository-posixacls ${subdir}${pkg}"
+	test -d "$pkg" && cd "$pkg"
+	echo "$pkg: MASTER BRANCH" && git push ssh://$GIT_USER@$GIT_HOSTNAME:$GIT_SSH_PORT/~/git/${subdir}${pkg} master 
+	git branch | grep upstream &>/dev/null && echo "$pkg: RELEASE BRANCH" && git push ssh://$GIT_USER@$GIT_HOSTNAME:$GIT_SSH_PORT/~/git/${subdir}${pkg} upstream
+	git branch | grep pristine-tar &>/dev/null && echo "$pkg: PRISTINE-TAR" && git push ssh://$GIT_USER@$GIT_HOSTNAME:$GIT_SSH_PORT/~/git/${subdir}${pkg} pristine-tar
+	echo "$pkg: PUSHING TAGS" && git push --tags ssh://$GIT_USER@$GIT_HOSTNAME:$GIT_SSH_PORT/~/git/${subdir}${pkg}
+	git remote add origin ssh://$GIT_USER@$GIT_HOSTNAME:$GIT_SSH_PORT/~/git/${subdir}${pkg} 
+	cd ..
+done

@@ -17,15 +17,28 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
-test -z $1 && { echo "usage: <nwt-git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
+GIT_USER="gituser"
+GIT_HOSTNAME="git.mydomain.org"
+
+DEBEMAIL="firstname.lastname@mydomain.org"
+DEBFULLNAME="Firstname Lastname"
+GPG_KEY=
+DISTS_SUPPORTED="debian ubuntu"
+BUILDS_FOR="\
+debian: squeeze wheezy sid\n\
+ubuntu: lucid precise\n\
+"
+
+COMPONENT_MAIN="main"
+COMPONENT_NIGHTLY="nightly"
+REPOS_SERVER="packages.mydomain.org"
+
+test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
+
+PREFIX=$(echo $0 | cut -d"-" -f1)
+test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo "$0 has no valid context prefix..."; exit -1; }
 
 set -ex
-
-export GIT_SERVER="code.das-netzwerkteam.de"
-export DEBEMAIL=debian@das-netzwerkteam.de
-export DEBFULLNAME="NWT Packages"
-export GPG_KEY="4DC41CF116990FF8"
-export DIST_SUPPORTED="debian ubuntu"
 
 set_vars() {
 	USE_SUDO="yes"
@@ -35,29 +48,30 @@ set_vars() {
 	chmod 2770 "$TEMP_BASE"
 
 	# first argv is the name of the Git project
-	PROJECT=$(basename $1)
-	PROJECT_PATH=$1
+	PROJECT_PATH="$1"
+	PROJECT_PATH=${PROJECT_PATH/%.git/}
+	PROJECT="$(basename $PROJECT_PATH)"
 
 	# grab repository component area from command line (2nd argv) or guess it
-	ARGV2_COMPONENT=$(echo "$2/" | cut -d"/" -f1)
-	ARGV2_CODENAME=$(echo "$2/" | cut -d"/" -f2)
-	COMPONENT=${ARGV2_COMPONENT:-${COMPONENT:-nightly}}
-	CODENAMES=${ARGV2_CODENAME:-${CODENAMES}}
+	ARGV2_COMPONENT="$(echo "$2/" | cut -d"/" -f1)"
+	ARGV2_CODENAME="$(echo "$2/" | cut -d"/" -f2)"
+	COMPONENT="${ARGV2_COMPONENT:-${COMPONENT:-$COMPONENT_NIGHTLY}}"
+	CODENAMES="${ARGV2_CODENAME:-${CODENAMES}}"
 	[ -n "$ARGV2_CODENAME" ] && FORCE_BUILD=0 || FORCE_BUILD=-1
-	if [ "x$COMPONENT" = "xmain" ]; then
-		CHECKOUT=${3:-build-main}
-	elif [ "x$COMPONENT" = "xnightly" ]; then
-		CHECKOUT=${3:-master}
+	if [ "x$COMPONENT" = "x$COMPONENT_MAIN" ]; then
+		CHECKOUT="${3:-build-main}"
+	elif [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
+		CHECKOUT="${3:-master}"
 		DATE="~${DATE:-$(date +%Y%m%d)}"
 	else
-		echo "error: no such package component area for NWT packages. Aborting..."
+		echo "error: no such package component area for this Git project. Aborting..."
 		exit -1
 	fi
 	# the DATE might be given as ,,today'' from the command line
 	[ "x$DATE" = "xtoday" ] && DATE="~$(date +%Y%m%d)"
 
 	# setting paths
-	PROJECT_DIR=$HOME/build/$COMPONENT/$PROJECT
+	PROJECT_DIR="$HOME/build/$COMPONENT/$PROJECT"
 	PKGDIST="$HOME/pkg-dist/$COMPONENT/$PROJECT"
 
 	# build for other architectures than amd64/i386
@@ -66,8 +80,8 @@ set_vars() {
 
 	# creating paths
 	mkdir -p "$TEMP_BASE"
-	mkdir -p $PROJECT_DIR
-	mkdir -p $PKGDIST
+	mkdir -p "$PROJECT_DIR"
+	mkdir -p "$PKGDIST"
 
 	return 0
 }
@@ -75,30 +89,30 @@ set_vars() {
 clear_pkgdist() {
 
 	# pkgdist directory cleanup
-	cat $PROJECT_DIR/BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
-		l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
-		CODENAMES=${CODENAMES:-$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])}
-		echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
+	cat "$PROJECT_DIR/BUILDS_FOR" | egrep -v '(^$|^#.*$)' | while read line; do
+		l_DIST="$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])"
+		CODENAMES="${CODENAMES:-$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])}"
+		echo "$DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
 			for l_CODENAME in $CODENAMES; do
 				if [ "x$EXTRA_ARCHS_ONLY" = "x" ]; then
 					for l_ARCH in amd64 i386; do
-						mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH
-						rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.changes
-						rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.upload
-						rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.build
-						rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.dsc
-						rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.tar.gz
-						rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/*.deb
+						mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.changes"
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.upload"
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.build"
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.dsc"
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_*.tar.gz"
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/*.deb"
 					done
 				fi
 				for l_EXTRA_ARCH in $EXTRA_ARCHS; do 
-					mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.changes
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.upload
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.build
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.dsc
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.tar.gz
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/*.deb
+					mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH"
+					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.changes"
+					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.upload"
+					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.build"
+					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.dsc"
+					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_*.tar.gz"
+					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/*.deb"
 				done	
 			done
 		}
@@ -108,46 +122,43 @@ clear_pkgdist() {
 
 prepare_workspace() {
 	# in any case remove the BUILDS_FOR file
-	rm -f $PROJECT_DIR/BUILDS_FOR
+	rm -f "$PROJECT_DIR/BUILDS_FOR"
 
 	# make sure our local working copy is up to date...
 
-	if [ -d $PROJECT_DIR/.git ]; then 
-		cd $PROJECT_DIR && git reset --hard
+	if [ -d "$PROJECT_DIR/.git" ]; then 
+		cd "$PROJECT_DIR" && git reset --hard
 		git checkout --force $CHECKOUT || git checkout --force -b $CHECKOUT
 		git pull origin $CHECKOUT
 		# and again, get the $CHECKOUT refspec in pure state
 		git reset --hard
 	else
-		cd $(dirname $PROJECT_DIR)
-		git clone git://$GIT_SERVER/$PROJECT_PATH.git
-		cd $PROJECT 
+		cd "$(dirname $PROJECT_DIR)"
+		git clone git://$GIT_HOSTNAME/$PROJECT_PATH.git
+		cd "$PROJECT"
 		git checkout --force $CHECKOUT || git checkout --force -b $CHECKOUT;
 	fi
-	cd $PROJECT_DIR
+	cd "$PROJECT_DIR"
 
 	# by default we build for all current debian versions
-	test -f BUILDS_FOR || cat > BUILDS_FOR <<EOF
-debian: lenny squeeze wheezy sid
-ubuntu: lucid precise
-EOF
+	test -f BUILDS_FOR || echo -e "$BUILDS_FOR" > BUILDS_FOR
 	return 0
 }
 
 build_packages() {
 	# use pbuilder for building all variants of this package
-	cat $PROJECT_DIR/BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
-		l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
-		CODENAMES=${CODENAMES:-$(echo $line | cut -d":" -f2- | tr [A-Z] [a-z])}
-		echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
+	cat "$PROJECT_DIR/BUILDS_FOR" | egrep -v '(^$|^#.*$)' | while read line; do
+		l_DIST="$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])"
+		CODENAMES="${CODENAMES:-$(echo $line | cut -d":" -f2- | tr [A-Z] [a-z])}"
+		echo "$DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
 			for l_CODENAME in $CODENAMES; do
 				TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
-				mkdir -p $TEMP_DIR/$PROJECT
+				mkdir -p "$TEMP_DIR/$PROJECT"
 				chmod 2770 "$TEMP_DIR" -Rf
-				git clone --local $PROJECT_DIR $TEMP_DIR/$PROJECT/ 
-				cd $TEMP_DIR/$PROJECT
+				git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
+				cd "$TEMP_DIR/$PROJECT"
 				git checkout $CHECKOUT || git checkout master
-				GITREV=$(nwt-gitrevno)
+				GITREV=$(gitrevno)
 				# we always build native packages for our repos
 				test -f debian/source/format && cat debian/source/format | egrep '^3.0.*\(quilt\)$' >/dev/null && {
 					echo "3.0 (native)" > debian/source/format
@@ -159,29 +170,28 @@ build_packages() {
 				[ "x$l_CODENAME" = "xlenny" ] && VERSION=oldstable
 				
 				# modify the section for non-main package builds
-				[ "x$COMPONENT" = "xmain" ] || {
+				[ "x$COMPONENT" != "xmain" ] || {
 					mv debian/control debian/control.tmp
 					cat debian/control.tmp | sed  "s#Section:[\ ]*\(.*\)#Section: $COMPONENT/\1#g" > debian/control
 				}
 				
 				# modify changelog for this build
-				dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE~$GITREV~build" "Auto-built $l_DIST $l_CODENAME package for packages.das-netzwerkteam.de repository."
+				dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE~$GITREV~build" "Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository."
 				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
-				#OTHERMIRROR="deb http://packages.das-netzwerkteam.de/debian $l_CODENAME $COMPONENT"
-				OTHERMIRROR=""
+				OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT"
 				[ "x$USE_SUDO" != "xyes" ] && {
 					[ "x$EXTRA_ARCHS_ONLY" = "x" ] && {
 						cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
-							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult $PKGDIST/$l_DIST/$l_CODENAME/amd64
+							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/amd64"
 						}
 						cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
-							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult $PKGDIST/$l_DIST/$l_CODENAME/i386  -- --binary-arch
+							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/i386"  -- --binary-arch
 						}
 					}
 					for extra_arch in $EXTRA_ARCHS; do
-						mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/$extra_arch
+						mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch"
 						cat debian/control | egrep "Architecture.*(any|$extra_arch)" >/dev/null && {
-							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=$extra_arch $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult $PKGDIST/$l_DIST/$l_CODENAME/$extra_arch -- --binary-arch
+							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=$extra_arch $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch" -- --binary-arch
 						}
 					done
 				}
@@ -195,14 +205,14 @@ build_packages() {
 						}
 					}
 					for extra_arch in $EXTRA_ARCHS; do
-						mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/$extra_arch
+						mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch"
 						cat debian/control | egrep "Architecture.*(any|$extra_arch)" >/dev/null && {
-						    sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=$extra_arch OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult $PKGDIST/$l_DIST/$l_CODENAME/$extra_arch -- --binary-arch
+						    sudo DIST=$l_DIST CODENAME=$l_CODENAME ARCH=$extra_arch OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch" -- --binary-arch
 						}
 					done
 				}
 				cd -
-				rm -Rf $TEMP_DIR
+				rm -Rf "$TEMP_DIR"
 			done
 			echo
 		}
@@ -214,21 +224,21 @@ build_packages() {
 
 upload_packages() {
 	# dupload the new packages to the reprepro repository
-	cd $PKGDIST
-	cat $PROJECT_DIR/BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
+	cd "$PKGDIST"
+	cat "$PROJECT_DIR/BUILDS_FOR" | egrep -v '(^$|^#.*$)' | while read line; do
 		l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
 		CODENAMES=${CODENAMES:-$(echo $line | cut -d":" -f2- | tr [A-Z] [a-z])}
 		for l_CODENAME in $CODENAMES; do
 			if [ "x$EXTRA_ARCHS_ONLY" = "x" ]; then	
 				for l_ARCH in amd64 i386; do 
-					cd $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH
-					ls $PROJECT_*.changes &>/dev/null && dupload --to nwt-$l_DIST-$l_CODENAME $PROJECT_*.changes
+					cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
+					ls "$PROJECT_*.changes" &>/dev/null && dupload --to $PREFIX-$l_DIST-$l_CODENAME "$PROJECT_*.changes"
 					cd -
 				done
 			fi
 			for l_EXTRA_ARCH in $EXTRA_ARCHS; do 
-				cd $PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH
-				ls $PROJECT_*.changes &>/dev/null && dupload --to nwt-$l_DIST-$l_CODENAME $PROJECT_*.changes
+				cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH"
+				ls "$PROJECT_*.changes" &>/dev/null && dupload --to $PREFIX-$l_DIST-$l_CODENAME "$PROJECT_*.changes"
 				cd -
 			done
 		done
@@ -239,15 +249,15 @@ upload_packages() {
 
 ### MAIN ###
 set_vars $@ && {
-	if [ "x$(basename $0)" = "xnwt-build-package" ] || [ "x$(basename $0)" = "xnwt-build+upload-package" ]; then
-		cd $PROJECT_DIR && nwt-pkgneedsbuild $CHECKOUT || [ "$FORCE_BUILD" -eq 0 ] && {
+	if [ "x$(basename $0)" = "x$PREFIX-build-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-package" ]; then
+		cd $PROJECT_DIR && pkgneedsbuild $CHECKOUT || [ "$FORCE_BUILD" -eq 0 ] && {
 			clear_pkgdist
 			prepare_workspace && {
 				build_packages
 			}
 		}
 	fi
-	if [ "x$(basename $0)" = "xnwt-upload-package" ] || [ "x$(basename $0)" = "xnwt-build+upload-package" ]; then
+	if [ "x$(basename $0)" = "x$PREFIX-upload-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-package" ]; then
 		upload_packages
 	fi
 }
