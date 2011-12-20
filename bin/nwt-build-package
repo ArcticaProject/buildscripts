@@ -30,6 +30,8 @@ set_vars() {
 	USE_SUDO="yes"
 	PDEBUILD="pdebuild --pbuilder qemubuilder"
 	TEMP_BASE="$HOME/tmp/"
+	mkdir "$TEMP_BASE"
+	chmod 2770 "$TEMP_BASE"
 
 	# first argv is the name of the Git project
 	PROJECT=$(basename $1)
@@ -141,10 +143,15 @@ build_packages() {
 			for l_CODENAME in $CODENAMES; do
 				TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
 				mkdir -p $TEMP_DIR/$PROJECT
+				chmod 2770 "$TEMP_DIR" -Rf
 				git clone --local $PROJECT_DIR $TEMP_DIR/$PROJECT/ 
 				cd $TEMP_DIR/$PROJECT
 				git checkout $CHECKOUT || git checkout master
 				GITREV=$(nwt-gitrevno)
+				# we always build native packages for our repos
+				test -f debian/source/format && cat debian/source/format | egrep '^3.0.*\(quilt\)$' >/dev/null && {
+					echo "3.0 (native)" > debian/source/format
+				}
 				# translate the version name for Debian releases
 				[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
 				[ "x$l_CODENAME" = "xwheezy" ] && VERSION=testing
