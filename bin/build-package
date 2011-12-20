@@ -247,13 +247,13 @@ upload_packages() {
 			if [ "x$EXTRA_ARCHS_ONLY" = "x" ]; then	
 				for l_ARCH in amd64 i386; do 
 					cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
-					ls "$PROJECT_*.changes" &>/dev/null && dupload --to $PREFIX-$l_DIST-$l_CODENAME "$PROJECT_*.changes"
+					ls "$PROJECT_*.changes" &>/dev/null && dupload -c ~/.dupload.conf.$PREFIX --to $PREFIX-$l_DIST-$l_CODENAME "$PROJECT_*.changes"
 					cd -
 				done
 			fi
 			for l_EXTRA_ARCH in $EXTRA_ARCHS; do 
 				cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH"
-				ls "$PROJECT_*.changes" &>/dev/null && dupload --to $PREFIX-$l_DIST-$l_CODENAME "$PROJECT_*.changes"
+				ls "$PROJECT_*.changes" &>/dev/null && dupload -c ~/.dupload.conf.$PREFIX --to $PREFIX-$l_DIST-$l_CODENAME "$PROJECT_*.changes"
 				cd -
 			done
 		done

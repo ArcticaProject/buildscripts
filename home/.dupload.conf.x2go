@@ -1,0 +1,37 @@
+package config;
+
+### X2go/DEBIAN
+$cfg{"x2go-debian-sid"} = {
+        fqdn => "code.x2go.org",
+        login => "x2go-admin",
+        method => "scpb",
+        incoming => "/srv/sites/x2go.org/packages/debian/incoming/sid",
+        queuedir => "/srv/sites/x2go.org/packages/debian/upload/sid",
+        dinstall_runs => 1,
+};
+$cfg{"x2go-debian-wheezy"} = {
+        fqdn => "code.x2go.org",
+        login => "x2go-admin",
+        method => "scpb",
+        incoming => "/srv/sites/x2go.org/packages/debian/incoming/wheezy",
+        queuedir => "/srv/sites/x2go.org/packages/debian/upload/wheezy",
+        dinstall_runs => 1,
+};
+$cfg{"x2go-debian-squeeze"} = {
+        fqdn => "code.x2go.org",
+        login => "x2go-admin",
+        method => "scpb",
+        incoming => "/srv/sites/x2go.org/packages/debian/incoming/squeeze",
+        queuedir => "/srv/sites/x2go.org/packages/debian/upload/squeeze",
+        dinstall_runs => 1,
+};
+$cfg{"x2go-debian-lenny"} = {
+        fqdn => "code.x2go.org",
+        login => "x2go-admin",
+        method => "scpb",
+        incoming => "/srv/sites/x2go.org/packages/debian/incoming/lenny",
+        queuedir => "/srv/sites/x2go.org/packages/debian/upload/lenny",
+        dinstall_runs => 1,
+};
+
+1;
