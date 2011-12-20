@@ -137,6 +137,7 @@ build_packages() {
 			for l_CODENAME in $CODENAMES; do
 				TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
 				mkdir -p $TEMP_DIR/$PROJECT
+				chmod 27550 "$TEMP_DIR" -Rf
 				git clone --local $PROJECT_DIR $TEMP_DIR/$PROJECT/ 
 				cd $TEMP_DIR/$PROJECT
 				git checkout $CHECKOUT || git checkout master
