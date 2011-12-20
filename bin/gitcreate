@@ -20,6 +20,7 @@ for pkg in "$@"; do
 	git branch | grep upstream &>/dev/null && echo "$pkg: RELEASE BRANCH" && git push ssh://$GIT_USER@$GIT_HOSTNAME:$GIT_SSH_PORT/~/git/${subdir}${pkg} upstream
 	git branch | grep pristine-tar &>/dev/null && echo "$pkg: PRISTINE-TAR" && git push ssh://$GIT_USER@$GIT_HOSTNAME:$GIT_SSH_PORT/~/git/${subdir}${pkg} pristine-tar
 	echo "$pkg: PUSHING TAGS" && git push --tags ssh://$GIT_USER@$GIT_HOSTNAME:$GIT_SSH_PORT/~/git/${subdir}${pkg}
-	git remote add origin ssh://$GIT_USER@$GIT_HOSTNAME:$GIT_SSH_PORT/~/git/${subdir}${pkg} 
+	git remote | grep origin >/dev/null || git remote add origin ssh://$GIT_USER@$GIT_HOSTNAME:$GIT_SSH_PORT/~/git/${subdir}${pkg}
+	git remote add ${PREFIX}-public ssh://$GIT_USER@$GIT_HOSTNAME:$GIT_SSH_PORT/~/git/${subdir}${pkg}
 	cd ..
 done
