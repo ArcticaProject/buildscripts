@@ -124,7 +124,7 @@ prepare_workspace() {
 	cd $PROJECT_DIR
 
 	test -f debian/source/format && cat debian/source/format | egrep '^3.0.*\(quilt\)$' >/dev/null && {
-		UPSTREAM_VERSION=`head -n1 debian/changelog | sed 's,.*(\(.*\)).*,\1,' | cut -d"-" -f1`
+		UPSTREAM_VERSION=`head -n1 debian/changelog | sed 's,.*(\(.*\)).*,\1,' | sed 's,\(\.dfsg.*\),,' | cut -d"-" -f1`
 		ORIG_TARBALL="${PROJECT}_${UPSTREAM_VERSION}.orig.tar.gz"
 		git checkout --force pristine-tar && pristine-tar checkout ../${ORIG_TARBALL}
 	}
