@@ -6,7 +6,7 @@ GIT_USER=
 GIT_HOSTNAME=
 GIT_SSH_PORT=22
 
-PREFIX=$(echo $0 | cut -d"-" -f1)
+PREFIX=$(echo `basename $0` | cut -d"-" -f1)
 . ~/.buildscripts/$PREFIX.conf
 
 
