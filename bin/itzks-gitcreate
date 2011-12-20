@@ -12,5 +12,6 @@ for pkg in "$@"; do
 	git branch | grep upstream &>/dev/null && echo "$pkg: RELEASE BRANCH" && git push ssh://itzks@code.it-zukunft-schule.de:32032/~/git/${subdir}${pkg}.git upstream
 	git branch | grep pristine-tar &>/dev/null && echo "$pkg: PRISTINE-TAR" && git push ssh://itzks@code.it-zukunft-schule.de:32032/~/git/${subdir}${pkg}.git pristine-tar
 	echo "$pkg: PUSHING TAGS" && git push --tags ssh://itzks@code.it-zukunft-schule.de:32032/~/git/${subdir}${pkg}.git
+	git remote add origin ssh://itzks@code.it-zukunft-schule.de:32032/~/git/${subdir}${pkg}.git
 	cd ..
 done
