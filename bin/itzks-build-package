@@ -150,7 +150,6 @@ build_packages() {
 				git checkout $CHECKOUT || git checkout master
 				GITREV=$(itzks-gitrevno)
 				test -n ${ORIG_TARBALL} && pristine-tar checkout ../${ORIG_TARBALL}
-				}
 				# translate the version name for Debian releases
 				[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
 				[ "x$l_CODENAME" = "xwheezy" ] && VERSION=testing
