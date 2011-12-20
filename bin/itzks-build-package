@@ -125,6 +125,8 @@ prepare_workspace() {
 	cd $PROJECT_DIR
 
 	test -f debian/source/format && cat debian/source/format | egrep '^3.0.*\(quilt\)$' >/dev/null && {
+		UPSTREAM_DFSG_VERSION=`head -n1 debian/changelog | sed 's,.*(\(.*\)).*,\1,' | cut -d"-" -f1`
+		ORIG_DFSG_TARBALL="${PROJECT}_${UPSTREAM_DFSG_VERSION}.orig.tar.gz"
 		UPSTREAM_VERSION=`head -n1 debian/changelog | sed 's,.*(\(.*\)).*,\1,' | sed 's,\(\.dfsg.*\),,' | cut -d"-" -f1`
 		ORIG_TARBALL="${PROJECT}_${UPSTREAM_VERSION}.orig.tar.gz"
 		git fetch origin pristine-tar:pristine-tar
@@ -150,7 +152,11 @@ build_packages() {
 				cd $TEMP_DIR/$PROJECT
 				git checkout $CHECKOUT || git checkout master
 				GITREV=$(itzks-gitrevno)
-				test -n ${ORIG_TARBALL} && git fetch origin pristine-tar:pristine-tar && pristine-tar checkout ../${ORIG_TARBALL}
+				test -n ${ORIG_TARBALL} && {
+					git fetch origin pristine-tar:pristine-tar
+					pristine-tar checkout ../${ORIG_TARBALL}
+					[ "x$ORIG_TARBALL" != "x$ORIG_DFSG_TARBALL" ] && mv ../${ORIG_TARBALL} ../${ORIG_DFSG_TARBALL}
+				}
 				# translate the version name for Debian releases
 				[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
 				[ "x$l_CODENAME" = "xwheezy" ] && VERSION=testing
