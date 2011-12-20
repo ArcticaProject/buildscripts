@@ -127,6 +127,7 @@ prepare_workspace() {
 	test -f debian/source/format && cat debian/source/format | egrep '^3.0.*\(quilt\)$' >/dev/null && {
 		UPSTREAM_VERSION=`head -n1 debian/changelog | sed 's,.*(\(.*\)).*,\1,' | sed 's,\(\.dfsg.*\),,' | cut -d"-" -f1`
 		ORIG_TARBALL="${PROJECT}_${UPSTREAM_VERSION}.orig.tar.gz"
+		git fetch origin pristine-tar:pristine-tar
 	}
 	# by default we build for all current debian versions
 	test -f BUILDS_FOR || cat > BUILDS_FOR <<EOF
@@ -149,7 +150,7 @@ build_packages() {
 				cd $TEMP_DIR/$PROJECT
 				git checkout $CHECKOUT || git checkout master
 				GITREV=$(itzks-gitrevno)
-				test -n ${ORIG_TARBALL} && pristine-tar checkout ../${ORIG_TARBALL}
+				test -n ${ORIG_TARBALL} && git fetch origin pristine-tar:pristine-tar && pristine-tar checkout ../${ORIG_TARBALL}
 				# translate the version name for Debian releases
 				[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
 				[ "x$l_CODENAME" = "xwheezy" ] && VERSION=testing
