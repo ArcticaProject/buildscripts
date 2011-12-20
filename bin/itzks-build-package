@@ -126,7 +126,7 @@ prepare_workspace() {
 	test -f debian/source/format && cat debian/source/format | egrep '^3.0.*\(quilt\)$' >/dev/null && {
 		UPSTREAM_VERSION=`head -n1 debian/changelog | sed 's,.*(\(.*\)).*,\1,' | sed 's,\(\.dfsg.*\),,' | cut -d"-" -f1`
 		ORIG_TARBALL="${PROJECT}_${UPSTREAM_VERSION}.orig.tar.gz"
-		git checkout --force pristine-tar && pristine-tar checkout ../${ORIG_TARBALL}
+		pristine-tar checkout ../${ORIG_TARBALL}
 	}
 	# by default we build for all current debian versions
 	test -f BUILDS_FOR || cat > BUILDS_FOR <<EOF
