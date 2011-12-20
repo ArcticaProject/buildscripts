@@ -25,6 +25,8 @@ set_vars() {
 	USE_SUDO="yes"
 	PDEBUILD="pdebuild --pbuilder qemubuilder"
 	TEMP_BASE="$HOME/tmp/"
+	mkdir -p "$TEMP_BASE"
+	chmod 2770 "$TEMP_BASE"
 
 	# first argv is the name of the Git project
 	PROJECT=$1
@@ -67,7 +69,7 @@ set_vars() {
 clear_pkgdist() {
 
 	# pkgdist directory cleanup
-	cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
+	cat $PROJECT_DIR/BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 		l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
 		CODENAMES=${CODENAMES:-$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])}
 		echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
@@ -128,7 +130,7 @@ EOF
 
 build_packages() {
 	# use pbuilder for building all variants of this package
-	cat BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
+	cat $PROJECT_DIR/BUILDS_FOR | egrep -v '(^$|^#.*$)' | while read line; do
 		l_DIST=$(echo $line | cut -d":" -f1 | tr [A-Z] [a-z])
 		CODENAMES=${CODENAMES:-$(echo $line | cut -d":" -f2- | tr [A-Z] [a#-z])}
 		echo "$DIST_SUPPORTED" | grep $l_DIST >/dev/null && {
@@ -139,6 +141,10 @@ build_packages() {
 				cd $TEMP_DIR/$PROJECT
 				git checkout $CHECKOUT || git checkout master
 				GITREV=$(x2go-gitrevno)
+				# we always build native packages for our repos
+				test -f debian/source/format && cat debian/source/format | egrep '^3.0.*\(quilt\)$' >/dev/null && {
+					echo "3.0 (native)" > debian/source/format
+				}
 				# translate the version name for Debian releases
 				[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
 				[ "x$l_CODENAME" = "xwheezy" ] && VERSION=testing

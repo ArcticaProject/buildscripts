@@ -29,5 +29,6 @@ for pkg in "$@"; do
 	#echo "$pkg: RELEASE BRANCH" && git push ssh://x2go@code.x2go.org:32032/srv/git/code.x2go.org/$pkg release
 	#echo "$pkg: PRISTINE-TAR" && git push ssh://x2go@code.x2go.org:32032/srv/git/code.x2go.org/$pkg pristine-tar
 	echo "$pkg: PUSHING TAGS" && git push --tags ssh://x2go@code.x2go.org:32032/srv/git/code.x2go.org/$pkg
+	git remote add ssh://x2go@code.x2go.org:32032/srv/git/code.x2go.org/$pkg
 	cd ..
 done
