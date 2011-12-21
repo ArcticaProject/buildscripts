@@ -1,0 +1,37 @@
+package config;
+
+### nwt/DEBIAN
+$cfg{"nwt-debian-sid"} = {
+        fqdn => "packages.das-netzwerkteam.de",
+        login => "nwt-admin",
+        method => "scpb",
+        incoming => "/srv/sites/das-netzwerkteam.de/packages/debian/incoming/sid",
+        queuedir => "/srv/sites/das-netzwerkteam.de/packages/debian/upload/sid",
+        dinstall_runs => 1,
+};
+$cfg{"nwt-debian-wheezy"} = {
+        fqdn => "packages.das-netzwerkteam.de",
+        login => "nwt-admin",
+        method => "scpb",
+        incoming => "/srv/sites/das-netzwerkteam.de/packages/debian/incoming/wheezy",
+        queuedir => "/srv/sites/das-netzwerkteam.de/packages/debian/upload/wheezy",
+        dinstall_runs => 1,
+};
+$cfg{"nwt-debian-squeeze"} = {
+        fqdn => "packages.das-netzwerkteam.de",
+        login => "nwt-admin",
+        method => "scpb",
+        incoming => "/srv/sites/das-netzwerkteam.de/packages/debian/incoming/squeeze",
+        queuedir => "/srv/sites/das-netzwerkteam.de/packages/debian/upload/squeeze",
+        dinstall_runs => 1,
+};
+$cfg{"nwt-debian-lenny"} = {
+        fqdn => "packages.das-netzwerkteam.de",
+        login => "nwt-admin",
+        method => "scpb",
+        incoming => "/srv/sites/das-netzwerkteam.de/packages/debian/incoming/lenny",
+        queuedir => "/srv/sites/das-netzwerkteam.de/packages/debian/upload/lenny",
+        dinstall_runs => 1,
+};
+
+1;
