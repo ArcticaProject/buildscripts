@@ -182,7 +182,7 @@ build_packages() {
 				[ "x$l_CODENAME" = "xlenny" ] && VERSION=oldstable
 				
 				# modify the section for non-main package builds
-				[ "x$COMPONENT" != "xmain" ] || {
+				[ "x$COMPONENT" != "xmain" ] && {
 					mv debian/control debian/control.tmp
 					cat debian/control.tmp | sed  "s#Section:[\ ]*\(.*\)#Section: $COMPONENT/\1#g" > debian/control
 				}
