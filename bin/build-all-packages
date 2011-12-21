@@ -28,7 +28,7 @@ APP_PACKAGES_MAIN=
 PREFIX=$(echo `basename $0` | cut -d"-" -f1)
 test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo "$0 has no valid context prefix..."; exit -1; }
 
-test -z $1 && { echo "usage: $(basename $0) [{$COMPONENT_MAIN,$COMPONENT_NIGHTLY}]"; exit -1; }
+test -n $2 && { echo "usage: $(basename $0) [{$COMPONENT_MAIN,$COMPONENT_NIGHTLY}]"; exit -1; }
 
 set -ex
 
