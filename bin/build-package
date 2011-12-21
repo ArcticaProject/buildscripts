@@ -177,6 +177,10 @@ build_packages() {
 				test -f debian/source/format && cat debian/source/format | egrep '^3.0.*\(quilt\)$' >/dev/null && {
 					echo "3.0 (native)" > debian/source/format
 				}
+
+				# for Ubuntu version is the codename of the distribution release
+				VERSION=$l_CODENAME
+
 				# translate the version name for Debian releases
 				[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
 				[ "x$l_CODENAME" = "xwheezy" ] && VERSION=testing
