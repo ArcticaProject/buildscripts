@@ -255,18 +255,15 @@ upload_packages() {
 					cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
 					test -f ./dupload.conf || ln -s ~/.dupload.conf.$PREFIX ./dupload.conf
 					ls $PROJECT_*.changes &>/dev/null && dupload -c --to $PREFIX-$l_DIST-$l_CODENAME $PROJECT_*.changes
-					cd -
 				done
 			fi
 			for l_EXTRA_ARCH in $EXTRA_ARCHS; do 
 				cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH"
 				test -f ./dupload.conf || ln -s ~/.dupload.conf.$PREFIX ./dupload.conf
 				ls $PROJECT_*.changes &>/dev/null && dupload -c --to $PREFIX-$l_DIST-$l_CODENAME $PROJECT_*.changes
-				cd -
 			done
 		done
 	done
-	cd -
 	return 0
 }
 
