@@ -174,11 +174,12 @@ build_packages() {
 				git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
 				cd "$TEMP_DIR/$PROJECT"
 				git checkout $CHECKOUT || git checkout master
+				find $PROJECT_DIR/../ -type f -maxdepth 0 -mindepth 0 | grep $PROJECT_*.orig.tar.gz &>/dev/null && cp $PROJECT_DIR/../$PROJECT_*.orig.tar.gz ..
 				GITREV=$(gitrevno)
 				# we always build native packages for our repos
 				test -f debian/source/format && cat debian/source/format | egrep '^3.0.*\(quilt\)$' >/dev/null && {
 					echo "3.0 (native)" > debian/source/format
-				}
+			        }	
 
 				# for Ubuntu version is the codename of the distribution release
 				VERSION=$l_CODENAME
