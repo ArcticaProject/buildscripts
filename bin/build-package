@@ -126,14 +126,16 @@ clear_pkgdist() {
 
 				if [ "x$EXTRA_ARCHS_ONLY" = "x" ]; then
 					for l_ARCH in amd64 i386; do
-						mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/dupload.conf"
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.changes
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.upload
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.build
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.dsc
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.tar.gz
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/"*.deb
+						[ "x$SKIP_ARCH" != "x$l_ARCH" ] {
+							mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
+							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/dupload.conf"
+							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.changes
+							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.upload
+							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.build
+							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.dsc
+							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.tar.gz
+							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/"*.deb
+						}
 					done
 				fi
 				for l_EXTRA_ARCH in $EXTRA_ARCHS; do 
@@ -250,10 +252,12 @@ upload_packages() {
 			test -z $CODENAMES || echo $line | grep $CODENAMES || break
 
 			if [ "x$EXTRA_ARCHS_ONLY" = "x" ]; then	
-				for l_ARCH in amd64 i386; do 
-					cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
-					test -f ./dupload.conf || ln -s ~/.dupload.conf.$PREFIX ./dupload.conf
-					ls $PROJECT_*.changes &>/dev/null && dupload -c --to $PREFIX-$l_DIST-$l_CODENAME $PROJECT_*.changes 0<&-
+				for l_ARCH in amd64 i386; do
+					[ "x$SKIP_ARCH" != "x$l_ARCH" ] {
+						cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
+						test -f ./dupload.conf || ln -s ~/.dupload.conf.$PREFIX ./dupload.conf
+						ls $PROJECT_*.changes &>/dev/null && dupload -c --to $PREFIX-$l_DIST-$l_CODENAME $PROJECT_*.changes 0<&-
+					}
 				done
 			fi
 			for l_EXTRA_ARCH in $EXTRA_ARCHS; do 
