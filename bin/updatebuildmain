@@ -20,7 +20,7 @@
 set -e
 
 GITPROJECT=$(basename $(pwd))
-REF=$1
+REF=${1-HEAD}
 
 # we need to be within a working copy (base folder) and we need a <REF>!!!
 test -z $1 || test -d ./.git || {
