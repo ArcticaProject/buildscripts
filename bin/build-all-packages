@@ -57,3 +57,7 @@ COMPONENT=${1:-""}
 	fi
     done
 }
+
+echo "Component: $COMPONENT"
+echo "Main: $COMPONENT_MAIN"
+echo "Nightly: $COMPONENT_NIGHTLY"
