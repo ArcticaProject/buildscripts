@@ -24,6 +24,8 @@ DEBEMAIL="firstname.lastname@mydomain.org"
 DEBFULLNAME="Firstname Lastname"
 GPG_KEY=
 DISTS_SUPPORTED="debian ubuntu"
+DEBIAN_DISTROS="lenny squeeze wheezy sid"
+UBUNTU_DISTROS="lucid maverick natty oneiric precise"
 BUILDS_FOR="\
 debian: squeeze wheezy sid\n\
 ubuntu: lucid precise\n\
@@ -109,7 +111,13 @@ prepare_workspace() {
 	cd "$PROJECT_DIR"
 
 	# by default we build for all current debian versions
-	test -f BUILDS_FOR || echo -e "$BUILDS_FOR" > BUILDS_FOR
+	if test -z $ARGV2_CODENAME; then
+		test -f BUILDS_FOR || echo -e "$BUILDS_FOR" > BUILDS_FOR
+	elif echo "$DEBIAN_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
+		echo "debian: $ARGV2_CODENAME" > BUILDS_FOR
+	elif echo "$UBUNUT_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
+		echo "ubuntu: $ARGV2_CODENAME" >/dev/null
+	fi
 	return 0
 }
 
