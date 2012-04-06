@@ -37,6 +37,7 @@ if [ "x$ARCH" = "xarmel" ]; then
 	MEMORY_MEGS=256
 	INITRD=""
 else
+	SMP="2"
 	MEMORY_MEGS=512
 	INITRD=/srv/pbuilder/qemu-kernels/$ARCH/initrd.img
 fi
@@ -44,6 +45,10 @@ fi
 if [ "x${DIST}" = "xubuntu" ]; then 
         MIRRORSITE="http://localhost:3142/ubuntu"
 elif [ "x${DIST}" = "xdebian" ]; then
-        MIRRORSITE="http://localhost:3142/debian"
+	if [ "x${CODENAME}" = "xlenny" ]; then
+		MIRRORSITE="http://localhost:3142/archive.debian.org/debian"
+	else
+	        MIRRORSITE="http://localhost:3142/debian"
+	fi
 fi
 
