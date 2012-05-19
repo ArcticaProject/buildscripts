@@ -35,7 +35,7 @@ KERNEL_IMAGE=/srv/pbuilder/qemu-kernels/$ARCH/vmlinuz
 ARCH_DISKDEVICE=sd
 if [ "x$ARCH" = "xarmel" ]; then
 	MEMORY_MEGS=256
-	INITRD=""
+	INITRD=
 else
 	SMP="2"
 	MEMORY_MEGS=512
@@ -43,7 +43,11 @@ else
 fi
 
 if [ "x${DIST}" = "xubuntu" ]; then 
-        MIRRORSITE="http://localhost:3142/ubuntu"
+	if [ "x$ARCH" = "xarmel" ] || [ "x$ARCH" = "xpowerpc" ]; then
+		MIRRORSITE="http://localhost:3142/ports.ubuntu.com/"
+	else
+	        MIRRORSITE="http://localhost:3142/ubuntu"
+	fi
 elif [ "x${DIST}" = "xdebian" ]; then
 	if [ "x${CODENAME}" = "xlenny" ]; then
 		MIRRORSITE="http://localhost:3142/archive.debian.org/debian"
