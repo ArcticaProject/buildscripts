@@ -9,7 +9,6 @@ GIT_SSH_PORT=22
 PREFIX=$(echo `basename $0` | cut -d"-" -f1)
 . ~/.buildscripts/$PREFIX.conf
 
-
 for pkg in "$@"; do
 	subdir=$(dirname $pkg)/
 	pkg=$(basename $pkg)
