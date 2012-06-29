@@ -35,9 +35,9 @@ TEMP_DIR="$(mktemp -d)"
 echo $MANIFEST
 
 trap "rm -f \"${MANIFEST}\"; rm -rf \"${TEMP_DIR}\"" 0
-git clone . "$TEMP_DIR/${PROJECT}_$RELEASE"
-( set -e; cd "$TEMP_DIR/${PROJECT}_$RELEASE/" && git checkout ${CHECKOUT} 2>/dev/null || true )
-( set -e; cd "$TEMP_DIR" && rm -Rf "${PROJECT}_$RELEASE/.git"* )
-( set -e; cd "$TEMP_DIR" && find "${PROJECT}_$RELEASE" -type f | sed 's/^\.*\/*//' | sort > "$MANIFEST" )
+git clone . "$TEMP_DIR/${PROJECT}-$RELEASE"
+( set -e; cd "$TEMP_DIR/${PROJECT}-$RELEASE/" && git checkout ${CHECKOUT} 2>/dev/null || true )
+( set -e; cd "$TEMP_DIR" && rm -Rf "${PROJECT}-$RELEASE/.git"* )
+( set -e; cd "$TEMP_DIR" && find "${PROJECT}-$RELEASE" -type f | sed 's/^\.*\/*//' | sort > "$MANIFEST" )
 mkdir -p "$TARGETDIR/_releases_/source/${PROJECT}/"
-tar c -C "$TEMP_DIR" --owner 0 --group 0 --numeric-owner --no-recursion --files-from "$MANIFEST" | gzip -n > "$TARGETDIR/_releases_/source/${PROJECT}/${PROJECT}_$RELEASE.tar.gz"
+tar c -C "$TEMP_DIR" --owner 0 --group 0 --numeric-owner --no-recursion --files-from "$MANIFEST" | gzip -n > "$TARGETDIR/_releases_/source/${PROJECT}/${PROJECT}-$RELEASE.tar.gz"
