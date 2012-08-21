@@ -199,6 +199,7 @@ build_packages() {
 				SA_OPTION=""
 
 				# we always build native packages for our repos
+				SA_OPTION=""
 				test -f debian/source/format && cat debian/source/format | egrep '^3.0.*\(quilt\)$' >/dev/null && {
 					git fetch origin upstream:upstream
 					UPSTREAM_VERSION=$(dpkg-parsechangelog | grep Version: | cut -d " " -f2 | sed -e 's/-.*//' -e 's/^.*://')
