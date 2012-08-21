@@ -102,14 +102,17 @@ prepare_workspace() {
 	if [ -d "$PROJECT_DIR/.git" ]; then 
 		cd "$PROJECT_DIR" && git reset --hard
 		git checkout --force $CHECKOUT || git checkout --force -b $CHECKOUT
-		git pull origin $CHECKOUT
+		git pull --all origin $CHECKOUT
 		# and again, get the $CHECKOUT refspec in pure state
 		git reset --hard
+		git clean -df
 	else
 		cd "$(dirname $PROJECT_DIR)"
 		git clone git://$GIT_HOSTNAME/$PROJECT_PATH.git
+		git fetch origin upstream:upstream
 		cd "$PROJECT"
 		git checkout --force $CHECKOUT || git checkout --force -b $CHECKOUT;
+		git clean -df
 	fi
 	cd "$PROJECT_DIR"
 
@@ -190,8 +193,11 @@ build_packages() {
 				GITREV=$(gitrevno)
 				# we always build native packages for our repos
 				test -f debian/source/format && cat debian/source/format | egrep '^3.0.*\(quilt\)$' >/dev/null && {
-					echo "3.0 (native)" > debian/source/format
-			        }	
+					git fetch origin upstream:upstream
+					UPSTREAM_VERSION=$(dpkg-parsechangelog | grep Version: | cut -d " " -f2 | sed -e 's/-.*// -e '/^.*://')
+					git archive --prefix=${PROJECT}-${UPSTREAM_VERSION} -o ../${PROJECT}_${UPSTREAM_VERSION}.orig.tar.gz upstream/${UPSTREAM_VERSION} || \
+						echo "3.0 (native)" > debian/source/format
+				}
 
 				# for Ubuntu version is the codename of the distribution release
 				VERSION=$l_CODENAME
