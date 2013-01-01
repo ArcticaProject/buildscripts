@@ -65,7 +65,7 @@ set_vars() {
 	[ -n "$ARGV2_CODENAME" ] && FORCE_BUILD=0 || FORCE_BUILD=-1
 	if [ "x$COMPONENT" = "x$COMPONENT_MAIN" ]; then
 		CHECKOUT="${3:-build-main}"
-	elif [ echo "$COMPONENT_RELEASES" | grep "$COMPONENT" ]; then
+	elif echo "$COMPONENT_RELEASES" | grep "$COMPONENT" >/dev/null; then
 		CHECKOUT="${3:-build-$COMPONENT}"
 	elif [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
 		CHECKOUT="${3:-master}"
