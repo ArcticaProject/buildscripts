@@ -212,8 +212,12 @@ build_packages() {
 				dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE~$GITREV~build" "Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository."
 				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
 				OTHERMIRROR=""
-				echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT"
-				
+				if [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
+					echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME main $COMPONENT"
+				else
+					echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT"
+				fi
+
 				[ "x$USE_SUDO" != "xyes" ] && {
 					[ "x$EXTRA_ARCHS_ONLY" = "x" ] && {
 						[ "x$SKIP_ARCH" != "xamd64" ] && cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
