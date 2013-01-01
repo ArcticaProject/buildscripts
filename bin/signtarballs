@@ -1,0 +1,13 @@
+#!/bin/bash
+
+test -d _releases_  && cd _releases_ || test -d ../_releases_ && cd ../_releases_ || exit -1
+
+find * | egrep ".*(\.tar\.gz|\.exe|\.dmg)$" | while read tarball; do
+	test -f $tarball.md5 || md5sum $tarball > $tarball.md5
+	test -f $tarball.sha1 || sha1sum $tarball > $tarball.sha1
+	test -f $tarball.asc || gpg -a -b --sign $tarball
+done
+
+
+
+
