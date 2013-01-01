@@ -213,7 +213,7 @@ build_packages() {
 				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
 				OTHERMIRROR=""
 				if [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
-					echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME main $COMPONENT"
+					echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT_MAIN $COMPONENT"
 				else
 					echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT"
 				fi
