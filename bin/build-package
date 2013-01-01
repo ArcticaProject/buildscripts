@@ -33,6 +33,7 @@ ubuntu: lucid precise\n\
 
 COMPONENT_MAIN="main"
 COMPONENT_NIGHTLY="nightly"
+COMPONENT_BUNDLES="bundle-release1 bundle-release2"
 REPOS_SERVER="packages.mydomain.org"
 PACKAGES_WITHOUT_OTHERMIRROR="keyring"
 GNUPGHOME=$HOME/.gnupg
@@ -64,6 +65,8 @@ set_vars() {
 	[ -n "$ARGV2_CODENAME" ] && FORCE_BUILD=0 || FORCE_BUILD=-1
 	if [ "x$COMPONENT" = "x$COMPONENT_MAIN" ]; then
 		CHECKOUT="${3:-build-main}"
+	elif [ echo "$COMPONENT_RELEASES" | grep "$COMPONENT" ]; then
+		CHECKOUT="${3:-build-$COMPONENT}"
 	elif [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
 		CHECKOUT="${3:-master}"
 		DATE="~${DATE:-$(date +%Y%m%d)}"
