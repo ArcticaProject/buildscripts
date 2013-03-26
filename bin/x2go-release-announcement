@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# Copyright (C) 2013 by Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+#
+# This programme is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This programme is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the
+# Free Software Foundation, Inc.,
+# 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+
+offset=${1:-0}
+count=${2:-1}
+whereami=`pwd`
+
+while ! test -f debian/changelog; do
+	cd ..
+done
+
+project=$(basename `pwd`)
+echo "
+Dear all,
+
+the X2Go project is proud to announce the release of the X2Go
+component ,,$project''.
+
+New gains of this version of ,,$project'' are:
+
+  o <gain-1>
+  o <gain-2>
+  o <gain-3>
+  o Bug closures: #<n>, #<m> (see below)
+
+"
+
+dpkg-parsechangelog --offset $offset -c$count | sed -e 's/^Source: /X2Go Component: /' \
+	                    -e 's/-0~x2go[0-9]//' \
+	                    -e 's/-0$//' \
+	                    -e 's/^Distribution: unstable/Status: RELEASE/' \
+	                    -e 's/ unstable;/ RELEASED;/' \
+	                    -e 's/^Distribution: UNRELEASED/Status: PREVIEW/' \
+	                    -e 's/ UNRELEASED;/ PREVIEW;/' \
+	                | egrep -v "^(Urgency:|Maintainer:).*"
+
+echo
+echo "
+Regards,
+<release-manager>
+"
+echo
+cd "$whereami"
