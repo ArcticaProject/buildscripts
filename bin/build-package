@@ -209,7 +209,7 @@ build_packages() {
 				}
 				
 				# modify changelog for this build
-				dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE~$GITREV~build" "Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository."
+				dch --distribution $VERSION --force-distribution -l "~$l_CODENAME~$COMPONENT$DATE~$GITREV~build" "Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository."
 				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
 				OTHERMIRROR=""
 				if [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
