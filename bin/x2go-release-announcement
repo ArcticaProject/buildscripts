@@ -29,7 +29,7 @@ project=$(basename `pwd`)
 echo "
 Dear all,
 
-the X2Go project is proud to announce the release of the X2Go
+the X2Go project is proud to announce a new release of the X2Go
 component ,,$project''.
 
 New gains of this version of ,,$project'' are:
