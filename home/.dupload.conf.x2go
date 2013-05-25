@@ -9,6 +9,14 @@ $cfg{"x2go-debian-sid"} = {
         queuedir => "/srv/sites/x2go.org/packages/debian/upload/sid",
         dinstall_runs => 1,
 };
+$cfg{"x2go-debian-jessie"} = {
+        fqdn => "code.x2go.org",
+        login => "x2go-admin",
+        method => "scpb",
+        incoming => "/srv/sites/x2go.org/packages/debian/incoming/jessie",
+        queuedir => "/srv/sites/x2go.org/packages/debian/upload/jessie",
+        dinstall_runs => 1,
+};
 $cfg{"x2go-debian-wheezy"} = {
         fqdn => "code.x2go.org",
         login => "x2go-admin",

@@ -9,6 +9,14 @@ $cfg{"itzks-debian-sid"} = {
         queuedir => "/srv/sites/it-zukunft-schule.de/packages/debian/upload/sid",
         dinstall_runs => 1,
 };
+$cfg{"itzks-debian-jessie"} = {
+        fqdn => "packages.it-zukunft-schule.de",
+        login => "itzks-admin",
+        method => "scpb",
+        incoming => "/srv/sites/it-zukunft-schule.de/packages/debian/incoming/jessie",
+        queuedir => "/srv/sites/it-zukunft-schule.de/packages/debian/upload/jessie",
+        dinstall_runs => 1,
+};
 $cfg{"itzks-debian-wheezy"} = {
         fqdn => "packages.it-zukunft-schule.de",
         login => "itzks-admin",

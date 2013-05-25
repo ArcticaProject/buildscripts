@@ -24,10 +24,10 @@ DEBEMAIL="firstname.lastname@mydomain.org"
 DEBFULLNAME="Firstname Lastname"
 GPG_KEY=
 DISTS_SUPPORTED="debian ubuntu"
-DEBIAN_DISTROS="lenny squeeze wheezy sid"
+DEBIAN_DISTROS="lenny squeeze wheezy jessie sid"
 UBUNTU_DISTROS="lucid maverick natty oneiric precise"
 BUILDS_FOR="\
-debian: squeeze wheezy sid\n\
+debian: squeeze wheezy jessie sid\n\
 ubuntu: lucid precise\n\
 "
 
@@ -198,9 +198,9 @@ build_packages() {
 
 				# translate the version name for Debian releases
 				[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
-				[ "x$l_CODENAME" = "xwheezy" ] && VERSION=testing
-				[ "x$l_CODENAME" = "xsqueeze" ] && VERSION=stable
-				[ "x$l_CODENAME" = "xlenny" ] && VERSION=oldstable
+				[ "x$l_CODENAME" = "xjessie" ] && VERSION=testing
+				[ "x$l_CODENAME" = "xwheezy" ] && VERSION=stable
+				[ "x$l_CODENAME" = "xoldstable" ] && VERSION=oldstable
 				
 				# modify the section for non-main package builds
 				[ "x$COMPONENT" != "xmain" ] && {

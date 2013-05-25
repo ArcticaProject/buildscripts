@@ -9,6 +9,14 @@ $cfg{"nwt-debian-sid"} = {
         queuedir => "/srv/sites/das-netzwerkteam.de/packages/debian/upload/sid",
         dinstall_runs => 1,
 };
+$cfg{"nwt-debian-jessie"} = {
+        fqdn => "packages.das-netzwerkteam.de",
+        login => "nwt-admin",
+        method => "scpb",
+        incoming => "/srv/sites/das-netzwerkteam.de/packages/debian/incoming/jessie",
+        queuedir => "/srv/sites/das-netzwerkteam.de/packages/debian/upload/jessie",
+        dinstall_runs => 1,
+};
 $cfg{"nwt-debian-wheezy"} = {
         fqdn => "packages.das-netzwerkteam.de",
         login => "nwt-admin",
