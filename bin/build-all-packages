@@ -18,6 +18,7 @@
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
 COMPONENT_MAIN="main"
+COMPONENT_BAIKAL="baikal"
 COMPONENT_NIGHTLY="nightly"
 
 LIB_PACKAGES_NIGHTLY=
@@ -65,6 +66,23 @@ CODENAME=${2:-""}
     done
 }
 
+# build all packages tagged as build-baikal
+[ "x$COMPONENT" = "x$COMPONENT_BAIKAL" ] || [ -z $COMPONENT ] && {
+    echo -e $LIB_PACKAGES_BAIKAL $APP_PACKAGES_BAIKAL | while read pkg comp checkout; do
+	if [ -n $CODENAME ]; then
+		comp="$comp/$CODENAME"
+	fi
+	if [ "x$(basename $0)" = "x$PREFIX-build-all-packages" ]; then
+		$PREFIX-build-package $pkg $comp $checkout
+	elif [ "x$(basename $0)" = "x$PREFIX-upload-all-packages" ]; then
+		$PREFIX-upload-package $pkg $comp $checkout
+	elif [ "x$(basename $0)" = "x$PREFIX-build+upload-all-packages" ]; then
+		$PREFIX-build-package $pkg $comp $checkout && $PREFIX-upload-package $pkg $comp $checkout
+	fi
+    done
+}
+
 echo "Component: $COMPONENT"
 echo "Main: $COMPONENT_MAIN"
+echo "Baikal: $COMPONENT_BAIKAL"
 echo "Nightly: $COMPONENT_NIGHTLY"
