@@ -17,6 +17,8 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
+CODENAME=$1
+
 COMPONENT_MAIN="main"
 COMPONENT_NIGHTLY="nightly"
 
@@ -35,6 +37,9 @@ COMPONENT=${1:-""}
 # build the newest code... (nightly-builds)
 [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ] || [ -z $COMPONENT ] && {
     echo -e $LIB_PACKAGES_NIGHTLY $APP_PACKAGES_NIGHTLY | while read pkg comp checkout; do
+	if [ -n $CODENAME ]; then 
+		comp="$comp/$CODENAME"
+	fi
 	if [ "x$(basename $0)" = "x$PREFIX-build-all-packages" ]; then
 		$PREFIX-build-package $pkg $comp $checkout
 	elif [ "x$(basename $0)" = "x$PREFIX-upload-all-packages" ]; then
@@ -48,6 +53,9 @@ COMPONENT=${1:-""}
 # build all packages tagged as build-main
 [ "x$COMPONENT" = "x$COMPONENT_MAIN" ] || [ -z $COMPONENT ] && {
     echo -e $LIB_PACKAGES_MAIN $APP_PACKAGES_MAIN | while read pkg comp checkout; do
+	if [ -n $CODENAME ]; then
+		comp="$comp/$CODENAME"
+	fi
 	if [ "x$(basename $0)" = "x$PREFIX-build-all-packages" ]; then
 		$PREFIX-build-package $pkg $comp $checkout
 	elif [ "x$(basename $0)" = "x$PREFIX-upload-all-packages" ]; then
