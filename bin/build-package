@@ -198,9 +198,9 @@ build_packages() {
 
 				# translate the version name for Debian releases
 				[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
-				[ "x$l_CODENAME" = "xjessie" ] && VERSION=testing
-				[ "x$l_CODENAME" = "xwheezy" ] && VERSION=stable
-				[ "x$l_CODENAME" = "xoldstable" ] && VERSION=oldstable
+				#[ "x$l_CODENAME" = "xjessie" ] && VERSION=testing
+				#[ "x$l_CODENAME" = "xwheezy" ] && VERSION=stable
+				#[ "x$l_CODENAME" = "xoldstable" ] && VERSION=oldstable
 				
 				# modify the section for non-main package builds
 				[ "x$COMPONENT" != "xmain" ] && {
