@@ -17,8 +17,6 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
-CODENAME=$1
-
 COMPONENT_MAIN="main"
 COMPONENT_NIGHTLY="nightly"
 
@@ -33,6 +31,7 @@ test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo
 set -ex
 
 COMPONENT=${1:-""}
+CODENAME=${2:-""}
 
 # build the newest code... (nightly-builds)
 [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ] || [ -z $COMPONENT ] && {
