@@ -37,11 +37,12 @@ New gains of this version of ,,$project'' are:
   o <gain-1>
   o <gain-2>
   o <gain-3>
-  o Bug closures: #<n>, #<m> (see below)
 
 "
 
-dpkg-parsechangelog --offset $offset -c$count | sed -e 's/^Source: /X2Go Component: /' \
+cat debian/changelog | sed -e 's/Fixes:/Closes:/i' | dpkg-parsechangelog --offset $offset -c$count -l- | \
+	                sed -e 's/Closes:/Fixes these bug report(s):/i' \
+	                    -e 's/^Source: /X2Go Component: /' \
 	                    -e 's/-0~x2go[0-9]//' \
 	                    -e 's/-0$//' \
 	                    -e 's/^Distribution: unstable/Status: RELEASE/' \
