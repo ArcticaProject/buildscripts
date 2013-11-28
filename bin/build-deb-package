@@ -69,13 +69,13 @@ set_vars() {
 		CHECKOUT="${3:-build-$COMPONENT}"
 	elif [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
 		CHECKOUT="${3:-master}"
-		DATE="~${DATE:-$(date +%Y%m%d)}"
+		DATE="${DATE:-$(date +%Y%m%d)}"
 	else
 		echo "error: no such package component area for this Git project. Aborting..."
 		exit -1
 	fi
 	# the DATE might be given as ,,today'' from the command line
-	[ "x$DATE" = "xtoday" ] && DATE="~$(date +%Y%m%d)"
+	[ "x$DATE" = "xtoday" ] && DATE="$(date +%Y%m%d)"
 
 	# setting paths
 	PROJECT_DIR="$HOME/build/$COMPONENT/$PROJECT"
