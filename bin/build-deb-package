@@ -314,7 +314,7 @@ upload_packages() {
 
 ### MAIN ###
 set_vars $@ && {
-	if [ "x$(basename $0)" = "x$PREFIX-build-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-package" ]; then
+	if [ "x$(basename $0)" = "x$PREFIX-build-deb-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-deb-package" ]; then
 		cd $PROJECT_DIR && pkgneedsbuild $CHECKOUT || [ "$FORCE_BUILD" -eq 0 ] && {
 			prepare_workspace && {
 				clear_pkgdist
@@ -322,7 +322,7 @@ set_vars $@ && {
 			}
 		}
 	fi
-	if [ "x$(basename $0)" = "x$PREFIX-upload-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-package" ]; then
+	if [ "x$(basename $0)" = "x$PREFIX-upload-deb-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-deb-package" ]; then
 		upload_packages
 	fi
 }
