@@ -188,10 +188,10 @@ build_packages() {
 				git checkout $CHECKOUT || git checkout master
 				find $PROJECT_DIR/../ -type f -maxdepth 0 -mindepth 0 | grep $PROJECT_*.orig.tar.gz &>/dev/null && cp $PROJECT_DIR/../$PROJECT_*.orig.tar.gz ..
 				GITREV=$(gitrevno)
-				# we always build native packages for our repos
+				# we always build 1.0 source format packages for our repos
 				test -f debian/source/format && cat debian/source/format | egrep '^3.0.*\(quilt\)$' >/dev/null && {
-					echo "3.0 (native)" > debian/source/format
-			        }	
+					echo "1.0" > debian/source/format
+				}
 
 				# for Ubuntu version is the codename of the distribution release
 				VERSION=$l_CODENAME
@@ -201,21 +201,24 @@ build_packages() {
 				#[ "x$l_CODENAME" = "xjessie" ] && VERSION=testing
 				#[ "x$l_CODENAME" = "xwheezy" ] && VERSION=stable
 				#[ "x$l_CODENAME" = "xoldstable" ] && VERSION=oldstable
-				
+
 				# modify the section for non-main package builds
 				[ "x$COMPONENT" != "xmain" ] && {
 					mv debian/control debian/control.tmp
 					cat debian/control.tmp | sed  "s#Section:[\ ]*\(.*\)#Section: $COMPONENT/\1#g" > debian/control
 				}
-				
+
 				# modify changelog for this build
-				dch --distribution $VERSION --force-distribution -l "~$l_CODENAME~$COMPONENT$DATE~$GITREV~build" "Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository."
+				dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE~$GITREV~build" "Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository."
 				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
 				OTHERMIRROR=""
 				if [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
 					echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT_MAIN $COMPONENT"
 				else
 					echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT"
+				fi
+				if [ $PROJECT = "x2gomatebindings" ]; then
+					OTHERMIRROR="deb http://packages.mate-desktop.org/repo/debian $l_CODENAME main"
 				fi
 
 				[ "x$USE_SUDO" != "xyes" ] && {

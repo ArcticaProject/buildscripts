@@ -56,3 +56,4 @@ elif [ "x${DIST}" = "xdebian" ]; then
 	fi
 fi
 
+EXTRA_ARCHS=armel
