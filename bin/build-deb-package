@@ -117,6 +117,8 @@ prepare_workspace() {
 		git fetch origin pristine-tar:pristine-tar || true
 		git clean -df
 	fi
+
+	GIT_OBJECT_ID=`git show-ref -s heads/master`
 	cd "$PROJECT_DIR"
 
 	# by default we build for all current debian versions
@@ -225,7 +227,11 @@ build_packages() {
 				}
 
 				# modify changelog for this build
-				dch --distribution $VERSION --force-distribution -l "+$l_CODENAME~$COMPONENT$DATE~$GITREV~build" "Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository."
+				if [ "$COMPONENT" != "$COMPONENT_NIGHTLY" ]; then
+					dch --distribution $VERSION --force-distribution -l "+git$DATE.$GITREV+$l_CODENAME.$COMPONENT." "Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository (Git commit: $GIT_OBJECT_ID)."
+				else
+					dch --distribution $VERSION --force-distribution -l "~git$DATE.$GITREV+$l_CODENAME.$COMPONENT." "Development-Snapshot!!! Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository (Git commit: $GIT_OBJECT_ID)."
+				fi
 				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
 				OTHERMIRROR=""
 				if [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
