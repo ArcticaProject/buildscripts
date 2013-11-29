@@ -173,8 +173,11 @@ build_packages() {
 	PKG_RELEASE=$(cat $PROJECT.spec | egrep "^Release:.*" | awk '{ print $2 }')
 	PKG_SRCRELEASE=$(echo $PKG_RELEASE | sed -e 's/%{?dist}//')
 
-	sed -i $PROJECT.spec -e "s/%{?dist}/~git$DATE.$GITREV.$COMPONENT%{?dist}/"
-
+	if [ "$COMPONENT" = "$COMPONENT_NIGHTLY" ]; then
+		sed -i $PROJECT.spec -e "s/%{?dist}/.0.git$DATE.$GITREV.$COMPONENT%{?dist}/"
+	else
+		sed -i $PROJECT.spec -e "s/%{?dist}/.1.git$DATE.$GITREV.$COMPONENT%{?dist}/"
+	fi
 	mv $TEMP_DIR/$PROJECT $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
 	tar -czf $PKGDIST/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
 
