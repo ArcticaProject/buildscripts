@@ -245,7 +245,7 @@ build_packages() {
 					### TODO: build amd64/i386 packages here
 
 					[ "x$SKIP_ARCH" != "xamd64" ] && {
-						mock -r ${l_DIST}-${l_CODENAME}_x86_64 ~/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_RELEASE.src.rpm
+						mock -r ${l_DIST}-${l_CODENAME}-x86_64 ~/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_RELEASE.src.rpm
 					}
 					#[ "x$SKIP_ARCH" != "xi386" ] && cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
 					#	DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/i386"  -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
