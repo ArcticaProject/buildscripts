@@ -191,6 +191,11 @@ build_packages() {
 
 	mv $TEMP_DIR/$PROJECT $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
 	tar -czf ~/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
+
+	# create the SRPM package
+	rpmbuild -bs $PROJECT.spec
+
+	# clean up the Git clone from the temp folder
 	cd && rm $TEMP_DIR/$PROJECT -Rf
 
 
