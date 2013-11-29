@@ -79,10 +79,6 @@ set_vars() {
 	PROJECT_DIR="$HOME/build/$COMPONENT/$PROJECT"
 	PKGDIST="$HOME/pkg-dist/$COMPONENT/$PROJECT"
 
-	# build for other architectures than amd64/i386
-	EXTRA_ARCHS="${EXTRA_ARCHS:-}"
-	EXTRA_ARCHS_ONLY="${EXTRA_ARCHS_ONLY:-}"
-
 	# creating paths
 	mkdir -p "$TEMP_BASE"
 	mkdir -p "$PROJECT_DIR"
@@ -145,29 +141,17 @@ clear_pkgdist() {
 				# the wrong distribution here...
 				test -z $CODENAMES || echo $line | grep $CODENAMES || break
 
-				if [ "x$EXTRA_ARCHS_ONLY" = "x" ]; then
-					for l_ARCH in amd64 i386; do
-						[ "x$SKIP_ARCH" != "x$l_ARCH" ] && {
-							mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
-							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/dupload.conf"
-							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.changes
-							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.upload
-							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.build
-							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.dsc
-							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.tar.gz
-							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/"*.deb
-						}
-					done
-				fi
-				for l_EXTRA_ARCH in $EXTRA_ARCHS; do 
-					mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH"
-					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/dupload.conf"
-					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_"*.changes
-					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_"*.upload
-					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_"*.build
-					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_"*.dsc
-					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_"*.tar.gz
-					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/"*.deb
+				for l_ARCH in amd64 i386; do
+					[ "x$SKIP_ARCH" != "x$l_ARCH" ] && {
+						mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/dupload.conf"
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.changes
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.upload
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.build
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.dsc
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.tar.gz
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/"*.deb
+					}
 				done
 			done
 		}
@@ -230,7 +214,7 @@ build_packages() {
 				#fi
 
 
-				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
+				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{x86_64,i386}
 
 				# TODO: obtain packages from our YUM repository???
 
@@ -241,27 +225,12 @@ build_packages() {
 				#	echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT"
 				#fi
 
-				[ "x$EXTRA_ARCHS_ONLY" = "x" ] && {
-
-					### TODO: build amd64/i386 packages here
-
-					[ "x$SKIP_ARCH" != "xamd64" ] && {
-						mock -r ${l_DIST}-${l_CODENAME}-x86_64 ~/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.src.rpm
-					}
-					#[ "x$SKIP_ARCH" != "xi386" ] && cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
-					#	DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/i386"  -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
-					#}
+				[ "x$SKIP_ARCH" != "xx86_64" ] && {
+					mock -r ${l_DIST}-${l_CODENAME}-x86_64 --result $PKGDIST/$l_DIST/$l_CODENAME/x86_64 ~/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.src.rpm
 				}
-				for extra_arch in $EXTRA_ARCHS; do
-					mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch"
-
-					### TODO: build extra-arch packages here
-
-					echo .
-					#cat debian/control | egrep "Architecture.*(any|$extra_arch)" >/dev/null && {
-					#	DIST=$l_DIST CODENAME=$l_CODENAME ARCH=$extra_arch $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch" -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
-					#}
-				done
+				[ "x$SKIP_ARCH" != "xi386" ] && {
+					mock -r ${l_DIST}-${l_CODENAME}-i386  --result $PKGDIST/$l_DIST/$l_CODENAME/i386 ~/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.src.rpm
+				}
 			done
 		}
 	done
@@ -280,25 +249,15 @@ upload_packages() {
 			# the wrong distribution here...
 			test -z $CODENAMES || echo $line | grep $CODENAMES || break
 
-			if [ "x$EXTRA_ARCHS_ONLY" = "x" ]; then	
-				for l_ARCH in amd64 i386; do
-					[ "x$SKIP_ARCH" != "x$l_ARCH" ] && {
-						cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
+			for l_ARCH in amd64 i386; do
+				[ "x$SKIP_ARCH" != "x$l_ARCH" ] && {
+					cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
 
-						# TODO: upload package
+					# TODO: upload package
 
-						#test -f ./dupload.conf || ln -s ~/.dupload.conf.$PREFIX ./dupload.conf
-						#ls $PROJECT_*.changes &>/dev/null && dupload -c --to $PREFIX-$l_DIST-$l_CODENAME $PROJECT_*.changes 0<&-
-					}
-				done
-			fi
-			for l_EXTRA_ARCH in $EXTRA_ARCHS; do 
-				cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH"
-
-				# TODO: upload package
-
-				#test -f ./dupload.conf || ln -s ~/.dupload.conf.$PREFIX ./dupload.conf
-				#ls $PROJECT_*.changes &>/dev/null && dupload -c --to $PREFIX-$l_DIST-$l_CODENAME $PROJECT_*.changes 0<&-
+					#test -f ./dupload.conf || ln -s ~/.dupload.conf.$PREFIX ./dupload.conf
+					#ls $PROJECT_*.changes &>/dev/null && dupload -c --to $PREFIX-$l_DIST-$l_CODENAME $PROJECT_*.changes 0<&-
+				}
 			done
 		done
 	done
