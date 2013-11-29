@@ -63,13 +63,13 @@ set_vars() {
 	COMPONENT="${ARGV2_COMPONENT:-${COMPONENT:-$COMPONENT_NIGHTLY}}"
 	CODENAMES="${ARGV2_CODENAME:-${CODENAMES}}"
 	[ -n "$ARGV2_CODENAME" ] && FORCE_BUILD=0 || FORCE_BUILD=-1
+	DATE="${DATE:-$(date +%Y%m%d)}"
 	if [ "x$COMPONENT" = "x$COMPONENT_MAIN" ]; then
 		CHECKOUT="${3:-build-main}"
 	elif echo "$COMPONENT_RELEASES" | grep "$COMPONENT" >/dev/null; then
 		CHECKOUT="${3:-build-$COMPONENT}"
 	elif [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
 		CHECKOUT="${3:-master}"
-		DATE="${DATE:-$(date +%Y%m%d)}"
 	else
 		echo "error: no such package component area for this Git project. Aborting..."
 		exit -1
