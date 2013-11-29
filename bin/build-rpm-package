@@ -95,7 +95,6 @@ prepare_workspace() {
 	mkdir -p $PKGDIST/rpmbuild/SOURCES
 
 	# make sure our local working copy is up to date...
-
 	if [ -d "$PROJECT_DIR/.git" ]; then 
 		cd "$PROJECT_DIR" && git reset --hard
 		git checkout --force $CHECKOUT || git checkout --force -b $CHECKOUT
@@ -180,7 +179,7 @@ build_packages() {
 	tar -czf $PKGDIST/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
 
 	# create the SRPM package
-	rpmbuild --dbpath $PKGDIST/rpmbuild -bs $PROJECT.spec
+	rpmbuild -D "%_topdir $PKGDIST/rpmbuild" -bs $PROJECT.spec
 
 	# clean up the Git clone from the temp folder
 	cd && rm $TEMP_DIR/$PROJECT -Rf
