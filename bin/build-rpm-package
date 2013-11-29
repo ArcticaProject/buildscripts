@@ -173,6 +173,8 @@ build_packages() {
 	PKG_RELEASE=$(cat $PROJECT.spec | egrep "^Release:.*" | awk '{ print $2 }')
 	PKG_SRCRELEASE=$(echo $PKG_RELEASE | sed -e 's/%{?dist}//')
 
+	IS_NOARCH=$(cat $PROJECT.spec | egrep "^BuildArch:.*noarch\$" 1>/dev/null 2>/dev/null && echo yes)
+
 	if [ "$COMPONENT" = "$COMPONENT_NIGHTLY" ]; then
 		IS_RELEASE="0"
 	else
@@ -196,25 +198,9 @@ build_packages() {
 
 				test -z $CODENAMES || echo $line | grep $CODENAMES || break
 
-				# modify the section for non-main package builds
-
-				### TODO: How to host different builds (releases / nightlies in the same repository???)
-
-				#[ "x$COMPONENT" != "xmain" ] && {
-				#	mv debian/control debian/control.tmp
-				#	cat debian/control.tmp | sed  "s#Section:[\ ]*\(.*\)#Section: $COMPONENT/\1#g" > debian/control
-				#}
-
 				# modify changelog for this build
 
-				### TODO: manipulate the version string in the .spec file
-
-				#if [ "$COMPONENT" != "$COMPONENT_NIGHTLY" ]; then
-				#	dch --distribution $VERSION --force-distribution -l "+git$DATE.$GITREV+$l_CODENAME.$COMPONENT." "Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository (Git commit: $GIT_OBJECT_ID)."
-				#else
-				#	dch --distribution $VERSION --force-distribution -l "~git$DATE.$GITREV+$l_CODENAME.$COMPONENT." "Development-Snapshot!!! Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository (Git commit: $GIT_OBJECT_ID)."
-				#fi
-
+                                ### TODO: add changelog entry for this automatic build
 
 				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{x86_64,i386}
 
@@ -227,12 +213,12 @@ build_packages() {
 				#	echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT"
 				#fi
 
-				[ "x$SKIP_ARCH" != "xx86_64" ] && {
+				if [ "x$SKIP_ARCH" != "xx86_64" ] || [ "$IS_NOARCH" = "yes" ]; then
 					mock -r ${l_DIST}-${l_CODENAME}-x86_64 --result $PKGDIST/$l_DIST/$l_CODENAME/x86_64 $PKGDIST/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm
-				}
-				[ "x$SKIP_ARCH" != "xi386" ] && {
+				fi
+				if [ "x$SKIP_ARCH" != "xi386" ] && [ "$IS_NOARCH" != "yes" ]; then
 					mock -r ${l_DIST}-${l_CODENAME}-i386  --result $PKGDIST/$l_DIST/$l_CODENAME/i386 $PKGDIST/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm
-				}
+				fi
 			done
 		}
 	done
