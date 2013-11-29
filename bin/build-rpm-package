@@ -185,10 +185,14 @@ build_packages() {
 	git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
 	cd $TEMP_DIR
 	rm -Rf "$PROJECT/.git"
+	cp $PROJECT/$PROJECT.spec .
+	UPSTREAM_VERSION=$(cat $PROJECT.spec | egrep "^Version:.*" | awk '{ print $2 }')
+	GITREV=$(cd $PROJECT && gitrevno && cd - 1>/dev/null)
+
 	mv $TEMP_DIR/$PROJECT $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
-	tar -czf ~/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
-	cp $PROJECT/$PROJECT.spec ..
+	tar -czf ~/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
 	cd && rm $TEMP_DIR/$PROJECT -Rf
+
 
 	cat "$PROJECT_DIR/RPM_BUILDS_FOR" | egrep -v '(^$|^#.*$)' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
@@ -197,18 +201,6 @@ build_packages() {
 			for l_CODENAME in $l_CODENAMES; do
 
 				test -z $CODENAMES || echo $line | grep $CODENAMES || break
-
-				TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
-				mkdir -p "$TEMP_DIR/$PROJECT"
-				chmod 2770 "$TEMP_DIR" -Rf
-
-				cd "$PROJECT_DIR"
-				git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
-				cd "$TEMP_DIR/$PROJECT"
-				git checkout $CHECKOUT || git checkout master
-
-				GITREV=$(gitrevno)
-				UPSTREAM_VERSION=$(cat $PROJECT.spec | egrep "^Version:.*" | awk '{ print $2 }')
 
 				# modify the section for non-main package builds
 
