@@ -194,11 +194,14 @@ build_packages() {
 				git checkout $CHECKOUT || git checkout master
 
 				GITREV=$(gitrevno)
-				VERSION=$l_CODENAME
+				UPSTREAM_VERSION=$(cat $PROJECT.spec | egrep "^Version:.*" | awk '{ print $2 }')
 
 				# tar upstream sources from our Git clone
-
-				### TODO: really tar the sources
+				mkdir -p ~/rpmbuild/SOURCES
+				rm -Rf ".git"
+				cd ..
+				mv $TEMP_DIR/$PROJECT $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
+				tar -czf ~/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
 
 				# modify the section for non-main package builds
 
