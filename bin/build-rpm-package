@@ -235,6 +235,7 @@ build_packages() {
 
 					### TODO: build amd64/i386 packages here
 
+					echo .
 					#[ "x$SKIP_ARCH" != "xamd64" ] && cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
 					#	DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/amd64" -- --allow-untrusted $SA_OPTION 0<&-
 					#}
@@ -247,6 +248,7 @@ build_packages() {
 
 					### TODO: build extra-arch packages here
 
+					echo .
 					#cat debian/control | egrep "Architecture.*(any|$extra_arch)" >/dev/null && {
 					#	DIST=$l_DIST CODENAME=$l_CODENAME ARCH=$extra_arch $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch" -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
 					#}
