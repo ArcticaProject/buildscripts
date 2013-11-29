@@ -224,10 +224,10 @@ build_packages() {
 				#fi
 
 				[ "x$SKIP_ARCH" != "xx86_64" ] && {
-					mock -r ${l_DIST}-${l_CODENAME}-x86_64 --result $PKGDIST/$l_DIST/$l_CODENAME/x86_64 ~/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE~git$DATE.$GITREV.$COMPONENT.src.rpm
+					mock -r ${l_DIST}-${l_CODENAME}-x86_64 --result $PKGDIST/$l_DIST/$l_CODENAME/x86_64 $PKGDIST/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE~git$DATE.$GITREV.$COMPONENT.src.rpm
 				}
 				[ "x$SKIP_ARCH" != "xi386" ] && {
-					mock -r ${l_DIST}-${l_CODENAME}-i386  --result $PKGDIST/$l_DIST/$l_CODENAME/i386 ~/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE~git$DATE.$GITREV.$COMPONENT.src.rpm
+					mock -r ${l_DIST}-${l_CODENAME}-i386  --result $PKGDIST/$l_DIST/$l_CODENAME/i386 $PKGDIST/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE~git$DATE.$GITREV.$COMPONENT.src.rpm
 				}
 			done
 		}
