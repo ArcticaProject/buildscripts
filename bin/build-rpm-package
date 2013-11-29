@@ -125,9 +125,9 @@ prepare_workspace() {
 	# by default we build for all current debian versions
 	if test -z $ARGV2_CODENAME; then
 		test -f RPM_BUILDS_FOR || echo -e "$RPM_BUILDS_FOR" > RPM_BUILDS_FOR
-	elif echo "$DEBIAN_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
+	elif echo "$FEDORA_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
 		echo "fedora: $ARGV2_CODENAME" > RPM_BUILDS_FOR
-	elif echo "$UBUNUT_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
+	elif echo "$EPEL_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
 		echo "epel: $ARGV2_CODENAME" >/dev/null
 	fi
 	return 0
