@@ -24,7 +24,7 @@ RPMEMAIL="firstname.lastname@mydomain.org"
 RPMFULLNAME="Firstname Lastname"
 GPG_KEY=
 DISTS_SUPPORTED="fedora epel"
-FEDORA_DISTROS="fe18 fe19 fe20"
+FEDORA_DISTROS="fe18 fe19 fe20 rawhide"
 EPEL_DISTROS="sl6"
 RPM_BUILDS_FOR="\
 fedora: $FEDORA_DISTROS\n\
