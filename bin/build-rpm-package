@@ -92,7 +92,7 @@ prepare_workspace() {
 	rm -f "$PROJECT_DIR/RPM_BUILDS_FOR"
 
 	# create rpmbuild subdirectories
-	mkdir -p ~/rpmbuild/SOURCES
+	mkdir -p $PKGDIST/rpmbuild/SOURCES
 
 	# make sure our local working copy is up to date...
 
@@ -144,13 +144,10 @@ clear_pkgdist() {
 				for l_ARCH in x86_64 i386; do
 					[ "x$SKIP_ARCH" != "x$l_ARCH" ] && {
 						mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/dupload.conf"
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.changes
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.upload
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.build
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.dsc
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.tar.gz
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/"*.deb
+						#rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/dupload.conf"
+						rm -f "$PKGDIST/rpmbuild/SOURCES/$PROJECT-"*.tar.gz
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/"*.log
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT-"*.rpm
 					}
 				done
 			done
@@ -165,6 +162,7 @@ build_packages() {
 	TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
 	mkdir -p "$TEMP_DIR/$PROJECT"
 	chmod 2770 "$TEMP_DIR" -Rf
+
 	cd "$PROJECT_DIR"
 	git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
 	cd $TEMP_DIR
@@ -179,10 +177,10 @@ build_packages() {
 	sed -i $PROJECT.spec -e "s/%{?dist}/~git$DATE.$GITREV.$COMPONENT%{?dist}/"
 
 	mv $TEMP_DIR/$PROJECT $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
-	tar -czf ~/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
+	tar -czf $PKGDIST/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
 
 	# create the SRPM package
-	rpmbuild -bs $PROJECT.spec
+	rpmbuild --dbpath $PKGDIST/rpmbuild -bs $PROJECT.spec
 
 	# clean up the Git clone from the temp folder
 	cd && rm $TEMP_DIR/$PROJECT -Rf
