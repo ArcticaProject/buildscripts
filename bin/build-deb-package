@@ -126,7 +126,7 @@ prepare_workspace() {
 		test -f DEB_BUILDS_FOR || echo -e "$DEB_BUILDS_FOR" > DEB_BUILDS_FOR
 	elif echo "$DEBIAN_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
 		echo "debian: $ARGV2_CODENAME" > DEB_BUILDS_FOR
-	elif echo "$UBUNUT_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
+	elif echo "$UBUNTU_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
 		echo "ubuntu: $ARGV2_CODENAME" >/dev/null
 	fi
 	return 0
