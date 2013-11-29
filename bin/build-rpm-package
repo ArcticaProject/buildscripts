@@ -95,6 +95,9 @@ prepare_workspace() {
 	# in any case remove the RPM_BUILDS_FOR file
 	rm -f "$PROJECT_DIR/RPM_BUILDS_FOR"
 
+	# create rpmbuild subdirectories
+	mkdir -p ~/rpmbuild/SOURCES
+
 	# make sure our local working copy is up to date...
 
 	if [ -d "$PROJECT_DIR/.git" ]; then 
@@ -173,15 +176,26 @@ clear_pkgdist() {
 }
 
 build_packages() {
-	# use pbuilder for building all variants of this package
+
+	# tar upstream sources from our Git clone
+	TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
+	mkdir -p "$TEMP_DIR/$PROJECT"
+	chmod 2770 "$TEMP_DIR" -Rf
+	cd "$PROJECT_DIR"
+	git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
+	cd $TEMP_DIR
+	rm -Rf "$PROJECT/.git"
+	mv $TEMP_DIR/$PROJECT $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
+	tar -czf ~/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
+	cp $PROJECT/$PROJECT.spec ..
+	cd && rm $TEMP_DIR/$PROJECT -Rf
+
 	cat "$PROJECT_DIR/RPM_BUILDS_FOR" | egrep -v '(^$|^#.*$)' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | tr [:upper:] [:lower:])}"
 		echo "$DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
 			for l_CODENAME in $l_CODENAMES; do
 
-				# in case we build a special CODENAME (squeeze, wheezy, lucid, ...) do skip
-				# the wrong distribution here...
 				test -z $CODENAMES || echo $line | grep $CODENAMES || break
 
 				TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
@@ -195,13 +209,6 @@ build_packages() {
 
 				GITREV=$(gitrevno)
 				UPSTREAM_VERSION=$(cat $PROJECT.spec | egrep "^Version:.*" | awk '{ print $2 }')
-
-				# tar upstream sources from our Git clone
-				mkdir -p ~/rpmbuild/SOURCES
-				rm -Rf ".git"
-				cd ..
-				mv $TEMP_DIR/$PROJECT $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
-				tar -czf ~/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
 
 				# modify the section for non-main package builds
 
@@ -256,10 +263,10 @@ build_packages() {
 					#	DIST=$l_DIST CODENAME=$l_CODENAME ARCH=$extra_arch $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch" -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
 					#}
 				done
-				rm -Rf "$TEMP_DIR"
 			done
 		}
 	done
+	rm -Rf "$TEMP_DIR"
 	return 0
 }
 
