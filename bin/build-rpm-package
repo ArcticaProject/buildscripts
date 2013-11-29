@@ -174,10 +174,11 @@ build_packages() {
 	PKG_SRCRELEASE=$(echo $PKG_RELEASE | sed -e 's/%{?dist}//')
 
 	if [ "$COMPONENT" = "$COMPONENT_NIGHTLY" ]; then
-		sed -i $PROJECT.spec -e "s/%{?dist}/.0.git$DATE.$GITREV.$COMPONENT%{?dist}/"
+		IS_RELEASE="0"
 	else
-		sed -i $PROJECT.spec -e "s/%{?dist}/.1.git$DATE.$GITREV.$COMPONENT%{?dist}/"
+		IS_RELEASE="1"
 	fi
+	sed -i $PROJECT.spec -e "s/%{?dist}/.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT%{?dist}/"
 	mv $TEMP_DIR/$PROJECT $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
 	tar -czf $PKGDIST/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
 
@@ -227,10 +228,10 @@ build_packages() {
 				#fi
 
 				[ "x$SKIP_ARCH" != "xx86_64" ] && {
-					mock -r ${l_DIST}-${l_CODENAME}-x86_64 --result $PKGDIST/$l_DIST/$l_CODENAME/x86_64 $PKGDIST/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE~git$DATE.$GITREV.$COMPONENT.src.rpm
+					mock -r ${l_DIST}-${l_CODENAME}-x86_64 --result $PKGDIST/$l_DIST/$l_CODENAME/x86_64 $PKGDIST/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm
 				}
 				[ "x$SKIP_ARCH" != "xi386" ] && {
-					mock -r ${l_DIST}-${l_CODENAME}-i386  --result $PKGDIST/$l_DIST/$l_CODENAME/i386 $PKGDIST/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE~git$DATE.$GITREV.$COMPONENT.src.rpm
+					mock -r ${l_DIST}-${l_CODENAME}-i386  --result $PKGDIST/$l_DIST/$l_CODENAME/i386 $PKGDIST/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm
 				}
 			done
 		}
