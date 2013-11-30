@@ -120,7 +120,8 @@ prepare_workspace() {
 	cd "$PROJECT_DIR"
 
 	# by default we build for all current debian versions
-	if [ -n $ARGV2_CODENAME ]; then
+	echo "HIIIIIIEEEEEERR: $ARGV2_CODENAME"
+	if [ "x$ARGV2_CODENAME" != "x" ]; then
 		if echo "$DEBIAN_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
 			DEB_BUILD_FOR="debian:$ARGV2_CODENAME"
 		elif echo "$UBUNTU_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then

@@ -116,7 +116,7 @@ prepare_workspace() {
 	GIT_OBJECT_ID=`git show-ref -s heads/master`
 	cd "$PROJECT_DIR"
 
-	if [ -n "$ARGV2_CODENAME" ]; then
+	if [ "x$ARGV2_CODENAME" != "x" ]; then
 		if echo "$FEDORA_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
 			RPM_BUILD_FOR="fedora:$ARGV2_CODENAME"
 		elif echo "$EPEL_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
