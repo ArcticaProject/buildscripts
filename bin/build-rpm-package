@@ -38,7 +38,7 @@ PACKAGES_WITHOUT_OTHERMIRROR="keyring"
 GNUPGHOME=$HOME/.gnupg
 
 FORCE_BUILD=${FORCE_BUILD:-"no"}
-RPM_BUILDS_FOR=${RPM_BUILDS_FOR:-"fedora:$FEDORA_DISTROS epel:$EPEL_DISTROS"}
+RPM_BUILD_FOR=${RPM_BUILD_FOR:-"fedora:$FEDORA_DISTROS epel:$EPEL_DISTROS"}
 
 test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
 
@@ -118,9 +118,9 @@ prepare_workspace() {
 
 	if [ -n "$ARGV2_CODENAME" ]; then
 		if echo "$FEDORA_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
-			RPM_BUILDS_FOR="fedora:$ARGV2_CODENAME"
+			RPM_BUILD_FOR="fedora:$ARGV2_CODENAME"
 		elif echo "$EPEL_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
-			RPM_BUILDS_FOR="epel:$ARGV2_CODENAME"
+			RPM_BUILD_FOR="epel:$ARGV2_CODENAME"
 		fi
 	fi
 	return 0
@@ -128,7 +128,7 @@ prepare_workspace() {
 
 clear_pkgdist() {
 	# pkgdist directory cleanup
-	echo "$RPM_BUILDS_FOR" | sed -e 's/ /\n/g' | while read line; do
+	echo "$RPM_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		echo "$DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
@@ -188,7 +188,7 @@ build_packages() {
 	# clean up the Git clone from the temp folder
 	cd && rm $TEMP_DIR/$PROJECT -Rf
 
-	echo "$RPM_BUILDS_FOR" | sed -e 's/ /\n/g' | while read line; do
+	echo "$RPM_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		echo "$DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
@@ -229,7 +229,7 @@ build_packages() {
 upload_packages() {
 	# dupload the new packages to the reprepro repository
 
-	echo "$RPM_BUILDS_FOR" | sed -e 's/ /\n/g' | while read line; do
+	echo "$RPM_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		for l_CODENAME in $l_CODENAMES; do

@@ -37,7 +37,7 @@ PACKAGES_WITHOUT_OTHERMIRROR="keyring"
 GNUPGHOME=$HOME/.gnupg
 
 FORCE_BUILD=${FORCE_BUILD:-"no"}
-DEB_BUILDS_FOR=${DEB_BUILDS_FOR:-"debian:$DEBIAN_DISTROS ubuntu:$UBUNTU_DISTROS"}
+DEB_BUILD_FOR=${DEB_BUILD_FOR:-"debian:$DEBIAN_DISTROS ubuntu:$UBUNTU_DISTROS"}
 
 test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
 
@@ -122,9 +122,9 @@ prepare_workspace() {
 	# by default we build for all current debian versions
 	if [ -n $ARGV2_CODENAME ]; then
 		if echo "$DEBIAN_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
-			DEB_BUILDS_FOR="debian:$ARGV2_CODENAME"
+			DEB_BUILD_FOR="debian:$ARGV2_CODENAME"
 		elif echo "$UBUNTU_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
-			DEB_BUILDS_FOR="ubuntu:$ARGV2_CODENAME"
+			DEB_BUILD_FOR="ubuntu:$ARGV2_CODENAME"
 		fi
 	fi
 	return 0
@@ -132,7 +132,7 @@ prepare_workspace() {
 
 clear_pkgdist() {
 	# pkgdist directory cleanup
-	echo "$DEB_BUILDS_FOR" | sed -e 's/ /\n/g' | while read line; do
+	echo "$DEB_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		echo "$DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
@@ -174,7 +174,7 @@ clear_pkgdist() {
 
 build_packages() {
 	# use pbuilder for building all variants of this package
-	echo "$DEB_BUILDS_FOR" | sed -e 's/ /\n/g' | while read line; do
+	echo "$DEB_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		echo "$DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
@@ -282,7 +282,7 @@ build_packages() {
 
 upload_packages() {
 	# dupload the new packages to the reprepro repository
-	echo "$DEB_BUILDS_FOR" | sed -e 's/ /\n/g' | while read line; do
+	echo "$DEB_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		for l_CODENAME in $l_CODENAMES; do
