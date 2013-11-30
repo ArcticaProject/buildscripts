@@ -26,12 +26,8 @@ RPMEMAIL="firstname.lastname@mydomain.org"
 RPMFULLNAME="Firstname Lastname"
 GPG_KEY=
 DISTS_SUPPORTED="fedora epel"
-FEDORA_DISTROS="18 19 20 rawhide"
+FEDORA_DISTROS="18,19,20,rawhide"
 EPEL_DISTROS="6"
-RPM_BUILDS_FOR="\
-fedora: $FEDORA_DISTROS\n\
-epel: $EPEL_DISTROS\n\
-"
 RPM_REPOS_BASE=/var/www/
 
 COMPONENT_MAIN="main"
@@ -42,6 +38,7 @@ PACKAGES_WITHOUT_OTHERMIRROR="keyring"
 GNUPGHOME=$HOME/.gnupg
 
 FORCE_BUILD=${FORCE_BUILD:-"no"}
+RPM_BUILDS_FOR=${RPM_BUILDS_FOR:-"fedora:$FEDORA_DISTROS epel:$EPEL_DISTROS"}
 
 test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
 
@@ -93,9 +90,6 @@ set_vars() {
 }
 
 prepare_workspace() {
-	# in any case remove the RPM_BUILDS_FOR file
-	rm -f "$PROJECT_DIR/RPM_BUILDS_FOR"
-
 	# create rpmbuild subdirectories
 	mkdir -p $PKGDIST/rpmbuild/SOURCES
 
@@ -122,22 +116,21 @@ prepare_workspace() {
 	GIT_OBJECT_ID=`git show-ref -s heads/master`
 	cd "$PROJECT_DIR"
 
-	# by default we build for all current debian versions
-	if test -z $ARGV2_CODENAME; then
-		test -f RPM_BUILDS_FOR || echo -e "$RPM_BUILDS_FOR" > RPM_BUILDS_FOR
-	elif echo "$FEDORA_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
-		echo "fedora: $ARGV2_CODENAME" > RPM_BUILDS_FOR
-	elif echo "$EPEL_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
-		echo "epel: $ARGV2_CODENAME" >/dev/null
+	if [ -n "$ARGV2_CODENAME" ]; then
+		if echo "$FEDORA_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
+			RPM_BUILDS_FOR="fedora:$ARGV2_CODENAME"
+		elif echo "$EPEL_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
+			RPM_BUILDS_FOR="epel:$ARGV2_CODENAME"
+		fi
 	fi
 	return 0
 }
 
 clear_pkgdist() {
 	# pkgdist directory cleanup
-	cat "$PROJECT_DIR/RPM_BUILDS_FOR" | egrep -v '(^$|^#.*$)' | while read line; do
+	echo "$RPM_BUILDS_FOR" | sed -e 's/ /\n/g' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
-		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | tr [:upper:] [:lower:])}"
+		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		echo "$DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
 			for l_CODENAME in $l_CODENAMES; do
 
@@ -195,9 +188,9 @@ build_packages() {
 	# clean up the Git clone from the temp folder
 	cd && rm $TEMP_DIR/$PROJECT -Rf
 
-	cat "$PROJECT_DIR/RPM_BUILDS_FOR" | egrep -v '(^$|^#.*$)' | while read line; do
+	echo "$RPM_BUILDS_FOR" | sed -e 's/ /\n/g' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
-		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | tr [:upper:] [:lower:])}"
+		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		echo "$DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
 			for l_CODENAME in $l_CODENAMES; do
 
@@ -236,9 +229,9 @@ build_packages() {
 upload_packages() {
 	# dupload the new packages to the reprepro repository
 
-	cat "$PROJECT_DIR/RPM_BUILDS_FOR" | egrep -v '(^$|^#.*$)' | while read line; do
-		l_DIST=$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])
-		l_CODENAMES=${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | tr [:upper:] [:lower:])}
+	echo "$RPM_BUILDS_FOR" | sed -e 's/ /\n/g' | while read line; do
+		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
+		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		for l_CODENAME in $l_CODENAMES; do
 
 			# in case we build a special CODENAME (squeeze, wheezy, lucid, ...) do skip
