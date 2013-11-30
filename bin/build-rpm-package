@@ -41,6 +41,8 @@ REPOS_SERVER="packages.mydomain.org"
 PACKAGES_WITHOUT_OTHERMIRROR="keyring"
 GNUPGHOME=$HOME/.gnupg
 
+FORCE_BUILD=${FORCE_BUILD:-"no"}
+
 test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
 
 PREFIX=$(echo `basename $0` | cut -d"-" -f1)
@@ -63,7 +65,7 @@ set_vars() {
 	ARGV2_CODENAME="$(echo "$2/" | cut -d"/" -f2)"
 	COMPONENT="${ARGV2_COMPONENT:-${COMPONENT:-$COMPONENT_NIGHTLY}}"
 	CODENAMES="${ARGV2_CODENAME:-${CODENAMES}}"
-	[ -n "$ARGV2_CODENAME" ] && FORCE_BUILD=0 || FORCE_BUILD=-1
+	[ -n "$ARGV2_CODENAME" ] && FORCE_BUILD="yes" || true
 	DATE="${DATE:-$(date +%Y%m%d)}"
 	if [ "x$COMPONENT" = "x$COMPONENT_MAIN" ]; then
 		CHECKOUT="${3:-build-main}"
@@ -266,7 +268,7 @@ upload_packages() {
 ### MAIN ###
 set_vars $@ && {
 	if [ "x$(basename $0)" = "x$PREFIX-build-rpm-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-rpm-package" ]; then
-		cd $PROJECT_DIR && pkgneedsbuild $CHECKOUT || [ "$FORCE_BUILD" -eq 0 ] && {
+		cd $PROJECT_DIR && pkgneedsbuild $CHECKOUT || [ "$FORCE_BUILD" = "yes" ] && {
 			prepare_workspace && {
 				clear_pkgdist
 				build_packages
