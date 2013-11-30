@@ -252,7 +252,7 @@ upload_packages() {
 					cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
 					scp *.rpm $REPOS_SERVER:$RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$l_ARCH/rpms/ || true
 
-					ssh $REPOS_SERVER cd $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$l_ARCH/ && createrepo .
+					ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$l_ARCH/ && createrepo ."
 
 				}
 			done
