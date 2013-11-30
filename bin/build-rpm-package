@@ -37,13 +37,13 @@ REPOS_SERVER="packages.mydomain.org"
 PACKAGES_WITHOUT_OTHERMIRROR="keyring"
 GNUPGHOME=$HOME/.gnupg
 
-FORCE_BUILD=${FORCE_BUILD:-"no"}
-RPM_BUILD_FOR=${RPM_BUILD_FOR:-"fedora:$FEDORA_DISTROS epel:$EPEL_DISTROS"}
-
 test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
 
 PREFIX=$(echo `basename $0` | cut -d"-" -f1)
 test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo "$0 has no valid context prefix..."; exit -1; }
+
+FORCE_BUILD=${FORCE_BUILD:-"no"}
+RPM_BUILD_FOR=${RPM_BUILD_FOR:-"fedora:$FEDORA_DISTROS epel:$EPEL_DISTROS"}
 
 set -ex
 
