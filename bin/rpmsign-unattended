@@ -1,4 +1,4 @@
-#!/usr/bin/expect -f
+#!/usr/bin/expect -- 
   
 spawn rpmsign {*}$argv
 expect -exact "Enter pass phrase: "
