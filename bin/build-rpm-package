@@ -178,7 +178,7 @@ build_packages() {
 	PKG_RELEASE=$(cat $PROJECT.spec | egrep "^Release:.*" | awk '{ print $2 }')
 	PKG_SRCRELEASE=$(echo $PKG_RELEASE | sed -e 's/%{?dist}//')
 
-	IS_NOARCH=$(cat $PROJECT.spec | egrep "^BuildArch:.*noarch\$" 1>/dev/null 2>/dev/null && echo yes)
+	IS_NOARCH=$(cat $PROJECT.spec | egrep "^BuildArch:.*noarch\$" 1>/dev/null 2>/dev/null && echo yes || echo no)
 
 	if [ "$COMPONENT" = "$COMPONENT_NIGHTLY" ]; then
 		IS_RELEASE="0"
