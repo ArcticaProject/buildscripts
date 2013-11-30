@@ -26,12 +26,8 @@ DEBEMAIL="firstname.lastname@mydomain.org"
 DEBFULLNAME="Firstname Lastname"
 GPG_KEY=
 DISTS_SUPPORTED="debian ubuntu"
-DEBIAN_DISTROS="lenny squeeze wheezy jessie sid"
-UBUNTU_DISTROS="lucid maverick natty oneiric precise"
-DEB_BUILDS_FOR="\
-debian: squeeze wheezy jessie sid\n\
-ubuntu: lucid precise\n\
-"
+DEBIAN_DISTROS="lenny,squeeze,wheezy,jessie,sid"
+UBUNTU_DISTROS="lucid,precise"
 
 COMPONENT_MAIN="main"
 COMPONENT_NIGHTLY="nightly"
@@ -41,6 +37,7 @@ PACKAGES_WITHOUT_OTHERMIRROR="keyring"
 GNUPGHOME=$HOME/.gnupg
 
 FORCE_BUILD=${FORCE_BUILD:-"no"}
+DEB_BUILDS_FOR=${DEB_BUILDS_FOR:-"debian:$DEBIAN_DISTROS ubuntu:$UBUNTU_DISTROS"}
 
 test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
 
@@ -98,9 +95,6 @@ set_vars() {
 }
 
 prepare_workspace() {
-	# in any case remove the DEB_BUILDS_FOR file
-	rm -f "$PROJECT_DIR/DEB_BUILDS_FOR"
-
 	# make sure our local working copy is up to date...
 
 	if [ -d "$PROJECT_DIR/.git" ]; then 
@@ -126,21 +120,21 @@ prepare_workspace() {
 	cd "$PROJECT_DIR"
 
 	# by default we build for all current debian versions
-	if test -z $ARGV2_CODENAME; then
-		test -f DEB_BUILDS_FOR || echo -e "$DEB_BUILDS_FOR" > DEB_BUILDS_FOR
-	elif echo "$DEBIAN_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
-		echo "debian: $ARGV2_CODENAME" > DEB_BUILDS_FOR
-	elif echo "$UBUNTU_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
-		echo "ubuntu: $ARGV2_CODENAME" >/dev/null
+	if [ -n $ARGV2_CODENAME ]; then
+		if echo "$DEBIAN_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
+			DEB_BUILDS_FOR="debian:$ARGV2_CODENAME"
+		elif echo "$UBUNTU_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
+			DEB_BUILDS_FOR="ubuntu:$ARGV2_CODENAME"
+		fi
 	fi
 	return 0
 }
 
 clear_pkgdist() {
 	# pkgdist directory cleanup
-	cat "$PROJECT_DIR/DEB_BUILDS_FOR" | egrep -v '(^$|^#.*$)' | while read line; do
+	echo "$DEB_BUILDS_FOR" | sed -e 's/ /\n/g' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
-		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | tr [:upper:] [:lower:])}"
+		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		echo "$DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
 			for l_CODENAME in $l_CODENAMES; do
 
@@ -180,9 +174,9 @@ clear_pkgdist() {
 
 build_packages() {
 	# use pbuilder for building all variants of this package
-	cat "$PROJECT_DIR/DEB_BUILDS_FOR" | egrep -v '(^$|^#.*$)' | while read line; do
+	echo "$DEB_BUILDS_FOR" | sed -e 's/ /\n/g' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
-		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | tr [:upper:] [:lower:])}"
+		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		echo "$DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
 			for l_CODENAME in $l_CODENAMES; do
 
@@ -288,9 +282,9 @@ build_packages() {
 
 upload_packages() {
 	# dupload the new packages to the reprepro repository
-	cat "$PROJECT_DIR/DEB_BUILDS_FOR" | egrep -v '(^$|^#.*$)' | while read line; do
-		l_DIST=$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])
-		l_CODENAMES=${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | tr [:upper:] [:lower:])}
+	echo "$DEB_BUILDS_FOR" | sed -e 's/ /\n/g' | while read line; do
+		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
+		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		for l_CODENAME in $l_CODENAMES; do
 
 			# in case we build a special CODENAME (squeeze, wheezy, lucid, ...) do skip
