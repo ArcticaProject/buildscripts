@@ -134,8 +134,6 @@ clear_pkgdist() {
 		echo "$RPM_DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
 			for l_CODENAME in $l_CODENAMES; do
 
-				# in case we build a special CODENAME (squeeze, wheezy, lucid, ...) do skip
-				# the wrong distribution here...
 				test -z $CODENAMES || echo $line | grep $CODENAMES || break
 
 				for l_ARCH in x86_64 i386; do
@@ -234,8 +232,6 @@ upload_packages() {
 		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		for l_CODENAME in $l_CODENAMES; do
 
-			# in case we build a special CODENAME (squeeze, wheezy, lucid, ...) do skip
-			# the wrong distribution here...
 			test -z $CODENAMES || echo $line | grep $CODENAMES || break
 
 			for l_ARCH in x86_64 i386; do
