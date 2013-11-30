@@ -1,6 +1,6 @@
 package config;
 
-### X2go/DEBIAN
+### X2Go/DEBIAN
 $cfg{"x2go-debian-sid"} = {
         fqdn => "code.x2go.org",
         login => "x2go-admin",
