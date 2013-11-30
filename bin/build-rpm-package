@@ -137,13 +137,13 @@ clear_pkgdist() {
 				test -z $CODENAMES || echo $line | grep $CODENAMES || break
 
 				for l_ARCH in x86_64 i386; do
-					[ "x$SKIP_ARCH" != "x$l_ARCH" ] && {
+					if [ "x$SKIP_ARCH" != "x$l_ARCH" ]; then
 						mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
 						#rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/dupload.conf"
 						rm -f "$PKGDIST/rpmbuild/SOURCES/$PROJECT-"*.tar.gz
 						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/"*.log
 						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT-"*.rpm
-					}
+					fi
 				done
 			done
 		}
@@ -235,22 +235,22 @@ upload_packages() {
 			test -z $CODENAMES || echo $line | grep $CODENAMES || break
 
 			for l_ARCH in x86_64 i386; do
-				[ "x$SKIP_ARCH" != "x$l_ARCH" ] && {
+				if [ "x$SKIP_ARCH" != "x$l_ARCH" ]; then
 
 					# create remote directories in archive
-					ssh $REPOS_SERVER mkdir -p $RPM_REPOS_BASE/$l_DIST/$COMPONENT/$l_CODENAME/$l_ARCH/rpms
-					ssh $REPOS_SERVER mkdir -p $RPM_REPOS_BASE/$l_DIST/$COMPONENT/$l_CODENAME/$l_ARCH/repodata
+					0</dev/null ssh $REPOS_SERVER mkdir -p $RPM_REPOS_BASE/$l_DIST/$COMPONENT/$l_CODENAME/$l_ARCH/rpms
+					0</dev/null ssh $REPOS_SERVER mkdir -p $RPM_REPOS_BASE/$l_DIST/$COMPONENT/$l_CODENAME/$l_ARCH/repodata
 
 					# remove rpm packages of the same name (pattern)
-					ssh $REPOS_SERVER rm -f $RPM_REPOS_BASE/$l_DIST/$COMPONENT/$l_CODENAME/$l_ARCH/rpms/$PROJECT.*.rpm
+					0</dev/null ssh $REPOS_SERVER rm -f $RPM_REPOS_BASE/$l_DIST/$COMPONENT/$l_CODENAME/$l_ARCH/rpms/$PROJECT.*.rpm
 
 					# copy rpms into repo
 					cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
 					scp *.rpm $REPOS_SERVER:$RPM_REPOS_BASE/$l_DIST/$COMPONENT/$l_CODENAME/$l_ARCH/rpms/ || true
 
-					ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$COMPONENT/$l_CODENAME/$l_ARCH/ && createrepo ."
+					0</dev/null ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$COMPONENT/$l_CODENAME/$l_ARCH/ && createrepo ."
 
-				}
+				fi
 			done
 		done
 	done
