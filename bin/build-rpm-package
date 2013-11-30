@@ -25,7 +25,7 @@ GIT_HOSTNAME="git.mydomain.org"
 RPMEMAIL="firstname.lastname@mydomain.org"
 RPMFULLNAME="Firstname Lastname"
 GPG_KEY=
-DISTS_SUPPORTED="fedora epel"
+RPM_DISTS_SUPPORTED="fedora epel"
 FEDORA_DISTROS="18,19,20,rawhide"
 EPEL_DISTROS="6"
 RPM_REPOS_BASE=/var/www/
@@ -131,7 +131,7 @@ clear_pkgdist() {
 	echo "$RPM_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
-		echo "$DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
+		echo "$RPM_DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
 			for l_CODENAME in $l_CODENAMES; do
 
 				# in case we build a special CODENAME (squeeze, wheezy, lucid, ...) do skip
@@ -191,7 +191,7 @@ build_packages() {
 	echo "$RPM_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
-		echo "$DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
+		echo "$RPM_DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
 			for l_CODENAME in $l_CODENAMES; do
 
 				test -z $CODENAMES || echo $line | grep $CODENAMES || break
