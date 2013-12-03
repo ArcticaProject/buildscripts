@@ -318,8 +318,8 @@ wait_for_lock() {
 		pid=$(head -n1 $LOCK_FILE)
 		if ! ps $pid 1>/dev/null; then rm -f $LOCK_FILE
 		else
-			echo "PROJECT directory is locked, sleeping for 10 secs..."
-			sleep 10
+			echo "PROJECT directory is locked, sleeping for 5 minutes..."
+			sleep 300
 		fi
 	done
 }
