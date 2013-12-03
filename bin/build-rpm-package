@@ -81,6 +81,9 @@ set_vars() {
 	PROJECT_DIR="$HOME/build/$COMPONENT/$PROJECT"
 	PKGDIST="$HOME/pkg-dist/$COMPONENT/$PROJECT"
 
+	# lock file
+	LOCK_FILE=$PROJECT_DIR/../.$PROJECT.lock
+
 	# creating paths
 	mkdir -p "$TEMP_BASE"
 	mkdir -p "$PROJECT_DIR"
@@ -177,6 +180,7 @@ build_packages() {
 		IS_RELEASE="1"
 	fi
 	sed -i $PROJECT.spec -e "s/%{?dist}/.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT%{?dist}/"
+
 	mv $TEMP_DIR/$PROJECT $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
 	tar -czf $PKGDIST/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
 
@@ -257,14 +261,37 @@ upload_packages() {
 	return 0
 }
 
+wait_for_lock() {
+	while [ -f $LOCK_FILE ]; do
+		pid=$(head -n1 $LOCK_FILE)
+		if ! ps $pid 1>/dev/null; then rm -f $LOCK_FILE
+		else
+			echo "PROJECT directory is locked, sleeping for 10 seconds..."
+			sleep 10
+		fi
+	done
+}
+
+lock_workspace() {
+	wait_for_lock
+	echo $$ > $LOCK_FILE
+}
+
+unlock_workspace() {
+	rm -f $LOCK_FILE
+}
+
 ### MAIN ###
 set_vars $@ && {
 	if [ "x$(basename $0)" = "x$PREFIX-build-rpm-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-rpm-package" ]; then
 		cd $PROJECT_DIR && pkgneedsbuild $CHECKOUT || [ "$FORCE_BUILD" = "yes" ] && {
+			lock_workspace
 			prepare_workspace && {
+				unlock_workspace
 				clear_pkgdist
 				build_packages
 			}
+			unlock_workspace
 		}
 	fi
 	if [ "x$(basename $0)" = "x$PREFIX-upload-rpm-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-rpm-package" ]; then
