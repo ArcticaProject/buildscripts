@@ -314,7 +314,7 @@ upload_packages() {
 }
 
 wait_for_lock() {
-	while $LOCK_FILE; do
+	while [ -f $LOCK_FILE ]; do
 		pid=$(head -n1 $LOCK_FILE)
 		if ! ps $pid 1>/dev/null; then rm -f $LOCK_FILE
 		else echo "PROJECT directory is locked, sleeping for 10 secs..."; fi
