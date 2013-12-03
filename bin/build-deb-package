@@ -318,8 +318,8 @@ wait_for_lock() {
 		pid=$(head -n1 $LOCK_FILE)
 		if ! ps $pid 1>/dev/null; then rm -f $LOCK_FILE
 		else
-			echo "PROJECT directory is locked, sleeping for 5 minutes..."
-			sleep 300
+			echo "PROJECT directory is locked, sleeping for 10 seconds..."
+			sleep 10
 		fi
 	done
 }
@@ -339,6 +339,7 @@ set_vars $@ && {
 		cd $PROJECT_DIR && pkgneedsbuild $CHECKOUT || [ "$FORCE_BUILD" = "yes" ] && {
 			lock_workspace
 			prepare_workspace && {
+				unlock_workspace
 				clear_pkgdist
 				build_packages
 			}
