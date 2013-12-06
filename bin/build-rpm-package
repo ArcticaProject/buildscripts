@@ -181,7 +181,7 @@ build_packages() {
 	fi
 	sed -i $PROJECT.spec -e "s/%{?dist}/.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT%{?dist}/"
 
-	cat $PROJECT.spec | egrep "^Source[0-9]+:.*" | awk '{ print $2 }' | while read source_file; do
+	cat $PROJECT.spec | egrep "^Source[1-9]+:.*" | awk '{ print $2 }' | while read source_file; do
 		find $PROJECT/rpm/$source_file -maxdepth 0 1> /dev/null && cp $PROJECT/rpm/$source_file . && continue
 		find $PROJECT/$source_file -maxdepth 0 1> /dev/null && cp $PROJECT/$source_file .
 	done
