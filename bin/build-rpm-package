@@ -181,6 +181,12 @@ build_packages() {
 	fi
 	sed -i $PROJECT.spec -e "s/%{?dist}/.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT%{?dist}/"
 
+	# apply patches from debian/patches/* so that they end up in the tarbal
+	# ... esp. relevant for NX (redistributed)
+	if [ -d $PROJECT/debian/patches/series ]; then
+		( cd $PROJECT && QUILT_PATCHES=debian/patches quilt push -a && rm .pc/ -Rf; )
+	fi
+
 	cat $PROJECT.spec | egrep "^Source[1-9]+:.*" | awk '{ print $2 }' | while read source_file; do
 		find $PROJECT/rpm/$source_file -maxdepth 0 1> /dev/null && cp $PROJECT/rpm/$source_file . && continue
 		find $PROJECT/$source_file -maxdepth 0 1> /dev/null && cp $PROJECT/$source_file .
