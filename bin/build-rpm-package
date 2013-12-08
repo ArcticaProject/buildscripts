@@ -263,7 +263,7 @@ upload_packages() {
 
 					# copy rpms into repo
 					cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
-					scp *.rpm $REPOS_SERVER:$RPM_REPOS_BASE/$l_DIST/$COMPONENT/$l_CODENAME/$PROJECT/$l_ARCH/rpms/$PROJECT/ || true
+					scp *.rpm $REPOS_SERVER:$RPM_REPOS_BASE/$l_DIST/$COMPONENT/$l_CODENAME/$l_ARCH/rpms/$PROJECT/ || true
 
 					0</dev/null ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$COMPONENT/$l_CODENAME/$l_ARCH/ && createrepo ."
 
