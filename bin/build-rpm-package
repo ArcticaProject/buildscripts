@@ -226,11 +226,19 @@ build_packages() {
 				#fi
 
 				if [ "x$SKIP_ARCH" != "xx86_64" ] || [ "$IS_NOARCH" = "yes" ]; then
+					while [ -d ~mock/${l_DIST}-${l_CODENAME}-x86_64 ]; do
+						echo "Waiting for some other build to finish..."
+						sleep 30
+					done
 					mock -r ${l_DIST}-${l_CODENAME}-x86_64 --result $PKGDIST/$l_DIST/$l_CODENAME/x86_64 $PKGDIST/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm
 					cat $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
 					rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign $PKGDIST/$l_DIST/$l_CODENAME/x86_64/*.rpm
 				fi
 				if [ "x$SKIP_ARCH" != "xi386" ] && [ "$IS_NOARCH" != "yes" ]; then
+					while [ -d ~mock/${l_DIST}-${l_CODENAME}-i386 ]; do
+						echo "Waiting for some other build to finish..."
+						sleep 30
+					done
 					mock -r ${l_DIST}-${l_CODENAME}-i386  --result $PKGDIST/$l_DIST/$l_CODENAME/i386 $PKGDIST/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm
 					cat $PKGDIST/$l_DIST/$l_CODENAME/i386/build.log
 					rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign $PKGDIST/$l_DIST/$l_CODENAME/i386/*.rpm
