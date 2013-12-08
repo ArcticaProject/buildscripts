@@ -155,12 +155,6 @@ clear_pkgdist() {
 }
 
 build_packages() {
-
-	# tar upstream sources from our Git clone
-	TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
-	mkdir -p "$TEMP_DIR/$PROJECT"
-	chmod 2770 "$TEMP_DIR" -Rf
-
 	echo "$RPM_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
@@ -168,6 +162,14 @@ build_packages() {
 			for l_CODENAME in $l_CODENAMES; do
 
 				test -z $CODENAMES || echo $line | grep $CODENAMES || break
+
+				# create rpmbuild subdirectories
+				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES
+
+				# tar upstream sources from our Git clone
+				TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
+				mkdir -p "$TEMP_DIR/$PROJECT"
+				chmod 2770 "$TEMP_DIR" -Rf
 
 				cd "$PROJECT_DIR"
 				git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
