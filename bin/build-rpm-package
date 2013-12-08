@@ -142,8 +142,8 @@ clear_pkgdist() {
 				for l_ARCH in x86_64 i386; do
 					if [ "x$SKIP_ARCH" != "x$l_ARCH" ]; then
 						mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
-						rm -f "$PKGDIST/rpmbuild/SOURCES/"*
-						rm -f "$PKGDIST/rpmbuild/SRPMS/$PROJECT-"*.src.rpm
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/"*
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-"*.src.rpm
 						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/"*.log
 						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT-"*.rpm
 					fi
@@ -161,46 +161,6 @@ build_packages() {
 	mkdir -p "$TEMP_DIR/$PROJECT"
 	chmod 2770 "$TEMP_DIR" -Rf
 
-	cd "$PROJECT_DIR"
-	git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
-	cd $TEMP_DIR
-	GITREV=$(cd $PROJECT && gitrevno && cd - 1>/dev/null)
-	rm -Rf "$PROJECT/.git"
-	mv $PROJECT/$PROJECT.spec .
-
-	UPSTREAM_VERSION=$(cat $PROJECT.spec | egrep "^Version:.*" | awk '{ print $2 }')
-	PKG_RELEASE=$(cat $PROJECT.spec | egrep "^Release:.*" | awk '{ print $2 }')
-	PKG_SRCRELEASE=$(echo $PKG_RELEASE | sed -e 's/%{?dist}//')
-
-	IS_NOARCH=$(cat $PROJECT.spec | egrep "^BuildArch:.*noarch\$" 1>/dev/null 2>/dev/null && echo yes || echo no)
-
-	if [ "$COMPONENT" = "$COMPONENT_NIGHTLY" ]; then
-		IS_RELEASE="0"
-	else
-		IS_RELEASE="1"
-	fi
-	sed -i $PROJECT.spec -e "s/%{?dist}/.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT%{?dist}/"
-
-	# apply patches from debian/patches/* so that they end up in the tarbal
-	# ... esp. relevant for NX (redistributed)
-	if [ -f $PROJECT/debian/patches/series ]; then
-		( cd $PROJECT && QUILT_PATCHES=debian/patches quilt push -a && rm .pc/ -Rf; )
-	fi
-
-	cat $PROJECT.spec | egrep "^Source[1-9]+:.*" | awk '{ print $2 }' | while read source_file; do
-		find $PROJECT/rpm/$source_file -maxdepth 0 1> /dev/null && cp $PROJECT/rpm/$source_file $PKGDIST/rpmbuild/SOURCES/ && continue
-		find $PROJECT/$source_file -maxdepth 0 1> /dev/null && cp $PROJECT/$source_file $PKGDIST/rpmbuild/SOURCES/
-	done
-
-	mv $TEMP_DIR/$PROJECT $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
-	tar -czf $PKGDIST/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
-
-	# create the SRPM package
-	rpmbuild -D "%_topdir $PKGDIST/rpmbuild" -bs $PROJECT.spec
-
-	# clean up the Git clone from the temp folder
-	cd && rm $TEMP_DIR/$PROJECT -Rf
-
 	echo "$RPM_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
@@ -209,14 +169,52 @@ build_packages() {
 
 				test -z $CODENAMES || echo $line | grep $CODENAMES || break
 
-				# modify changelog for this build
+				cd "$PROJECT_DIR"
+				git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
+				cd $TEMP_DIR
+				GITREV=$(cd $PROJECT && gitrevno && cd - 1>/dev/null)
+				rm -Rf "$PROJECT/.git"
+				mv $PROJECT/$PROJECT.spec .
 
+				UPSTREAM_VERSION=$(cat $PROJECT.spec | egrep "^Version:.*" | awk '{ print $2 }')
+				PKG_RELEASE=$(cat $PROJECT.spec | egrep "^Release:.*" | awk '{ print $2 }')
+				PKG_SRCRELEASE=$(echo $PKG_RELEASE | sed -e 's/%{?dist}//')
+
+				IS_NOARCH=$(cat $PROJECT.spec | egrep "^BuildArch:.*noarch\$" 1>/dev/null 2>/dev/null && echo yes || echo no)
+
+				if [ "$COMPONENT" = "$COMPONENT_NIGHTLY" ]; then
+					IS_RELEASE="0"
+				else
+					IS_RELEASE="1"
+				fi
+				sed -i $PROJECT.spec -e "s/%{?dist}/.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT%{?dist}/"
+
+				# apply patches from debian/patches/* so that they end up in the tarbal
+				# ... esp. relevant for NX (redistributed)
+				if [ -f $PROJECT/debian/patches/series ]; then
+					( cd $PROJECT && QUILT_PATCHES=debian/patches quilt push -a && rm .pc/ -Rf; )
+				fi
+
+				cat $PROJECT.spec | egrep "^Source[1-9]+:.*" | awk '{ print $2 }' | while read source_file; do
+					find $PROJECT/rpm/$source_file -maxdepth 0 1> /dev/null && cp $PROJECT/rpm/$source_file $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/ && continue
+					find $PROJECT/$source_file -maxdepth 0 1> /dev/null && cp $PROJECT/$source_file $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/
+				done
+
+				mv $TEMP_DIR/$PROJECT $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
+				tar -czf $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
+
+				# create the SRPM package
+				rpmbuild -D "%_topdir $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild" -bs $PROJECT.spec
+
+				# clean up the Git clone from the temp folder
+				cd && rm $TEMP_DIR/$PROJECT -Rf
+
+				# modify changelog for this build
 				### TODO: add changelog entry for this automatic build
 
 				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{x86_64,i386}
 
 				# TODO: obtain packages from our YUM repository???
-
 				#OTHERMIRROR=""
 				#if [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
 				#	echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT_MAIN $COMPONENT"
@@ -229,7 +227,7 @@ build_packages() {
 						echo "Waiting for some other build to finish..."
 						sleep 30
 					done
-					if mock -r ${l_DIST}-${l_CODENAME}-x86_64 --result $PKGDIST/$l_DIST/$l_CODENAME/x86_64 $PKGDIST/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm; then
+					if mock -r ${l_DIST}-${l_CODENAME}-x86_64 --result $PKGDIST/$l_DIST/$l_CODENAME/x86_64 $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm; then
 						rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign $PKGDIST/$l_DIST/$l_CODENAME/x86_64/*.rpm
 						cat $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
 					else
@@ -243,7 +241,7 @@ build_packages() {
 						echo "Waiting for some other build to finish..."
 						sleep 30
 					done
-					if mock -r ${l_DIST}-${l_CODENAME}-i386  --result $PKGDIST/$l_DIST/$l_CODENAME/i386 $PKGDIST/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm; then
+					if mock -r ${l_DIST}-${l_CODENAME}-i386  --result $PKGDIST/$l_DIST/$l_CODENAME/i386 $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm; then
 						rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign $PKGDIST/$l_DIST/$l_CODENAME/i386/*.rpm
 						cat $PKGDIST/$l_DIST/$l_CODENAME/i386/build.log
 					else
