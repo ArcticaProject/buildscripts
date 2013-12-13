@@ -312,10 +312,18 @@ unlock_workspace() {
 	rm -f $LOCK_FILE
 }
 
+delay_build() {
+	sleep $[ ( ( $RANDOM % 10 )  + 1 ) * 10 ]s
+}
+
+
 ### MAIN ###
 set_vars $@ && {
 	if [ "x$(basename $0)" = "x$PREFIX-build-rpm-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-rpm-package" ]; then
 		cd $PROJECT_DIR && pkgneedsbuild $CHECKOUT || [ "$FORCE_BUILD" = "yes" ] && {
+			if [ "x$FORCE_BUILD" = "xyes" ]; then
+				delay_build
+			fi
 			lock_workspace
 			prepare_workspace && {
 				unlock_workspace
