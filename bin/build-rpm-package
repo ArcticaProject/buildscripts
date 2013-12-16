@@ -93,9 +93,6 @@ set_vars() {
 }
 
 prepare_workspace() {
-	# create rpmbuild subdirectories
-	mkdir -p $PKGDIST/rpmbuild/SOURCES
-
 	# make sure our local working copy is up to date...
 	if [ -d "$PROJECT_DIR/.git" ]; then 
 		cd "$PROJECT_DIR" && git reset --hard
@@ -144,8 +141,7 @@ clear_pkgdist() {
 						mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
 						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/"*
 						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-"*.src.rpm
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/"*.log
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT-"*.rpm
+						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/"*.rpm
 					fi
 				done
 			done
