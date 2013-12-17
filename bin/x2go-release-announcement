@@ -44,6 +44,7 @@ cat debian/changelog | sed -e 's/Fixes:/Closes:/i' | dpkg-parsechangelog --offse
 	                sed -e 's/Closes:/Fixes these bug report(s):/i' \
 	                    -e 's/^Source: /X2Go Component: /' \
 	                    -e 's/-0~x2go[0-9]//' \
+	                    -e 's/-0x2go[0-9]//' \
 	                    -e 's/-0$//' \
 	                    -e 's/^Distribution: unstable/Status: RELEASE/' \
 	                    -e 's/ unstable;/ RELEASED;/' \
