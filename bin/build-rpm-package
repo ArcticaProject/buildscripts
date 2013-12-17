@@ -30,7 +30,7 @@ FEDORA_DISTROS="18,19,20,rawhide"
 EPEL_DISTROS="6"
 RPM_REPOS_BASE=/var/www/
 
-COMPONENT_MAIN="release"
+COMPONENT_MAIN="main"
 COMPONENT_NIGHTLY="nightly"
 COMPONENT_BUNDLES="bundle-release1 bundle-release2"
 REPOS_SERVER="packages.mydomain.org"
