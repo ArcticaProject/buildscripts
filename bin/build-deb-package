@@ -247,32 +247,32 @@ build_packages() {
 				[ "x$USE_SUDO" != "xyes" ] && {
 					[ "x$EXTRA_ARCHS_ONLY" = "x" ] && {
 						[ "x$SKIP_ARCH" != "xamd64" ] && cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
-							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/amd64" -- --allow-untrusted $SA_OPTION 0<&-
+							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 nice $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/amd64" -- --allow-untrusted $SA_OPTION 0<&-
 						}
 						[ "x$SKIP_ARCH" != "xi386" ] && cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
-							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/i386"  -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
+							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  nice $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/i386"  -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
 						}
 					}
 					for extra_arch in $EXTRA_ARCHS; do
 						mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch"
 						cat debian/control | egrep "Architecture.*(any|$extra_arch)" >/dev/null && {
-							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=$extra_arch $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch" -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
+							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=$extra_arch nice $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch" -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
 						}
 					done
 				}
 				[ "x$USE_SUDO" = "xyes" ] && {
 					[ "x$EXTRA_ARCHS_ONLY" = "x" ] && {
 						[ "x$SKIP_ARCH" != "xamd64" ] && cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
-							sudo GNUPGHOME=$GNUPGHOME DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult $PKGDIST/$l_DIST/$l_CODENAME/amd64 -- --allow-untrusted $SA_OPTION 0<&-
+							sudo GNUPGHOME=$GNUPGHOME DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 OTHERMIRROR="$OTHERMIRROR" nice $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult $PKGDIST/$l_DIST/$l_CODENAME/amd64 -- --allow-untrusted $SA_OPTION 0<&-
 						}
 						[ "x$SKIP_ARCH" != "xi386" ] && cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
-							sudo GNUPGHOME=$GNUPGHOME DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult $PKGDIST/$l_DIST/$l_CODENAME/i386  -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
+							sudo GNUPGHOME=$GNUPGHOME DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  OTHERMIRROR="$OTHERMIRROR" nice $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult $PKGDIST/$l_DIST/$l_CODENAME/i386  -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
 						}
 					}
 					for extra_arch in $EXTRA_ARCHS; do
 						mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch"
 						cat debian/control | egrep "Architecture.*(any|$extra_arch)" >/dev/null && {
-							sudo GNUPGHOME=$GNUPGHOME DIST=$l_DIST CODENAME=$l_CODENAME ARCH=$extra_arch OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch" -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
+							sudo GNUPGHOME=$GNUPGHOME DIST=$l_DIST CODENAME=$l_CODENAME ARCH=$extra_arch OTHERMIRROR="$OTHERMIRROR" nice $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch" -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
 						}
 					done
 				}
