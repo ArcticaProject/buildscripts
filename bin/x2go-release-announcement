@@ -41,7 +41,8 @@ New gains of this version of ,,$project'' are:
 "
 
 cat debian/changelog | sed -e 's/Fixes:/Closes:/i' | dpkg-parsechangelog --offset $offset -c$count -l- | \
-	                sed -e 's/Closes:/Fixes these bug report(s):/i' \
+	                sed -e 's/^Closes:/Fixes these bug report(s):/i' \
+	                    -e 's/Closes:/Fixes:/i' \
 	                    -e 's/^Source: /X2Go Component: /' \
 	                    -e 's/-0~x2go[0-9]//' \
 	                    -e 's/-0x2go[0-9]//' \
