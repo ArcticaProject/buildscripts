@@ -31,8 +31,8 @@ test -z $1 || test -d ./.git || {
 }
 
 # update the build-main branch with our newest blessed reference
-git branch -d build-main &>/dev/null || true
 git tag -d build-main &>/dev/null || true
+git branch -D build-main &>/dev/null || true
 git checkout -b build-main $REF || true
 git push $ORIGIN build-main:build-main
 git checkout master
