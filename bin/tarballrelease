@@ -38,7 +38,7 @@ trap "rm -f \"${MANIFEST}\"; rm -rf \"${TEMP_DIR}\"" 0
 git clone . "$TEMP_DIR/${PROJECT}-$RELEASE"
 ( set -e; cd "$TEMP_DIR/${PROJECT}-$RELEASE/" && git checkout ${CHECKOUT} 2>/dev/null || true )
 ( set -e; cd "$TEMP_DIR" && rm -Rf "${PROJECT}-$RELEASE/.git"* )
-( set -e; cd "$TEMP_DIR" && cp debian/changelog ChangeLog )
+( set -e; cd "$TEMP_DIR" && test -f ChangeLog || { test -f debian/changelog && cp debian/changelog ChangeLog; } )
 ( set -e; cd "$TEMP_DIR" && rm -Rf debian/ )
 ( set -e; cd "$TEMP_DIR" && rm -f *.spec )
 ( set -e; cd "$TEMP_DIR" && find "${PROJECT}-$RELEASE" -type f | sed 's/^\.*\/*//' | sort > "$MANIFEST" )
