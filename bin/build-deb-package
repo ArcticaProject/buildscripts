@@ -121,7 +121,6 @@ prepare_workspace() {
 
 	GIT_OBJECT_ID=`git show-ref -s heads/master`
 	cd "$PROJECT_DIR"
-	git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
 
 	# by default we build for all current debian versions
 	if [ "x$ARGV2_CODENAME" != "x" ]; then
@@ -244,6 +243,9 @@ build_packages() {
 				if [ $PROJECT = "x2gomatebindings" ]; then
 					OTHERMIRROR="deb http://packages.mate-desktop.org/repo/debian $l_CODENAME main"
 				fi
+
+				# create git changelog immediately prior to building the package
+				git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
 
 				[ "x$USE_SUDO" != "xyes" ] && {
 					[ "x$EXTRA_ARCHS_ONLY" = "x" ] && {
