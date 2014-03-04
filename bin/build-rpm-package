@@ -115,6 +115,7 @@ prepare_workspace() {
 
 	GIT_OBJECT_ID=`git show-ref -s heads/master`
 	cd "$PROJECT_DIR"
+	git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
 
 	if [ "x$ARGV2_CODENAME" != "x" ]; then
 		if echo "$FEDORA_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
