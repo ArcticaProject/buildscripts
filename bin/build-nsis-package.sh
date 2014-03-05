@@ -187,80 +187,29 @@ build_packages() {
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		echo "$NSIS_DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
-			for l_CODENAME in $l_CODENAMES; do
 
-				# in case we build a special CODENAME (squeeze, wheezy, lucid, ...) do skip
-				# the wrong distribution here...
-				#test -z $CODENAMES || echo $line | grep $CODENAMES || break
+			TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
+			mkdir -p "$TEMP_DIR/$PROJECT"
+			chmod 2770 "$TEMP_DIR" -Rf
 
-				TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
-				mkdir -p "$TEMP_DIR/$PROJECT"
-				chmod 2770 "$TEMP_DIR" -Rf
+			cd "$PROJECT_DIR"
+			git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
+			cd "$TEMP_DIR/$PROJECT"
+			git checkout $CHECKOUT || git checkout master
+			find $PROJECT_DIR/../ -type f -maxdepth 0 -mindepth 0 | grep $PROJECT_*.orig.tar.gz &>/dev/null && cp $PROJECT_DIR/../$PROJECT_*.orig.tar.gz ..
+			GITREV=$(gitrevno)
 
-				cd "$PROJECT_DIR"
-				git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
-				cd "$TEMP_DIR/$PROJECT"
-				git checkout $CHECKOUT || git checkout master
-				find $PROJECT_DIR/../ -type f -maxdepth 0 -mindepth 0 | grep $PROJECT_*.orig.tar.gz &>/dev/null && cp $PROJECT_DIR/../$PROJECT_*.orig.tar.gz ..
-				GITREV=$(gitrevno)
+			# FIXME: this should be handled at the beginning of this script!!!
+			l_DIST=mingw32-4.4
+			l_CODENAME=qt-4.8
 
-				# we always build native packages for our repos
-				SA_OPTION=""
+			# TODO: Improve generate-nsis-version.pl so that it can be run from another dir
+			cd /cygdrive/d/Build/scripts/
+			./generate-nsis-version.pl
 
-				# we always build native packages for our repos
-				SA_OPTION=""
-				test -f debian/source/format && cat debian/source/format | egrep '^3.0.*\(quilt\)$' >/dev/null && {
-					git fetch origin upstream:upstream
-					UPSTREAM_VERSION=$(dpkg-parsechangelog | grep Version: | cut -d " " -f2 | sed -e 's/-.*//' -e 's/^.*://')
-					REVISION=$(dpkg-parsechangelog | grep Version: | cut -d " " -f2 | sed -e 's/.*-//')
-					git archive --prefix=${PROJECT}-${UPSTREAM_VERSION}/ -o ../${PROJECT}_${UPSTREAM_VERSION}.orig.tar.gz upstream/${UPSTREAM_VERSION} && {
-						SA_OPTION="--debbuildopts=-sa"
-					} || echo "1.0" > debian/source/format
-				}
+			nice /cygdrive/d/Build/scripts/nsis-builder.bat --buildresult "D:\\Build\\Scripts\\test\\$l_DIST\\$l_CODENAME\\i386"
 
-				# for Ubuntu version is the codename of the distribution release
-				VERSION=$l_CODENAME
-
-				# translate the version name for Debian releases
-				[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
-				#[ "x$l_CODENAME" = "xjessie" ] && VERSION=testing
-				#[ "x$l_CODENAME" = "xwheezy" ] && VERSION=stable
-				#[ "x$l_CODENAME" = "xoldstable" ] && VERSION=oldstable
-
-				# modify the section for non-main package builds
-				[ "x$COMPONENT" != "xmain" ] && {
-					mv debian/control debian/control.tmp
-					cat debian/control.tmp | sed  "s#Section:[\ ]*\(.*\)#Section: $COMPONENT/\1#g" > debian/control
-				}
-
-				# modify changelog for this build
-#				if [ "$COMPONENT" != "$COMPONENT_NIGHTLY" ]; then
-#					dch --distribution $VERSION --force-distribution -l "+git$DATE.$GITREV+$l_CODENAME.$COMPONENT." "Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository (Git commit: $GIT_OBJECT_ID)."
-#				else
-#					dch --distribution $VERSION --force-distribution -l "~git$DATE.$GITREV+$l_CODENAME.$COMPONENT." "Development-Snapshot!!! Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository (Git commit: $GIT_OBJECT_ID)."
-#				fi
-#				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
-				OTHERMIRROR=""
-				if [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
-					echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT_MAIN $COMPONENT"
-				else
-					echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT"
-				fi
-				if [ $PROJECT = "x2gomatebindings" ]; then
-					OTHERMIRROR="deb http://packages.mate-desktop.org/repo/debian $l_CODENAME main"
-				fi
-
-				l_DIST=mingw32-4.4
-				l_CODENAME=qt-4.8
-
-				# TODO: Improve generate-nsis-version.pl so that it can be run from another dir
-				cd /cygdrive/d/Build/scripts/
-				./generate-nsis-version.pl
-
-				nice /cygdrive/d/Build/scripts/nsis-builder.bat --buildresult "D:\\Build\\Scripts\\test\\$l_DIST\\$l_CODENAME\\i386"
-
-				rm -Rf "$TEMP_DIR"
-			done
+			rm -Rf "$TEMP_DIR"
 		}
 	done
 	return 0
@@ -269,29 +218,28 @@ build_packages() {
 upload_packages() {
 	# dupload the new packages to the reprepro repository
 	echo "$NSIS_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
-		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
-		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
-		for l_CODENAME in $l_CODENAMES; do
 
-			# in case we build a special CODENAME (squeeze, wheezy, lucid, ...) do skip
-			# the wrong distribution here...
-			test -z $CODENAMES || echo $line | grep $CODENAMES || break
+		# in case we build a special CODENAME (squeeze, wheezy, lucid, ...) do skip
+		# the wrong distribution here...
+		test -z $CODENAMES || echo $line | grep $CODENAMES || break
 
-			if [ "x$EXTRA_ARCHS_ONLY" = "x" ]; then	
-				for l_ARCH in amd64 i386; do
-					[ "x$SKIP_ARCH" != "x$l_ARCH" ] && {
-						cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
-						test -f ./dupload.conf || ln -s ~/.dupload.conf.$PREFIX ./dupload.conf
-						ls $PROJECT_*.changes &>/dev/null && dupload -c --to $PREFIX-$l_DIST-$l_CODENAME $PROJECT_*.changes 0<&-
-					}
-				done
-			fi
-			for l_EXTRA_ARCH in $EXTRA_ARCHS; do 
-				cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH"
-				test -f ./dupload.conf || ln -s ~/.dupload.conf.$PREFIX ./dupload.conf
-				ls $PROJECT_*.changes &>/dev/null && dupload -c --to $PREFIX-$l_DIST-$l_CODENAME $PROJECT_*.changes 0<&-
-			done
-		done
+		# FIXME: this should be handled at the beginning of this script!!!
+		l_DIST=mingw32-4.4
+		l_CODENAME=qt-4.8
+		MINGW_REPOS_BASE=/srv/sites/x2go.org/code/releases/binary-win32/x2goclient/heuler/
+
+		# TODO: Improve generate-nsis-version.pl so that it can be run from another dir
+		cd /cygdrive/d/Build/scripts/
+		./generate-nsis-version.pl
+
+		# create remote directories in archive
+		0</dev/null ssh $REPOS_SERVER mkdir -p $MINGW_REPO_BASE/$l_DIST/$l_CODENAME/
+
+		# remove installer packages that are older than 30 days
+		0</dev/null ssh $REPOS_SERVER "find \"$MINGW_REPO_BASE/$l_DIST/$l_CODENAME/*\" -mtime +30 -name \"x2goclient-*-setup.exe\"; while read installer; do rm -f "$installer"; done
+
+		# copy new installer to download location
+		scp D:\\Build\\Scripts\\test\\$l_DIST\\$l_CODENAME\\i386\\x2goclient-*-setup.exe" "$MINGW_REPO_BASE/$l_DIST/$l_CODENAME/"
 	done
 	return 0
 }
