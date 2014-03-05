@@ -253,7 +253,7 @@ build_packages() {
 				l_DIST=mingw32-4.4
 				l_CODENAME=qt-4.8
 
-				# TODO: Improve generate-nsis-version.pl so that it can be run from another dir.				
+				# TODO: Improve generate-nsis-version.pl so that it can be run from another dir
 				cd /cygdrive/d/Build/scripts/
 				./generate-nsis-version.pl
 
