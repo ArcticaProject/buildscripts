@@ -25,26 +25,21 @@
 
 export PATH=~/bin:/cygdrive/d/Build/scripts:$PATH
 
-GIT_USER="gituser"
+GIT_USER="x2go"
 GIT_HOSTNAME="code.x2go.org"
 
-DEBEMAIL="firstname.lastname@mydomain.org"
-DEBFULLNAME="Firstname Lastname"
 GPG_KEY=
 NSIS_DISTS_SUPPORTED="mingw"
 MINGW_DISTROS="current"
 
 COMPONENT_MAIN="main"
 COMPONENT_NIGHTLY="heuler"
-COMPONENT_BUNDLES="bundle-release1 bundle-release2"
-REPOS_SERVER="packages.mydomain.org"
-PACKAGES_WITHOUT_OTHERMIRROR="keyring"
+COMPONENT_BUNDLES="baikal"
+
+REPOS_SERVER="code.x2go.org"
 GNUPGHOME=$HOME/.gnupg
 
 test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
-
-PREFIX=$(echo `basename $0` | cut -d"-" -f1)
-#test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo "$0 has no valid context prefix..."; exit -1; }
 
 FORCE_BUILD=${FORCE_BUILD:-"yes"}
 NSIS_BUILD_FOR=${NSIS_BUILD_FOR:-"mingw:$MINGW_DISTROS"}
@@ -228,18 +223,15 @@ upload_packages() {
 		l_CODENAME=qt-4.8
 		MINGW_REPOS_BASE=/srv/sites/x2go.org/code/releases/binary-win32/x2goclient/heuler/
 
-		# TODO: Improve generate-nsis-version.pl so that it can be run from another dir
-		cd /cygdrive/d/Build/scripts/
-		./generate-nsis-version.pl
-
 		# create remote directories in archive
-		0</dev/null ssh $REPOS_SERVER mkdir -p $MINGW_REPO_BASE/$l_DIST/$l_CODENAME/
+		0</dev/null ssh $REPOS_SERVER mkdir -p $MINGW_REPOS_BASE/$l_DIST/$l_CODENAME/
 
 		# remove installer packages that are older than 30 days
-		0</dev/null ssh $REPOS_SERVER "find \"$MINGW_REPO_BASE/$l_DIST/$l_CODENAME/*\" -mtime +30 -name \"x2goclient-*-setup.exe\"; while read installer; do rm -f "$installer"; done
+		0</dev/null ssh $REPOS_SERVER "find \"$MINGW_REPOS_BASE/$l_DIST/$l_CODENAME/*\" -mtime +30 -name \"x2goclient-*-setup.exe\" 2>/dev/null | while read installer; do rm -f "$installer"; done
 
 		# copy new installer to download location
-		scp D:\\Build\\Scripts\\test\\$l_DIST\\$l_CODENAME\\i386\\x2goclient-*-setup.exe" "$MINGW_REPO_BASE/$l_DIST/$l_CODENAME/"
+		# FIXME: this should work scp /cygdrive/d/Build/pkg-dist/$l_DIST/$l_CODENAME/i386/$PROJECT-*-setup.exe" "$MINGW_REPOS_BASE/$l_DIST/$l_CODENAME/"
+		scp /cygdrive/d/Build/GIT/nightly/$PROJECT/nsis/$PROJECT-*-setup.exe $REPOS_SERVER:"$MINGW_REPOS_BASE/$l_DIST/$l_CODENAME/"
 	done
 	return 0
 }
