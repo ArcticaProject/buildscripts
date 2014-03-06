@@ -8,7 +8,7 @@ D:
 cd D:\Build\GIT\nightly\x2goclient
 rem use msysgit's sed
 rem enable debug
-sed -i 's/#CONFIG += console/CONFIG += console/' x2goclient.pro
+if "%1"=="--console" sed -i 's/#CONFIG += console/CONFIG += console/' x2goclient.pro
 %COMSPEC% /c config_win.bat
 mingw32-make
 dir release\x2goclient.exe
