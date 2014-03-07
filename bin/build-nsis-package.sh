@@ -202,6 +202,15 @@ build_packages() {
 			cd /cygdrive/d/Build/scripts/
 			./generate-nsis-version.pl
 
+			cd $PROJECT_DIR
+			cp -a debian/changelog txt/
+			echo "GIT info:" > txt/git-info
+			git branch >> txt/git-info
+			echo "=================================" >> txt/git-info
+			echo "GIT history:" >> txt/git-info
+			git log -n 10 >> txt/git-info
+			cd /cygdrive/d/Build/scripts/
+
 			nice /cygdrive/d/Build/scripts/nsis-builder.bat --buildresult "D:\\Build\\Scripts\\test\\$l_DIST\\$l_CODENAME\\i386"
 
 			rm -Rf "$TEMP_DIR"
