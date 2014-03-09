@@ -204,11 +204,11 @@ build_packages() {
 
 			cd $PROJECT_DIR
 			cp -a debian/changelog txt/
-			echo "GIT info:" > txt/git-info
-			git branch >> txt/git-info
-			echo "=================================" >> txt/git-info
-			echo "GIT history:" >> txt/git-info
-			git log -n 10 >> txt/git-info
+
+			# create git changelog immediately prior to building the SRPM package
+			git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
+			cp ChangeLog.gitlog txt/git-info
+
 			cd /cygdrive/d/Build/scripts/
 
 			nice /cygdrive/d/Build/scripts/nsis-builder.bat --buildresult "D:\\Build\\Scripts\\test\\$l_DIST\\$l_CODENAME\\i386"
