@@ -173,7 +173,7 @@ build_packages() {
 				GITREV=$(cd $PROJECT && gitrevno && cd - 1>/dev/null)
 
 				# create git changelog immediately prior to building the SRPM package
-				git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
+				cd $PROJECT && git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog && cd - 1>/dev/null
 
 				rm -Rf "$PROJECT/.git"
 				mv $PROJECT/$PROJECT.spec .
