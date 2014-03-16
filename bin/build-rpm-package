@@ -171,6 +171,10 @@ build_packages() {
 				git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
 				cd $TEMP_DIR
 				GITREV=$(cd $PROJECT && gitrevno && cd - 1>/dev/null)
+
+				# create git changelog immediately prior to building the SRPM package
+				cd $PROJECT && git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog && cd - 1>/dev/null
+
 				rm -Rf "$PROJECT/.git"
 				mv $PROJECT/$PROJECT.spec .
 
@@ -200,9 +204,6 @@ build_packages() {
 
 				mv $TEMP_DIR/$PROJECT $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
 				tar -czf $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
-
-				# create git changelog immediately prior to building the SRPM package
-				git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
 
 				# create the SRPM package
 				rpmbuild -D "%_topdir $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild" -bs $PROJECT.spec
