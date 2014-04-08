@@ -3,7 +3,6 @@ set PATH=%PATH%;D:\MinGW\libexec\gcc\mingw32\4.4.0\
 set PATH=%PATH%;C:\Program Files (x86)\Git\bin\
 set PATH=%PATH%;D:\x2goclient-contrib\upx\3.91_bin\
 set PATH=%PATH%;C:\Program Files (x86)\NSIS\
-echo "hello" > D:\test.txt
 D:
 cd D:\Build\GIT\nightly\x2goclient
 rem use msysgit's sed
