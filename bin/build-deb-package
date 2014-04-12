@@ -240,7 +240,7 @@ build_packages() {
 				else
 					echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT"
 				fi
-				if [ $PROJECT = "x2gomatebindings" ]; then
+				if [ $PROJECT = "x2gomatebindings" ] && [ $l_CODENAME = "wheezy" ]; then
 					OTHERMIRROR="deb http://packages.mate-desktop.org/repo/debian $l_CODENAME main"
 				fi
 
