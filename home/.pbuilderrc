@@ -33,8 +33,10 @@ UML_DISTRIBUTION="$CODENAME"
 BASEPATH="$BASEDIRECTORY/base-$DIST-$CODENAME-$ARCH.qemu"
 if [ -e "/srv/pbuilder/qemu-kernels/$ARCH/vmlinuz.$CODENAME" ]; then
 	KERNEL_IMAGE=/srv/pbuilder/qemu-kernels/$ARCH/vmlinuz.$CODENAME
+	INITRD=/srv/pbuilder/qemu-kernels/$ARCH/initrd.img.$CODENAME
 else
 	KERNEL_IMAGE=/srv/pbuilder/qemu-kernels/$ARCH/vmlinuz
+	INITRD=/srv/pbuilder/qemu-kernels/$ARCH/initrd.img
 fi
 
 ARCH_DISKDEVICE=sd
@@ -44,7 +46,6 @@ if [ "x$ARCH" = "xarmel" ]; then
 else
 	SMP="2"
 	MEMORY_MEGS=512
-	INITRD=/srv/pbuilder/qemu-kernels/$ARCH/initrd.img
 fi
 
 if [ "x${DIST}" = "xubuntu" ]; then 
