@@ -192,7 +192,7 @@ build_packages() {
 				chmod 2770 "$TEMP_DIR" -Rf
 
 				cd "$PROJECT_DIR"
-				git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
+				git clone "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
 				cd "$TEMP_DIR/$PROJECT"
 				git checkout $CHECKOUT || git checkout master
 				find $PROJECT_DIR/../ -type f -maxdepth 0 -mindepth 0 | grep $PROJECT_*.orig.tar.gz &>/dev/null && cp $PROJECT_DIR/../$PROJECT_*.orig.tar.gz ..
@@ -329,6 +329,7 @@ wait_for_lock() {
 
 lock_workspace() {
 	wait_for_lock
+
 	echo $$ > $LOCK_FILE
 }
 

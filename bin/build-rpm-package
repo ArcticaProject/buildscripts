@@ -168,7 +168,7 @@ build_packages() {
 				chmod 2770 "$TEMP_DIR" -Rf
 
 				cd "$PROJECT_DIR"
-				git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
+				git clone "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
 				cd $TEMP_DIR
 				GITREV=$(cd $PROJECT && gitrevno && cd - 1>/dev/null)
 
