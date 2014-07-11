@@ -11,12 +11,17 @@ if "%1"=="--console" sed -i 's/#CONFIG += console/CONFIG += console/' x2goclient
 %COMSPEC% /c config_win.bat || exit /b %errorlevel%
 mingw32-make || exit /b %errorlevel%
 dir release\x2goclient.exe
+cd x2gohelper
+mingw32-make
+cd ..
 rmdir /s /q nsis\x2goclient
 cd nsis
 mkdir x2goclient
 xcopy /S D:\Build\scripts\current_files\x2goclient x2goclient
 copy ..\release\x2goclient.exe x2goclient\
+copy ..\release\x2gohelper.exe x2goclient\
 upx x2goclient\x2goclient.exe
+upx x2goclient\x2gohelper.exe
 makensis x2goclient.nsi || exit /b %errorlevel%
 
 
