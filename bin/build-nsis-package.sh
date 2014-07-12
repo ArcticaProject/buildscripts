@@ -21,9 +21,9 @@
 #       rough around the edges. For example, many lines are commented out
 #       and many values are hardcoded.
 #       It needs to be run under cygwin.
-#       It also needs to be placed under /cygdrive/d/Build/buildscripts.git/bin/
+#       It also needs to be placed under /cygdrive/d/Build/buildscripts/bin/
 
-export PATH=~/bin:/cygdrive/d/Build/buildscripts.git/bin:$PATH
+export PATH=~/bin:/cygdrive/d/Build/buildscripts/bin:$PATH
 
 GIT_USER="x2go"
 GIT_HOSTNAME="code.x2go.org"
@@ -199,7 +199,7 @@ build_packages() {
 			l_CODENAME=qt-4.8
 
 			# TODO: Improve generate-nsis-version.pl so that it can be run from another dir
-			cd /cygdrive/d/Build/buildscripts.git/bin/
+			cd /cygdrive/d/Build/buildscripts/bin/
 			./generate-nsis-version.pl
 
 			cd $PROJECT_DIR
@@ -209,9 +209,9 @@ build_packages() {
 			git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
 			cp ChangeLog.gitlog txt/git-info
 
-			cd /cygdrive/d/Build/buildscripts.git/bin/
+			cd /cygdrive/d/Build/buildscripts/bin/
 
-			nice /cygdrive/d/Build/buildscripts.git/bin/nsis-builder.bat --buildresult "D:\\Build\\Scripts\\test\\$l_DIST\\$l_CODENAME\\i386"
+			nice /cygdrive/d/Build/buildscripts/bin/nsis-builder.bat --buildresult "D:\\Build\\Scripts\\test\\$l_DIST\\$l_CODENAME\\i386"
 
 			rm -Rf "$TEMP_DIR"
 		}
