@@ -241,7 +241,13 @@ upload_packages() {
 		# Ensure that the package is world-readable before being uploaded to an HTTP/HTTPS server.
 		# Otherwise, sometimes cygwin sftp/scp uploads files with 000 permissions.
 		# What probably happens is that Cygwin is enumerates the windows permissions as a bunch of ACLs, and sets the octal permissions to 000. 
-		chmod a+r /cygdrive/d/Build/GIT/nightly/$PROJECT/nsis/$PROJECT-*-setup.exe
+		#
+		# 2014-07-13
+		# Commenting this out because for some reason, it could not find the files, thus causing the build to fail.
+		# Furthermore, the permissions on the uploaded builds are fine right now.
+		# The file not found error was:
+		# chmod: Zugriff auf Â»/cygdrive/d/Build/GIT/nightly/x2goclient/nsis/x2goclient-*-setup.exeâ€œ nicht mÃ¶glich: Datei oder Verzeichnis nicht gefunden
+		# chmod a+r /cygdrive/d/Build/GIT/nightly/$PROJECT/nsis/$PROJECT-*-setup.exe
 
 		# copy new installer to download location
 		# FIXME: this should work scp /cygdrive/d/Build/pkg-dist/$l_DIST/$l_CODENAME/i386/$PROJECT-*-setup.exe" "$MINGW_REPOS_BASE/$l_DIST/$l_CODENAME/"
