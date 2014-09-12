@@ -29,8 +29,8 @@ GIT_USER="x2go"
 GIT_HOSTNAME="code.x2go.org"
 
 GPG_KEY=
-NSIS_DISTS_SUPPORTED="mingw"
-MINGW_DISTROS="current"
+NSIS_DISTS_SUPPORTED="mingw32-4.4,mingw32-4.8"
+MINGW_DISTROS="qt-4.8"
 
 COMPONENT_MAIN="main"
 COMPONENT_NIGHTLY="heuler"
@@ -44,6 +44,9 @@ test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main
 FORCE_BUILD=${FORCE_BUILD:-"yes"}
 NSIS_BUILD_FOR=${NSIS_BUILD_FOR:-"mingw:$MINGW_DISTROS"}
 
+	# FIXME: these should be generated from the env var!!!
+	l_DIST=mingw32-4.4
+	l_CODENAME=qt-4.8
 
 set -ex
 
@@ -53,7 +56,7 @@ set_vars() {
 	TEMP_BASE="/cygdrive/d/Build/tmp"
 	mkdir -p "$TEMP_BASE"
 	chmod 2770 "$TEMP_BASE"
-
+	
 	# first argv is the name of the Git project
 	PROJECT_PATH="$1"
 	PROJECT_PATH=${PROJECT_PATH/%.git/}
@@ -80,8 +83,8 @@ set_vars() {
 	[ "x$DATE" = "xtoday" ] && DATE="$(date +%Y%m%d)"
 
 	# setting paths
-	PROJECT_DIR="/cygdrive/d/Build/GIT/nightly/x2goclient"
-	PKGDIST="/cygdrive/d/Build/pkg-dist/nightly/x2goclient"
+	PROJECT_DIR="/cygdrive/d/Build/GIT/nightly/$l_DIST/$l_CODENAME/x2goclient"
+	PKGDIST="/cygdrive/d/Build/pkg-dist/nightly/$l_DIST/$l_CODENAME/x2goclient"
 
 	# build for other architectures than amd64/i386
 	EXTRA_ARCHS="${EXTRA_ARCHS:-}"
@@ -125,10 +128,8 @@ prepare_workspace() {
 
 	# by default we build for all current debian versions
 	if [ "x$ARGV2_CODENAME" != "x" ]; then
-		if echo "$DEBIAN_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
-			NSIS_BUILD_FOR="debian:$ARGV2_CODENAME"
-		elif echo "$UBUNTU_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
-			NSIS_BUILD_FOR="ubuntu:$ARGV2_CODENAME"
+		if echo "$MINGW_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
+			NSIS_BUILD_FOR="mingw32-4.4:$ARGV2_CODENAME"
 		fi
 	fi
 	return 0
@@ -177,45 +178,36 @@ clear_pkgdist() {
 }
 
 build_packages() {
-	# use pbuilder for building all variants of this package
-	echo "$NSIS_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
-		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
-		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
-		echo "$NSIS_DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
+	echo "$NSIS_DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
 
-			TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
-			mkdir -p "$TEMP_DIR/$PROJECT"
-			chmod 2770 "$TEMP_DIR" -Rf
+		TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
+		mkdir -p "$TEMP_DIR/$PROJECT"
+		chmod 2770 "$TEMP_DIR" -Rf
 
-			cd "$PROJECT_DIR"
-			git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
-			cd "$TEMP_DIR/$PROJECT"
-			git checkout $CHECKOUT || git checkout master
-			find $PROJECT_DIR/../ -type f -maxdepth 0 -mindepth 0 | grep $PROJECT_*.orig.tar.gz &>/dev/null && cp $PROJECT_DIR/../$PROJECT_*.orig.tar.gz ..
-			GITREV=$(gitrevno)
+		cd "$PROJECT_DIR"
+		git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
+		cd "$TEMP_DIR/$PROJECT"
+		git checkout $CHECKOUT || git checkout master
+		find $PROJECT_DIR/../ -type f -maxdepth 0 -mindepth 0 | grep $PROJECT_*.orig.tar.gz &>/dev/null && cp $PROJECT_DIR/../$PROJECT_*.orig.tar.gz ..
+		GITREV=$(gitrevno)
 
-			# FIXME: this should be handled at the beginning of this script!!!
-			l_DIST=mingw32-4.4
-			l_CODENAME=qt-4.8
+		# TODO: Improve generate-nsis-version.pl so that it can be run from another dir
+		cd /cygdrive/d/Build/buildscripts/bin/
+		./generate-nsis-version.pl $PROJECT_DIR
 
-			# TODO: Improve generate-nsis-version.pl so that it can be run from another dir
-			cd /cygdrive/d/Build/buildscripts/bin/
-			./generate-nsis-version.pl
+		cd $PROJECT_DIR
+		cp -a debian/changelog txt/
 
-			cd $PROJECT_DIR
-			cp -a debian/changelog txt/
+		# create git changelog immediately prior to building the SRPM package
+		git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
+		cp ChangeLog.gitlog txt/git-info
 
-			# create git changelog immediately prior to building the SRPM package
-			git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
-			cp ChangeLog.gitlog txt/git-info
+		cd /cygdrive/d/Build/buildscripts/bin/
+		
+		nice /cygdrive/d/Build/buildscripts/bin/nsis-builder.bat "${l_DIST}" "${l_CODENAME}"
 
-			cd /cygdrive/d/Build/buildscripts/bin/
-
-			nice /cygdrive/d/Build/buildscripts/bin/nsis-builder.bat --buildresult "D:\\Build\\Scripts\\test\\$l_DIST\\$l_CODENAME\\i386"
-
-			rm -Rf "$TEMP_DIR"
+		rm -Rf "$TEMP_DIR"
 		}
-	done
 	return 0
 }
 
@@ -223,13 +215,7 @@ upload_packages() {
 	# dupload the new packages to the reprepro repository
 	echo "$NSIS_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
 
-		# in case we build a special CODENAME (squeeze, wheezy, lucid, ...) do skip
-		# the wrong distribution here...
-		test -z $CODENAMES || echo $line | grep $CODENAMES || break
-
 		# FIXME: this should be handled at the beginning of this script!!!
-		l_DIST=mingw32-4.4
-		l_CODENAME=qt-4.8
 		MINGW_REPOS_BASE=/srv/sites/x2go.org/code/releases/binary-win32/x2goclient/heuler/
 
 		# create remote directories in archive
@@ -251,7 +237,7 @@ upload_packages() {
 
 		# copy new installer to download location
 		# FIXME: this should work scp /cygdrive/d/Build/pkg-dist/$l_DIST/$l_CODENAME/i386/$PROJECT-*-setup.exe" "$MINGW_REPOS_BASE/$l_DIST/$l_CODENAME/"
-		scp /cygdrive/d/Build/GIT/nightly/$PROJECT/nsis/$PROJECT-*-setup.exe $REPOS_SERVER:"$MINGW_REPOS_BASE/$l_DIST/$l_CODENAME/"
+		scp /cygdrive/d/Build/GIT/nightly/$l_DIST/$l_CODENAME/$PROJECT/nsis/$PROJECT-*-setup.exe $REPOS_SERVER:"$MINGW_REPOS_BASE/$l_DIST/$l_CODENAME/"
 	done
 	return 0
 }
