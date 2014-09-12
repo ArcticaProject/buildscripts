@@ -12,8 +12,9 @@ if "%1"=="--console" sed -i 's/#CONFIG += console/CONFIG += console/' x2goclient
 mingw32-make || exit /b %errorlevel%
 dir release\x2goclient.exe
 cd x2gohelper
-mingw32-make
+mingw32-make || exit /b %errorlevel%
 cd ..
+dir release\x2gohelper.exe
 rmdir /s /q nsis\x2goclient
 cd nsis
 mkdir x2goclient
