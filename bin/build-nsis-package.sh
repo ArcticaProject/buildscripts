@@ -23,6 +23,8 @@
 #       It needs to be run under cygwin.
 #       It also needs to be placed under /cygdrive/d/Build/buildscripts/bin/
 
+set -ex
+
 export PATH=~/bin:/cygdrive/d/Build/buildscripts/bin:$PATH
 
 GIT_USER="x2go"
@@ -42,13 +44,11 @@ GNUPGHOME=$HOME/.gnupg
 test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
 
 FORCE_BUILD=${FORCE_BUILD:-"yes"}
-NSIS_BUILD_FOR=${NSIS_BUILD_FOR:-"mingw:$MINGW_DISTROS"}
 
-	# FIXME: these should be generated from the env var!!!
-	l_DIST=mingw32-4.4
-	l_CODENAME=qt-4.8
+echo ${NSIS_BUILD_FOR}
 
-set -ex
+l_DIST=$(echo ${NSIS_BUILD_FOR} | cut -d":" -f1 | tr [:upper:] [:lower:])
+l_CODENAME=$(echo ${NSIS_BUILD_FOR} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])
 
 set_vars() {
 	USE_SUDO="no"
@@ -178,36 +178,35 @@ clear_pkgdist() {
 }
 
 build_packages() {
-	echo "$NSIS_DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
 
-		TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
-		mkdir -p "$TEMP_DIR/$PROJECT"
-		chmod 2770 "$TEMP_DIR" -Rf
+	TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
+	mkdir -p "$TEMP_DIR/$PROJECT"
+	chmod 2770 "$TEMP_DIR" -Rf
 
-		cd "$PROJECT_DIR"
-		git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
-		cd "$TEMP_DIR/$PROJECT"
-		git checkout $CHECKOUT || git checkout master
-		find $PROJECT_DIR/../ -type f -maxdepth 0 -mindepth 0 | grep $PROJECT_*.orig.tar.gz &>/dev/null && cp $PROJECT_DIR/../$PROJECT_*.orig.tar.gz ..
-		GITREV=$(gitrevno)
+	cd "$PROJECT_DIR"
+	git clone --local "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
+	cd "$TEMP_DIR/$PROJECT"
+	git checkout $CHECKOUT || git checkout master
+	find $PROJECT_DIR/../ -type f -maxdepth 0 -mindepth 0 | grep $PROJECT_*.orig.tar.gz &>/dev/null && cp $PROJECT_DIR/../$PROJECT_*.orig.tar.gz ..
+	GITREV=$(gitrevno)
 
-		# TODO: Improve generate-nsis-version.pl so that it can be run from another dir
-		cd /cygdrive/d/Build/buildscripts/bin/
-		./generate-nsis-version.pl $PROJECT_DIR
+	# TODO: Improve generate-nsis-version.pl so that it can be run from another dir
+	cd /cygdrive/d/Build/buildscripts/bin/
+	./generate-nsis-version.pl $PROJECT_DIR
 
-		cd $PROJECT_DIR
-		cp -a debian/changelog txt/
+	cd $PROJECT_DIR
+	cp -a debian/changelog txt/
 
-		# create git changelog immediately prior to building the SRPM package
-		git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
-		cp ChangeLog.gitlog txt/git-info
+	# create git changelog immediately prior to building the SRPM package
+	git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
+	cp ChangeLog.gitlog txt/git-info
 
-		cd /cygdrive/d/Build/buildscripts/bin/
-		
-		nice /cygdrive/d/Build/buildscripts/bin/nsis-builder.bat "${l_DIST}" "${l_CODENAME}"
+	cd /cygdrive/d/Build/buildscripts/bin/
 
-		rm -Rf "$TEMP_DIR"
-		}
+	nice /cygdrive/d/Build/buildscripts/bin/nsis-builder.bat "${l_DIST}" "${l_CODENAME}"
+
+	rm -Rf "$TEMP_DIR"
+
 	return 0
 }
 
@@ -222,7 +221,7 @@ upload_packages() {
 		0</dev/null ssh $REPOS_SERVER mkdir -p $MINGW_REPOS_BASE/$l_DIST/$l_CODENAME/
 
 		# remove installer packages that are older than 30 days
-		0</dev/null ssh $REPOS_SERVER "find \"$MINGW_REPOS_BASE/$l_DIST/$l_CODENAME/*\" -mtime +30 -name \"x2goclient-*-setup.exe\" 2>/dev/null | while read installer; do rm -f "$installer"; done
+		0</dev/null ssh $REPOS_SERVER "find \"$MINGW_REPOS_BASE/$l_DIST/$l_CODENAME/*\" -mtime +30 -name \"x2goclient-*-setup.exe\" 2>/dev/null | while read installer; do rm -f "$installer"; done"
 		
 		# Ensure that the package is world-readable before being uploaded to an HTTP/HTTPS server.
 		# Otherwise, sometimes cygwin sftp/scp uploads files with 000 permissions.
@@ -233,10 +232,9 @@ upload_packages() {
 		# Furthermore, the permissions on the uploaded builds are fine right now.
 		# The file not found error was:
 		# chmod: Zugriff auf Â»/cygdrive/d/Build/GIT/nightly/x2goclient/nsis/x2goclient-*-setup.exeâ€œ nicht mÃ¶glich: Datei oder Verzeichnis nicht gefunden
-		# chmod a+r /cygdrive/d/Build/GIT/nightly/$PROJECT/nsis/$PROJECT-*-setup.exe
+		chmod 755 /cygdrive/d/Build/GIT/nightly/$l_DIST/$l_CODENAME/$PROJECT/nsis/$PROJECT-*-setup.exe
 
 		# copy new installer to download location
-		# FIXME: this should work scp /cygdrive/d/Build/pkg-dist/$l_DIST/$l_CODENAME/i386/$PROJECT-*-setup.exe" "$MINGW_REPOS_BASE/$l_DIST/$l_CODENAME/"
 		scp /cygdrive/d/Build/GIT/nightly/$l_DIST/$l_CODENAME/$PROJECT/nsis/$PROJECT-*-setup.exe $REPOS_SERVER:"$MINGW_REPOS_BASE/$l_DIST/$l_CODENAME/"
 	done
 	return 0
