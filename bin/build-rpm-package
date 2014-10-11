@@ -263,18 +263,37 @@ build_packages() {
 					fi
 				fi
 				if [ "x$SKIP_ARCH" != "xi386" ] && [ "$IS_NOARCH" != "yes" ]; then
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/i386/build.log
-					while [ -d ~mock/${l_DIST}-${l_CODENAME}-i386 ]; do
-						echo "Waiting for some other build to finish..."
-						sleep 30
-					done
-					if nice mock -r ${l_DIST}-${l_CODENAME}-i386  --result $PKGDIST/$l_DIST/$l_CODENAME/i386 $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm; then
-						rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign $PKGDIST/$l_DIST/$l_CODENAME/i386/*.rpm
-						cat $PKGDIST/$l_DIST/$l_CODENAME/i386/build.log
+					if [ "x$l_DIST" = "xopensuse" ]; then
+						OPENSUSE_DOWNLOAD_URL=$(echo "$OPENSUSE_DOWNLOAD_URL" | sed "s/#VERSION#/$l_CODENAME/")
+						if sudo linux32 obs-build \
+						                    --nosignature \
+						                    --repo "$OPENSUSE_DOWNLOAD_URL" \
+						                    --root "/var/cache/obs-build/$l_DIST/$l_CODENAME/i386/" \
+						                    --clean \
+						                    $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm; then
+							mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/i386/"
+							find "/var/cache/obs-build/$l_DIST/$l_CODENAME/i386/home/abuild/rpmbuild/RPMS/" -type f | egrep '.*\.rpm$' | while read rpmfile; do
+								cp "$rpmfile" "$PKGDIST/$l_DIST/$l_CODENAME/i386/"
+							done
+							rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "$PKGDIST/$l_DIST/$l_CODENAME/i386/"*.rpm
+						else
+							rm -Rf "$TEMP_DIR"
+							exit -1
+						fi
 					else
-						cat $PKGDIST/$l_DIST/$l_CODENAME/i386/build.log
-						rm -Rf "$TEMP_DIR"
-						exit -1
+						while [ -d ~mock/${l_DIST}-${l_CODENAME}-i386 ]; do
+							echo "Waiting for some other build to finish..."
+							sleep 30
+						done
+						rm -f $PKGDIST/$l_DIST/$l_CODENAME/i386/build.log
+						if nice mock -r ${l_DIST}-${l_CODENAME}-i386  --result $PKGDIST/$l_DIST/$l_CODENAME/i386 $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm; then
+							rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign $PKGDIST/$l_DIST/$l_CODENAME/i386/*.rpm
+							cat $PKGDIST/$l_DIST/$l_CODENAME/i386/build.log
+						else
+							cat $PKGDIST/$l_DIST/$l_CODENAME/i386/build.log
+							rm -Rf "$TEMP_DIR"
+							exit -1
+						fi
 					fi
 				fi
 			done
