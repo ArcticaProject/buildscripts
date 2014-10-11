@@ -45,8 +45,9 @@ test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main
 PREFIX=$(echo `basename $0` | cut -d"-" -f1)
 test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo "$0 has no valid context prefix..."; exit -1; }
 
+NO_DELAY=${NO_DELAY:-"no"}
 FORCE_BUILD=${FORCE_BUILD:-"no"}
-RPM_BUILD_FOR=${RPM_BUILD_FOR:-"fedora:$FEDORA_DISTROS epel:$EPEL_DISTROS"}
+RPM_BUILD_FOR=${RPM_BUILD_FOR:-"fedora:$FEDORA_DISTROS epel:$EPEL_DISTROSi opensuse:$OPENSUSE_DISTROS"}
 
 set -ex
 
