@@ -230,7 +230,7 @@ build_packages() {
 
 				if [ "x$SKIP_ARCH" != "xx86_64" ] || [ "$IS_NOARCH" = "yes" ]; then
 					rm -f $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
-					if [ "x$PKGDIST" = "xopensuse"]; then
+					if [ "x$PKGDIST" = "xopensuse" ]; then
 						mkdir -p "/var/cache/obs-build/$PKGDIST/$l_DIST/$l_CODENAME/x86_64/"
 						OPENSUSE_DOWNLOAD_URL=$(echo "$OPENSUSE_DOWNLOAD_URL" | sed 's/#VERSION#/$l_DIST/')
 						if obs-build --repo "$OPENSUSE_DOWNLOAD_URL" \
