@@ -232,6 +232,7 @@ build_packages() {
 					if [ "x$l_DIST" = "xopensuse" ]; then
 						OPENSUSE_DOWNLOAD_URL=$(echo "$OPENSUSE_DOWNLOAD_URL" | sed "s/#VERSION#/$l_CODENAME/")
 						if sudo obs-build \
+						             --nosignature \
 						             --repo "$OPENSUSE_DOWNLOAD_URL" \
 						             --root "/var/cache/obs-build/$l_DIST/$l_CODENAME/x86_64/" \
 						             --clean \
