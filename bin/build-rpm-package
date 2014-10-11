@@ -230,11 +230,11 @@ build_packages() {
 
 				if [ "x$SKIP_ARCH" != "xx86_64" ] || [ "$IS_NOARCH" = "yes" ]; then
 					if [ "x$l_DIST" = "xopensuse" ]; then
-						OPENSUSE_DOWNLOAD_URL=$(echo "$OPENSUSE_DOWNLOAD_URL" | sed "s/#VERSION#/$l_DIST/")
+						OPENSUSE_DOWNLOAD_URL=$(echo "$OPENSUSE_DOWNLOAD_URL" | sed "s/#VERSION#/$l_CODENAME/")
 						if sudo obs-build \
 						             --clean \
 						             --repo "$OPENSUSE_DOWNLOAD_URL" \
-						             --root "/var/cache/obs-build/$PKGDIST/$l_DIST/$l_CODENAME/x86_64/" \
+						             --root "/var/cache/obs-build/$l_DIST/$l_CODENAME/x86_64/" \
 						             $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm; then
 							mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/x86_64/"
 							mv "/var/cache/obs-build/$PKGDIST/$l_DIST/$l_CODENAME/x86_64/home/abuild/rpmbuild/RPMS/*.rpm" "$PKGDIST/$l_DIST/$l_CODENAME/x86_64/"
