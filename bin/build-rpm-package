@@ -229,8 +229,7 @@ build_packages() {
 				#fi
 
 				if [ "x$SKIP_ARCH" != "xx86_64" ] || [ "$IS_NOARCH" = "yes" ]; then
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
-					if [ "x$PKGDIST" = "xopensuse" ]; then
+					if [ "x$l_DIST" = "xopensuse" ]; then
 						mkdir -p "/var/cache/obs-build/$PKGDIST/$l_DIST/$l_CODENAME/x86_64/"
 						OPENSUSE_DOWNLOAD_URL=$(echo "$OPENSUSE_DOWNLOAD_URL" | sed 's/#VERSION#/$l_DIST/')
 						if obs-build --repo "$OPENSUSE_DOWNLOAD_URL" \
@@ -248,6 +247,7 @@ build_packages() {
 							echo "Waiting for some other build to finish..."
 							sleep 30
 						done
+						rm -f $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
 						if mock -r ${l_DIST}-${l_CODENAME}-x86_64 --result $PKGDIST/$l_DIST/$l_CODENAME/x86_64 $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm; then
 							rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign $PKGDIST/$l_DIST/$l_CODENAME/x86_64/*.rpm
 							cat $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
