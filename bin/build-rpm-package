@@ -230,7 +230,7 @@ build_packages() {
 
 				if [ "x$SKIP_ARCH" != "xx86_64" ] || [ "$IS_NOARCH" = "yes" ]; then
 					if [ "x$l_DIST" = "xopensuse" ]; then
-						OPENSUSE_DOWNLOAD_URL=$(echo "$OPENSUSE_DOWNLOAD_URL" | sed 's/#VERSION#/$l_DIST/')
+						OPENSUSE_DOWNLOAD_URL=$(echo "$OPENSUSE_DOWNLOAD_URL" | sed "s/#VERSION#/$l_DIST/")
 						if sudo obs-build \
 						             --clean \
 						             --repo "$OPENSUSE_DOWNLOAD_URL" \
