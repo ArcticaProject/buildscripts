@@ -342,7 +342,7 @@ delay_build() {
 set_vars $@ && {
 	if [ "x$(basename $0)" = "x$PREFIX-build-rpm-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-rpm-package" ]; then
 		cd $PROJECT_DIR && pkgneedsbuild $CHECKOUT || [ "$FORCE_BUILD" = "yes" ] && {
-			if [ "x$FORCE_BUILD" = "xyes" ] && [ "x$NO_DELAY" != "yes" ]; then
+			if [ "x$FORCE_BUILD" = "xyes" ] && [ "x$NO_DELAY" != "xyes" ]; then
 				delay_build
 			fi
 			lock_workspace
