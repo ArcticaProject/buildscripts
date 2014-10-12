@@ -210,7 +210,11 @@ build_packages() {
 				tar -czf $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
 
 				# create the SRPM package
-				rpmbuild -D "%_topdir $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild" -bs $PROJECT.spec
+				if [ "x$l_DIST" != "xopensuse" ]; then
+					rpmbuild -D "%_topdir $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild" -bs $PROJECT.spec
+				else
+					cp $PROJECT.spec $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES
+				fi
 
 				# clean up the Git clone from the temp folder
 				cd && rm $TEMP_DIR/$PROJECT -Rf
@@ -236,7 +240,7 @@ build_packages() {
 						             --repo "$OPENSUSE_DOWNLOAD_URL" \
 						             --root "/var/cache/obs-build/$l_DIST/$l_CODENAME/x86_64/" \
 						             --clean \
-						             $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm; then
+						             $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/$PROJECT.spec; then
 							mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/x86_64/"
 							find "/var/cache/obs-build/$l_DIST/$l_CODENAME/x86_64/home/abuild/rpmbuild/RPMS/" -type f | egrep '.*\.rpm$' | while read rpmfile; do
 								cp "$rpmfile" "$PKGDIST/$l_DIST/$l_CODENAME/x86_64/"
