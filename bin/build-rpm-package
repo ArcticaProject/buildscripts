@@ -210,9 +210,13 @@ build_packages() {
 				tar -czf $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
 
 				# create the SRPM package
-				if [ "x$l_DIST" != "xopensuse" ]; then
+				if [ "x$l_DIST" = "xfedora" ]; then
 					rpmbuild -D "%_topdir $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild" \
-					            "%_vendor centos" \
+					            "%_vendor fedora" \
+					            -bs $PROJECT.spec
+				elif [ "x$l_DIST" = "xepel" ]; then
+					rpmbuild -D "%_topdir $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild" \
+					            "%_vendor rhel" \
 					            -bs $PROJECT.spec
 				else
 					cp $PROJECT.spec $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES
