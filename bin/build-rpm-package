@@ -209,17 +209,26 @@ build_packages() {
 				mv $TEMP_DIR/$PROJECT $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
 				tar -czf $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
 
-				# create the SRPM package
-				if [ "x$l_DIST" = "xfedora" ]; then
-					rpmbuild -D "%_topdir $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild" \
-					         -D "%_vendor fedora" \
-					         -bs $PROJECT.spec
-				elif [ "x$l_DIST" = "xepel" ]; then
-					rpmbuild -D "%_topdir $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild" \
-					         -D "%_vendor rhel" \
-					         -bs $PROJECT.spec
-				else
-					cp $PROJECT.spec $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES
+				cp $PROJECT.spec $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES
+
+				if [ "x$l_DIST" = "xfedora" ] || [ "x$l_DIST" = "xepel" ]; then
+					while [ -d ~mock/${l_DIST}-${l_CODENAME}-x86_64 ]; do
+						echo "Waiting for some other build to finish..."
+						sleep 30
+					done
+					rm -f $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
+					if mock --buildsrpm \
+					          -r ${l_DIST}-${l_CODENAME}-x86_64 \
+					          --result $PKGDIST/$l_DIST/$l_CODENAME/rpmbuild/SRPMS \
+					          --spec "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/$PROJECT.spec" \
+					          --sources "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/"; then
+						cat "$PKGDIST/$l_DIST/$l_CODENAME/rpmbuild/SRPMS/build.log"
+						rm -Rf "$PKGDIST/$l_DIST/$l_CODENAME/rpmbuild/SRPMS/build.log"
+					else
+						cat $PKGDIST/$l_DIST/$l_CODENAME/rpmbuild/SRPMS/build.log
+						rm -Rf "$TEMP_DIR"
+						exit -1
+					fi
 				fi
 
 				# clean up the Git clone from the temp folder
@@ -261,19 +270,21 @@ build_packages() {
 							exit -1
 						fi
 					else
+						rm -f $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
 						while [ -d ~mock/${l_DIST}-${l_CODENAME}-x86_64 ]; do
 							echo "Waiting for some other build to finish..."
 							sleep 30
 						done
-						rm -f $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
-						if mock -r ${l_DIST}-${l_CODENAME}-x86_64 --result $PKGDIST/$l_DIST/$l_CODENAME/x86_64 $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.src.rpm; then
-							rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign $PKGDIST/$l_DIST/$l_CODENAME/x86_64/*.rpm
-							cat $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
-						else
-							cat $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
-							rm -Rf "$TEMP_DIR"
-							exit -1
-						fi
+						ls $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.*.src.rpm | while read srpm; do
+							if mock -r ${l_DIST}-${l_CODENAME}-x86_64 --result $PKGDIST/$l_DIST/$l_CODENAME/x86_64 $srpm; then
+								rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign $PKGDIST/$l_DIST/$l_CODENAME/x86_64/*.rpm
+								cat $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
+							else
+								cat $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
+								rm -Rf "$TEMP_DIR"
+								exit -1
+							fi
+						done
 					fi
 				fi
 				if [ "x$SKIP_ARCH" != "xi386" ] && [ "$IS_NOARCH" != "yes" ]; then
