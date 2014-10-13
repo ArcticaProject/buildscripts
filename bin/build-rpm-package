@@ -241,6 +241,10 @@ build_packages() {
 				if [ "x$SKIP_ARCH" != "xx86_64" ] || [ "$IS_NOARCH" = "yes" ]; then
 					if [ "x$l_DIST" = "xopensuse" ]; then
 						OPENSUSE_DOWNLOAD_URL=$(echo "$OPENSUSE_DOWNLOAD_URL" | sed "s/#VERSION#/$l_CODENAME/")
+						while mount | grep /var/cache/obs-build/${l_DIST}/${l_CODENAME}/x86_64/proc 1>/dev/null; do
+							echo "Waiting for some other build to finish..."
+							sleep 30
+						done
 						if sudo obs-build \
 						             --nosignature \
 						             --repo "$OPENSUSE_DOWNLOAD_URL" \
