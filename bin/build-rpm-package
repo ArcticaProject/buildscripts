@@ -211,7 +211,9 @@ build_packages() {
 
 				# create the SRPM package
 				if [ "x$l_DIST" != "xopensuse" ]; then
-					rpmbuild -D "%_topdir $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild" -bs $PROJECT.spec
+					rpmbuild -D "%_topdir $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild" \
+					            "%_vendor centos" \
+					            -bs $PROJECT.spec
 				else
 					cp $PROJECT.spec $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES
 				fi
