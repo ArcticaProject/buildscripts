@@ -201,7 +201,7 @@ build_packages() {
 					( cd $PROJECT && QUILT_PATCHES=debian/patches quilt push -a && rm .pc/ -Rf; )
 				fi
 
-				cat $PROJECT.spec | egrep "^Source[1-9]+:.*" | sed "s/%\{name\}/$PROJECT/" | awk '{ print $2 }' | while read source_file; do
+				cat $PROJECT.spec | egrep "^Source[1-9]+:.*" | sed "s/%{name}/$PROJECT/" | awk '{ print $2 }' | while read source_file; do
 					find $PROJECT/rpm/$source_file -maxdepth 0 1> /dev/null && cp $PROJECT/rpm/$source_file $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/ && continue
 					find $PROJECT/$source_file -maxdepth 0 1> /dev/null && cp $PROJECT/$source_file $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/
 				done
