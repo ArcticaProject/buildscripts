@@ -256,6 +256,7 @@ build_packages() {
 						done
 						if sudo obs-build \
 						             --nosignature \
+						             --repo "http://packages.x2go.org/opensuse/$l_CODENAME/extras" \
 						             --repo "$OPENSUSE_DOWNLOAD_URL" \
 						             --root "/var/cache/obs-build/$l_DIST/$l_CODENAME/x86_64/" \
 						             --clean \
