@@ -293,6 +293,7 @@ build_packages() {
 						OPENSUSE_DOWNLOAD_URL=$(echo "$OPENSUSE_DOWNLOAD_URL" | sed "s/#VERSION#/$l_CODENAME/")
 						if linux32 sudo obs-build \
 						                    --nosignature \
+						                    --repo "http://packages.x2go.org/opensuse/$l_CODENAME/extras" \
 						                    --repo "$OPENSUSE_DOWNLOAD_URL" \
 						                    --root "/var/cache/obs-build/$l_DIST/$l_CODENAME/i386/" \
 						                    --clean \
