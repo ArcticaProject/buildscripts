@@ -358,6 +358,9 @@ upload_packages() {
 
 					0</dev/null ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/ && createrepo ."
 
+					0</dev/null ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/repodata &&  gpg -a -u ${GPG_KEY} --detach-sign repomd.xml"
+					0</dev/null ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/repodata &&  gpg -a --output repomd.xml.key --export ${GPG_KEY} "
+
 				fi
 			done
 		done
