@@ -40,7 +40,7 @@ PACKAGES_WITHOUT_OTHERMIRROR="keyring"
 GNUPGHOME=$HOME/.gnupg
 
 OPENSUSE_DOWNLOAD_URL="http://download.opensuse.org/distribution/#VERSION#/repo/oss/suse/"
-SLES_DOWNLOAD_URL="file:///srv/mirrors/non-public/#VERSION#/repo/oss/suse/"
+SLES_DOWNLOAD_URL="file:///srv/mirrors/non-public/sles/#VERSION#/repo/oss/suse/"
 
 test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
 
