@@ -256,7 +256,7 @@ build_packages() {
 						elif [ "x$l_DIST" = "xsles" ]; then
 							DOWNLOAD_URL=$(echo "$SLES_DOWNLOAD_URL" | sed "s/#VERSION#/$l_CODENAME/")
 						fi
-						while mount | grep /var/cache/obs-build/${l_DIST}/${l_CODENAME}/x86_64/proc 1>/dev/null; do
+						while ps ax | grep -E "build.*/var/cache/obs-build/$l_DIST/$l_CODENAME/x86_64/" | grep "sudo obs"; do
 							echo "Waiting for some other build to finish..."
 							sleep 30
 						done
@@ -301,6 +301,10 @@ build_packages() {
 						elif [ "x$l_DIST" = "xsles" ]; then
 							DOWNLOAD_URL=$(echo "$SLES_DOWNLOAD_URL" | sed "s/#VERSION#/$l_CODENAME/")
 						fi
+						while ps ax | grep -E "build.*/var/cache/obs-build/$l_DIST/$l_CODENAME/i386/" | grep "sudo obs"; do
+							echo "Waiting for some other build to finish..."
+							sleep 30
+						done
 						if linux32 sudo obs-build \
 						                    --nosignature \
 						                    --repo "http://packages.x2go.org/${l_DIST}/$l_CODENAME/extras" \
