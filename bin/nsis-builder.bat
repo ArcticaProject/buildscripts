@@ -25,7 +25,13 @@ dir release\x2gohelper.exe
 rmdir /s /q nsis\x2goclient
 cd nsis
 mkdir x2goclient
-xcopy /S D:\Build\scripts\current_files\%1\%2\x2goclient x2goclient
+if "%1"=="mingw32-4.4" (
+	xcopy /S D:\Build\scripts\current_files\%1\%2\x2goclient x2goclient
+)
+
+if "%1"=="mingw32-4.8" (
+	..\copy-deps-win32.bat
+)
 copy ..\release\x2goclient.exe x2goclient\
 copy ..\release\x2gohelper.exe x2goclient\
 upx x2goclient\x2goclient.exe
