@@ -30,7 +30,7 @@ if "%1"=="mingw32-4.4" (
 )
 
 if "%1"=="mingw32-4.8" (
-	call ..\copy-deps-win32.bat
+	call ..\copy-deps-win32.bat x2goclient
 )
 copy ..\release\x2goclient.exe x2goclient\
 copy ..\release\x2gohelper.exe x2goclient\
