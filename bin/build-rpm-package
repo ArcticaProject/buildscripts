@@ -398,7 +398,8 @@ upload_packages() {
 
 			test -z $CODENAMES || echo $line | grep $CODENAMES || break
 
-			for l_ARCH in x86_64 i386; do
+			# Yes, "SRPM" is technically not an architecture.
+			for l_ARCH in x86_64 i386 SRPM; do
 				if [ "x$SKIP_ARCH" != "x$l_ARCH" ]; then
 
 					# create remote directories in archive
@@ -408,7 +409,7 @@ upload_packages() {
 					# remove rpm packages of the same name (pattern)
 					0</dev/null ssh $REPOS_SERVER rm -f $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/rpms/$PROJECT/*.rpm
 
-					# copy rpms into repo
+					# copy (s)rpms into repo
 					cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
 					scp *.rpm $REPOS_SERVER:$RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/rpms/$PROJECT/ || true
 
