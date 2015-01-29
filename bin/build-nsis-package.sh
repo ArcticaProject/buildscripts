@@ -267,8 +267,9 @@ delay_build() {
 ### MAIN ###
 set_vars $@ && {
 	if [ "x$(basename $0)" = "xbuild-nsis-package.sh" ] || [ "x$(basename $0)" = "xbuild+upload-nsis-package.sh" ]; then
-		cd $PROJECT_DIR && pkgneedsbuild $CHECKOUT || [ "$FORCE_BUILD" = "yes" ] && {
-			if [ "x$FORCE_BUILD" = "xyes" ]; then
+								# Treat any value other than "no" and "0" as true.
+		cd $PROJECT_DIR && pkgneedsbuild $CHECKOUT || ( [ "x$FORCE_BUILD" != "xno" ] && [ "x$FORCE_BUILD" != "x0" ] ) && {
+			if [ "x$FORCE_BUILD" != "xno" ] && [ "x$FORCE_BUILD" != "x0" ]; then
 				delay_build
 			fi
 			lock_workspace
