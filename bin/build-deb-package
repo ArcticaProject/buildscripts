@@ -41,6 +41,7 @@ test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main
 PREFIX=$(echo `basename $0` | cut -d"-" -f1)
 test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo "$0 has no valid context prefix..."; exit -1; }
 
+NO_DELAY=${NO_DELAY:-"no"}
 FORCE_BUILD=${FORCE_BUILD:-"no"}
 DEB_BUILD_FOR=${DEB_BUILD_FOR:-"debian:$DEBIAN_DISTROS ubuntu:$UBUNTU_DISTROS"}
 
@@ -346,7 +347,7 @@ set_vars $@ && {
 	if [ "x$(basename $0)" = "x$PREFIX-build-deb-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-deb-package" ]; then
 								# Treat any value other than "no" and "0" as true.
 		cd $PROJECT_DIR && pkgneedsbuild $CHECKOUT || ( [ "x$FORCE_BUILD" != "xno" ] && [ "x$FORCE_BUILD" != "x0" ] ) && {
-			if [ "x$FORCE_BUILD" != "xno" ] && [ "x$FORCE_BUILD" != "x0" ]; then
+			if [ "x$FORCE_BUILD" != "xno" ] && [ "x$FORCE_BUILD" != "x0" ] && [ "x$NO_DELAY" != "xno" ] && [ "x$NO_DELAY" != "x0" ]; then
 				delay_build
 			fi
 			lock_workspace
