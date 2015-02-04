@@ -74,6 +74,7 @@ set_vars() {
 		CHECKOUT="${3:-build-main}"
 	elif [ "x$COMPONENT" = "x${COMPONENT_MAIN}-test" ]; then
 		CHECKOUT="${3:-build-main-test}"
+		COMPONENT="maintest"
 	elif echo "$COMPONENT_RELEASES" | grep "$COMPONENT" >/dev/null; then
 		CHECKOUT="${3:-build-$COMPONENT}"
 	elif [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
@@ -187,7 +188,7 @@ build_packages() {
 				mv $PROJECT/$PROJECT.spec .
 
 				UPSTREAM_VERSION=$(cat $PROJECT.spec | egrep "^Version:.*" | awk '{ print $2 }')
-				PKG_RELEASE=$(cat $PROJECT.spec | egrep "^Release:.*" | awk '{ print $2 }' | sed 's/-//')
+				PKG_RELEASE=$(cat $PROJECT.spec | egrep "^Release:.*" | awk '{ print $2 }')
 				PKG_SRCRELEASE=$(echo $PKG_RELEASE | sed -e 's/%{?dist}//')
 
 				IS_NOARCH=$(cat $PROJECT.spec | egrep "^BuildArch:.*noarch\$" 1>/dev/null 2>/dev/null && echo yes || echo no)
