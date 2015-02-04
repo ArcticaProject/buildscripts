@@ -68,6 +68,8 @@ set_vars() {
 	DATE="${DATE:-$(date +%Y%m%d)}"
 	if [ "x$COMPONENT" = "x$COMPONENT_MAIN" ]; then
 		CHECKOUT="${3:-build-main}"
+	elif [ "x$COMPONENT" = "x${COMPONENT_MAIN}-test" ]; then
+		CHECKOUT="${3:-build-main-test}"
 	elif echo "$COMPONENT_RELEASES" | grep "$COMPONENT" >/dev/null; then
 		CHECKOUT="${3:-build-$COMPONENT}"
 	elif [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
