@@ -187,7 +187,7 @@ build_packages() {
 				mv $PROJECT/$PROJECT.spec .
 
 				UPSTREAM_VERSION=$(cat $PROJECT.spec | egrep "^Version:.*" | awk '{ print $2 }')
-				PKG_RELEASE=$(cat $PROJECT.spec | egrep "^Release:.*" | awk '{ print $2 }')
+				PKG_RELEASE=$(cat $PROJECT.spec | egrep "^Release:.*" | awk '{ print $2 }' | sed 's/-//')
 				PKG_SRCRELEASE=$(echo $PKG_RELEASE | sed -e 's/%{?dist}//')
 
 				IS_NOARCH=$(cat $PROJECT.spec | egrep "^BuildArch:.*noarch\$" 1>/dev/null 2>/dev/null && echo yes || echo no)
