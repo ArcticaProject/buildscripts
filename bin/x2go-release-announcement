@@ -27,9 +27,11 @@ done
 
 project=$(basename `pwd`)
 echo "
-Dear all,
+Subject: $project (<ver>) released
 
-the X2Go project is proud to announce a new release of the X2Go
+Dear all
+
+The X2Go project is proud to announce a new release of the X2Go
 component ,,$project''.
 
 New gains of this version of ,,$project'' are:
@@ -58,6 +60,9 @@ cat debian/changelog | sed -e 's/Fixes:/Closes:/i' | dpkg-parsechangelog --offse
 echo
 echo "
 Regards,
+
+
+
 <release-manager>
 "
 echo
