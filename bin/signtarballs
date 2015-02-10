@@ -3,8 +3,9 @@
 test -d _releases_  && cd _releases_ || test -d ../_releases_ && cd ../_releases_ || exit -1
 
 find * -type f | egrep ".*(\.zip|\.tar\.gz|\.exe|\.dmg)$" | while read tarball; do
-	test -f $tarball.md5 || md5sum $tarball > $tarball.md5
-	test -f $tarball.sha1 || sha1sum $tarball > $tarball.sha1
+	test -f $tarball.md5 || md5sum $tarball | tee $tarball.md5
+	test -f $tarball.sha1 || sha1sum $tarball | tee $tarball.sha1
+	test -f $tarball.sha256 || sha256sum $tarball | tee $tarball.sha256
 	test -f $tarball.asc || gpg -a -b --sign $tarball
 done
 
