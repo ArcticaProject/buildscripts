@@ -426,7 +426,7 @@ upload_packages() {
 					scp *.rpm $REPOS_SERVER:$RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/rpms/$PROJECT/ || true
 
 					CREATEREPO_OPTS=""
-					if [ "$l_DIST" = "" ] && [ "$l_CODENAME" = "5" ]; then
+					if [ "$l_DIST" = "epel" ] && [ "$l_CODENAME" = "5" ]; then
 						CREATEREPO_OPTS="-s sha"
 					fi
 					0</dev/null ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/ && createrepo ${CREATEREPO_OPTS} ."
