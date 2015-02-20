@@ -425,7 +425,11 @@ upload_packages() {
 					cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
 					scp *.rpm $REPOS_SERVER:$RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/rpms/$PROJECT/ || true
 
-					0</dev/null ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/ && createrepo ."
+					CREATEREPO_OPTS=""
+					if [ "$l_DIST" = "" ] && [ "$l_CODENAME" = "5" ]; then
+						CREATEREPO_OPTS="-s sha"
+					fi
+					0</dev/null ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/ && createrepo ${CREATEREPO_OPTS} ."
 
 					0</dev/null ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/repodata &&  rm -f repomd.xml.asc && gpg -a -u ${GPG_KEY} --detach-sign repomd.xml" 1>/dev/null 2>/dev/null
 					0</dev/null ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/repodata && test -e repomd.xml.key || gpg -a --output repomd.xml.key --export ${GPG_KEY} "
