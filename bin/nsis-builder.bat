@@ -16,12 +16,14 @@ rem use msysgit's sed
 rem enable debug
 if "%3"=="--console" sed -i 's/#CONFIG += console/CONFIG += console/' x2goclient.pro
 %COMSPEC% /c config_win.bat || exit /b %errorlevel%
+cd client_build
 mingw32-make || exit /b %errorlevel%
 dir release\x2goclient.exe
-cd x2gohelper 
+cd ..
+cd x2gohelper
 mingw32-make || exit /b %errorlevel%
 cd ..
-dir release\x2gohelper.exe
+dir client_build\release\x2gohelper.exe
 rmdir /s /q nsis\x2goclient
 cd nsis
 mkdir x2goclient
@@ -32,8 +34,8 @@ if "%1"=="mingw32-4.4" (
 if "%1"=="mingw32-4.8" (
 	call ..\copy-deps-win32.bat x2goclient
 )
-copy ..\release\x2goclient.exe x2goclient\
-copy ..\release\x2gohelper.exe x2goclient\
+copy ..\client_build\release\x2goclient.exe x2goclient\
+copy ..\client_build\release\x2gohelper.exe x2goclient\
 upx x2goclient\x2goclient.exe
 upx x2goclient\x2gohelper.exe
 makensis x2goclient.nsi || exit /b %errorlevel%
