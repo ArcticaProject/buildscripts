@@ -6,7 +6,7 @@ use POSIX qw(strftime);
 
 my $date = strftime "%Y.%m.%d", localtime;
 
-open(F,"<$ARGV[0]/version.h") or die;
+open(F,"<$ARGV[0]/src/version.h") or die;
 my @lines=<F>;
 close(F);
 
