@@ -196,7 +196,7 @@ build_packages() {
 	./generate-nsis-version.pl $PROJECT_DIR
 
 	cd $PROJECT_DIR
-	cp -a debian/changelog res/txt/
+	cp -a --no-preserve=ownership debian/changelog res/txt/
 
 	# create git changelog immediately prior to building the SRPM package
 	git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
