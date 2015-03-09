@@ -13,8 +13,8 @@ for pkg in "${@}"; do
   subdir="$(dirname ${pkg})/"
   pkg="$(basename ${pkg})"
 
-  ssh -l"${GIT_USER}" "${GIT_HOSTNAME}" "cd ~/git && ./setup-repository ${subdir}${pkg} '${pkg} upstream project'"
-  ssh -l"${GIT_USER}" "${GIT_HOSTNAME}" "cd ~/git && ./update-repository-posixacls ${subdir}${pkg}"
+  ssh -l"${GIT_USER}" "${GIT_HOSTNAME}" "cd ~/git && _misc_/setup-repository ${subdir}${pkg} '${pkg} upstream project'"
+  ssh -l"${GIT_USER}" "${GIT_HOSTNAME}" "cd ~/git && _misc_/update-repository-posixacls ${subdir}${pkg}"
 
   POP="0"
   if [ -d "${pkg}" ]; then
