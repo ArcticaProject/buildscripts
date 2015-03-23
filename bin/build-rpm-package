@@ -25,13 +25,17 @@ GIT_HOSTNAME="git.mydomain.org"
 
 RPMEMAIL="firstname.lastname@mydomain.org"
 RPMFULLNAME="Firstname Lastname"
-GPG_KEY=
+GPG_KEY=""
 RPM_DISTS_SUPPORTED="fedora epel opensuse sle"
 FEDORA_DISTROS="18,19,20,21,rawhide"
 EPEL_DISTROS="6,7"
 OPENSUSE_DISTROS="12.2,12.3,13.1,13.2"
 SLE_DISTROS="11.2,11.3,12.0"
 RPM_REPOS_BASE=/var/www/
+RPM_MOCK_CONFIG_DIR=""
+RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME=""
+RPM_EXTRA_REPO_MOCK_CONFIG_FULL_NAME=""
+
 
 COMPONENT_MAIN="main"
 COMPONENT_NIGHTLY="nightly"
@@ -100,6 +104,64 @@ set_vars() {
 	mkdir -p "$PKGDIST"
 
 	return 0
+}
+
+get_extra_repository () {
+	TYPE="${1:?"Error: no type passed to ${FUNCNAME}()."}"
+	DIST="${2:?"Error: no distribution passed to ${FUNCNAME}()"}"
+	CODENAME="${3:?"Error: no codename (distro 'version') passed to ${FUNCNAME}()"}"
+	COMPONENT="${4:?"Error: no component (X2Go release group) passed to ${FUNCNAME}()"}"
+	PACKAGE="${5:?"Error: no package passed to ${FUNCAME}()"}"
+	ARCH="${6:?"Error: no architecture passed to ${FUNCNAME}()"}"
+
+	ret=""
+	# Note: we always add the extras repo, because that's defined as "packages missing from the main repository".
+	case "${TYPE}" in
+		"suse")
+			ret="--repo http://${REPOS_SERVER}/${DIST}/${CODENAME}/extras/${ARCH}"
+			if [ -z "${PACKAGE_WITHOUT_OTHERMIRROR}" ] || [ "${PACKAGE_WITHOUT_OTHERMIRROR}" != "${PACKAGE}" ]; then
+				ret="${ret} --repo http://${REPOS_SERVER}/${DIST}/${CODENAME}/${COMPONENT}/${ARCH}"
+			fi
+			;;
+		"redhat")
+			# Always use -r.
+			ret="-r "
+			if [ -n "${RPM_MOCK_CONFIG_DIR}" ]; then
+				# Add config base dir if specified.
+				ret="${ret} ${RPM_MOCK_CONFIG_DIR}"
+
+				# Mock config file names shall follow the format:
+				# distname-distversion-arch[-extra_repo_base_name[-extra_repo_full_name]]
+				# ^------ mandatory ------^^----------------- optional -----------------^
+				# ^------- default -------^^---- for extras ----^^--- for everything ---^
+
+				# Add mandatory, default value.
+				ret="${ret} ${DIST}-${CODENAME}-${ARCH}"
+				if [ -n "${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}" ]; then
+					ret="${ret}-${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}"
+
+					if [-n "${RPM_EXTRA_REPO_MOCK_CONFIG_FULL_NAME}" ] && [ -z "${PACKAGE_WITHOUT_OTHERMIRROR}" ] || \
+					   [ "${PACKAGE_WITHOUT_OTHERMIRROR}" != "${PACKAGE}" ]; then
+						ret="${ret}-${RPM_EXTRA_REPO_MOCK_CONFIG_FULL_NAME}"
+					fi
+				fi
+
+				# Add .cfg extension.
+				ret="${ret}.cfg"
+			else
+				# As the default directory /etc/mock is non-writable, assume we don't have
+				# special mock configs.
+				ret="${ret} ${DIST}-${CODENAME}-${ARCH}"
+			fi
+			;;
+		*)
+			echo "Error: unknown type passed to ${FUNCNAME}()" >&2
+			echo "Valid values: suse, redhat." >&2
+			exit -1
+			;;
+	esac
+
+	echo "${ret}"
 }
 
 prepare_workspace() {
@@ -224,8 +286,11 @@ build_packages() {
 						sleep 30
 					done
 					rm -f $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
+
+					# Obtain packages from our RPM repository.
+					MOCK_CHROOT_CONFIG="$(get_extra_repository "redhat" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "x86_64")"
 					if mock --buildsrpm \
-					          -r ${l_DIST}-${l_CODENAME}-x86_64 \
+					          ${MOCK_CHROOT_CONFIG} \
 					          --resultdir="$PKGDIST/$l_DIST/$l_CODENAME/rpmbuild/SRPMS" \
 					          --spec "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/$PROJECT.spec" \
 					          --sources "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/"; then
@@ -246,14 +311,6 @@ build_packages() {
 
 				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{x86_64,i386,SRPM}
 
-				# TODO: obtain packages from our YUM repository???
-				#OTHERMIRROR=""
-				#if [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
-				#	echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT_MAIN $COMPONENT"
-				#else
-				#	echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT"
-				#fi
-
 				if [ "x$SKIP_ARCH" != "xx86_64" ] || [ "$IS_NOARCH" = "yes" ]; then
 					if [ "x$l_DIST" = "xopensuse" ] || [ "x$l_DIST" = "xsle" ]; then
 						BUILD_RESULT=/home/abuild/rpmbuild/
@@ -269,10 +326,14 @@ build_packages() {
 							echo "Waiting for some other build to finish..."
 							sleep 30
 						done
+
+						# Obtain packages from our RPM repository.
+						OTHERMIRROR="$(get_extra_repository "suse" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "x86_64")"
 						if sudo obs-build \
 						             --nosignature \
 						             --repo "http://packages.x2go.org/${l_DIST}/$l_CODENAME/extras" \
 						             --repo "$DOWNLOAD_URL" \
+						             ${OTHERMIRROR} \
 						             --root "/var/cache/obs-build/$l_DIST/$l_CODENAME/x86_64/" \
 						             --clean \
 						             $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/$PROJECT.spec; then
@@ -297,8 +358,11 @@ build_packages() {
 							echo "Waiting for some other build to finish..."
 							sleep 30
 						done
+
+						# Obtain packages from our RPM repository.
+						MOCK_CHROOT_CONFIG="$(get_extra_repository "redhat" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "x86_64")"
 						ls $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.*.src.rpm | while read srpm; do
-							if mock -r "${l_DIST}-${l_CODENAME}-x86_64" --resultdir="$PKGDIST/$l_DIST/$l_CODENAME/x86_64" "$srpm"; then
+							if mock ${MOCK_CHROOT_CONFIG} --resultdir="$PKGDIST/$l_DIST/$l_CODENAME/x86_64" "$srpm"; then
 								# copy and later sign source RPM
 								cp "$srpm" "$PKGDIST/$l_DIST/$l_CODENAME/SRPM/"
 
@@ -340,10 +404,14 @@ build_packages() {
 							echo "Waiting for some other build to finish..."
 							sleep 30
 						done
+
+						# Obtain packages from our RPM repository.
+						OTHERMIRROR="$(get_extra_repository "suse" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "i386")"
 						if linux32 sudo obs-build \
 						                    --nosignature \
 						                    --repo "http://packages.x2go.org/${l_DIST}/$l_CODENAME/extras" \
 						                    --repo "$DOWNLOAD_URL" \
+						                    ${OTHERMIRROR} \
 						                    --root "/var/cache/obs-build/$l_DIST/$l_CODENAME/i386/" \
 						                    --clean \
 						                    $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/$PROJECT.spec; then
@@ -371,8 +439,11 @@ build_packages() {
 							sleep 30
 						done
 						rm -f $PKGDIST/$l_DIST/$l_CODENAME/i386/build.log
+
+						# Obtain packages from our RPM repository.
+						MOCK_CHROOT_CONFIG="$(get_extra_repository "redhat" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "i386")"
 						ls $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.*.src.rpm | while read srpm; do
-							if nice mock -r "${l_DIST}-${l_CODENAME}-i386" --resultdir="$PKGDIST/$l_DIST/$l_CODENAME/i386" "$srpm"; then
+							if nice mock ${MOCK_CHROOT_CONFIG} --resultdir="$PKGDIST/$l_DIST/$l_CODENAME/i386" "$srpm"; then
 								# only copy and sign source RPM if necessary
 								SIGN_SRPM=0
 								if [ ! -e "$PKGDIST/$l_DIST/$l_CODENAME/SRPM/$(basename "$srpm")" ]; then
