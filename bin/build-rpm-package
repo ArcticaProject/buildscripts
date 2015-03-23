@@ -131,14 +131,14 @@ get_extra_repository () {
 				ret="${ret} ${RPM_MOCK_CONFIG_DIR}"
 
 				# Mock config file names shall follow the format:
-				# distname-distversion-arch[-extra_repo_base_name[-extra_repo_full_name]]
-				# ^------ mandatory ------^^----------------- optional -----------------^
-				# ^------- default -------^^---- for extras ----^^--- for everything ---^
+				# distname-distversion-arch[-component-extra_repo_base_name[-extra_repo_full_name]]
+				# ^------ mandatory ------^^---------------------- optional ----------------------^
+				# ^------- default -------^            ^--- for extras ---^^--- for everything ---^
 
 				# Add mandatory, default value.
 				ret="${ret} ${DIST}-${CODENAME}-${ARCH}"
 				if [ -n "${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}" ]; then
-					ret="${ret}-${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}"
+					ret="${ret}-${COMPONENT}-${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}"
 
 					if [-n "${RPM_EXTRA_REPO_MOCK_CONFIG_FULL_NAME}" ] && [ -z "${PACKAGE_WITHOUT_OTHERMIRROR}" ] || \
 					   [ "${PACKAGE_WITHOUT_OTHERMIRROR}" != "${PACKAGE}" ]; then
