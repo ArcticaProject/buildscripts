@@ -110,21 +110,21 @@ set_vars() {
 # Returns 0 if the mock version is greater or equal the specified input,
 # 1 otherwise.
 check_mock_version_atleast () {
-	MAJOR="${1:?"Error: no major version passed to ${FUNCNAME}()."}"
-	MINOR="${2:?"Error: no minor version passed to ${FUNCNAME}()."}"
-	PATCH="${3:?"Error: no patch version passed to ${FUNCNAME}()."}"
+	typeset MAJOR="${1:?"Error: no major version passed to ${FUNCNAME}()."}"
+	typeset MINOR="${2:?"Error: no minor version passed to ${FUNCNAME}()."}"
+	typeset PATCH="${3:?"Error: no patch version passed to ${FUNCNAME}()."}"
 
 	# Check input parameters for sanity.
-	SANITY_CHECK_MAJOR="$(sed -e 's/^\([0-9][0-9]*\)$//' <<< "${MAJOR}")"
-	SANITY_CHECK_MINOR="$(sed -e 's/^\([0-9][0-9]*\)$//' <<< "${MINOR}")"
-	SANITY_CHECK_PATCH="$(sed -e 's/^\([0-9][0-9]*\)$//' <<< "${PATCH}")"
+	typeset SANITY_CHECK_MAJOR="$(sed -e 's/^\([0-9][0-9]*\)$//' <<< "${MAJOR}")"
+	typeset SANITY_CHECK_MINOR="$(sed -e 's/^\([0-9][0-9]*\)$//' <<< "${MINOR}")"
+	typeset SANITY_CHECK_PATCH="$(sed -e 's/^\([0-9][0-9]*\)$//' <<< "${PATCH}")"
 
 	if [ -n "${SANITY_CHECK_MAJOR}" ] || [ -n "${SANITY_CHECK_MINOR}" ] || [ -n "${SANITY_CHECK_PATCH}" ]; then
 		echo "Error: input parameters of ${FUNCNAME}() are not pure integers and failed sanity check." >&2
 		exit -1
 	fi
 
-	MOCK_VER="$(mock --version)"
+	typeset MOCK_VER="$(mock --version)"
 
 	# Sanitize ${MOCK_VER}:
 	# Only take the first line into account.
@@ -142,15 +142,15 @@ check_mock_version_atleast () {
 	# as a special character. POSIX ERE supports + as a special character, but sed is
 	# specified by POSIX to only support BRE. GNU sed supports a \+ special character in
 	# POSIX BRE standard mode, but this is a GNU extension.
-	MOCK_VER_MAJOR="$(sed -e 's/^\([0-9][0-9]*\)\.[0-9][0-9]*\.[0-9][0-9]*/\1/' <<< "${MOCK_VER}")"
-	MOCK_VER_MINOR="$(sed -e 's/^[0-9][0-9]*\.\([0-9][0-9]*\)\.[0-9][0-9]*/\1/' <<< "${MOCK_VER}")"
-	MOCK_VER_PATCH="$(sed -e 's/^[0-9][0-9]*\.[0-9][0-9]*\.\([0-9][0-9]*\)/\1/' <<< "${MOCK_VER}")"
+	typeset MOCK_VER_MAJOR="$(sed -e 's/^\([0-9][0-9]*\)\.[0-9][0-9]*\.[0-9][0-9]*/\1/' <<< "${MOCK_VER}")"
+	typeset MOCK_VER_MINOR="$(sed -e 's/^[0-9][0-9]*\.\([0-9][0-9]*\)\.[0-9][0-9]*/\1/' <<< "${MOCK_VER}")"
+	typeset MOCK_VER_PATCH="$(sed -e 's/^[0-9][0-9]*\.[0-9][0-9]*\.\([0-9][0-9]*\)/\1/' <<< "${MOCK_VER}")"
 
 	if [ -z "${MOCK_VER_MAJOR}" ] || [ -z "${MOCK_VER_MINOR}" ] || [ -z "${MOCK_VER_PATCH}" ]; then
 		echo "Error: unable to parse mock version in ${FUNCNAME}()." >&2
 		exit -1
 	else
-		ret="1"
+		typeset ret="1"
 		if [ "${MOCK_VER_MAJOR}" -gt "${MAJOR}" ]; then
 			ret="0"
 		elif [ "${MOCK_VER_MAJOR}" -eq "${MAJOR}" ]; then
@@ -169,14 +169,14 @@ check_mock_version_atleast () {
 }
 
 get_extra_repository () {
-	TYPE="${1:?"Error: no type passed to ${FUNCNAME}()."}"
-	DIST="${2:?"Error: no distribution passed to ${FUNCNAME}()."}"
-	CODENAME="${3:?"Error: no codename (distro 'version') passed to ${FUNCNAME}()."}"
-	COMPONENT="${4:?"Error: no component (X2Go release group) passed to ${FUNCNAME}()."}"
-	PACKAGE="${5:?"Error: no package passed to ${FUNCAME}()."}"
-	ARCH="${6:?"Error: no architecture passed to ${FUNCNAME}()."}"
+	typeset TYPE="${1:?"Error: no type passed to ${FUNCNAME}()."}"
+	typeset DIST="${2:?"Error: no distribution passed to ${FUNCNAME}()."}"
+	typeset CODENAME="${3:?"Error: no codename (distro 'version') passed to ${FUNCNAME}()."}"
+	typeset COMPONENT="${4:?"Error: no component (X2Go release group) passed to ${FUNCNAME}()."}"
+	typeset PACKAGE="${5:?"Error: no package passed to ${FUNCAME}()."}"
+	typeset ARCH="${6:?"Error: no architecture passed to ${FUNCNAME}()."}"
 
-	ret=""
+	typeset ret=""
 	# Note: we always add the extras repo, because that's defined as "packages missing from the main repository".
 	case "${TYPE}" in
 		"suse")
@@ -197,7 +197,7 @@ get_extra_repository () {
 				# We have to work around that by specifying ../..//PATH/TO/MOCK-CONFIG and leaving
 				# out the ".cfg" part.
 				# Find out if we're using a buggy version.
-				check_mock_version_atleast "1" "2" "0" && MOCK_BUGGY="0" || MOCK_BUGGY="1"
+				check_mock_version_atleast "1" "2" "0" && typeset MOCK_BUGGY="0" || typeset MOCK_BUGGY="1"
 
 				[ "${MOCK_BUGGY}" -eq "1" ] && ret="${ret}../../"
 
