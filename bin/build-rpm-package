@@ -170,11 +170,11 @@ check_mock_version_atleast () {
 
 get_extra_repository () {
 	TYPE="${1:?"Error: no type passed to ${FUNCNAME}()."}"
-	DIST="${2:?"Error: no distribution passed to ${FUNCNAME}()"}"
-	CODENAME="${3:?"Error: no codename (distro 'version') passed to ${FUNCNAME}()"}"
-	COMPONENT="${4:?"Error: no component (X2Go release group) passed to ${FUNCNAME}()"}"
-	PACKAGE="${5:?"Error: no package passed to ${FUNCAME}()"}"
-	ARCH="${6:?"Error: no architecture passed to ${FUNCNAME}()"}"
+	DIST="${2:?"Error: no distribution passed to ${FUNCNAME}()."}"
+	CODENAME="${3:?"Error: no codename (distro 'version') passed to ${FUNCNAME}()."}"
+	COMPONENT="${4:?"Error: no component (X2Go release group) passed to ${FUNCNAME}()."}"
+	PACKAGE="${5:?"Error: no package passed to ${FUNCAME}()."}"
+	ARCH="${6:?"Error: no architecture passed to ${FUNCNAME}()."}"
 
 	ret=""
 	# Note: we always add the extras repo, because that's defined as "packages missing from the main repository".
