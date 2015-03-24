@@ -180,7 +180,8 @@ get_extra_repository () {
 	# Note: we always add the extras repo, because that's defined as "packages missing from the main repository".
 	case "${TYPE}" in
 		"suse")
-			ret="--repo http://${REPOS_SERVER}/${DIST}/${CODENAME}/extras/${ARCH}"
+			# FIXME: make this package repository consistent with our main ones.
+			ret="--repo http://${REPOS_SERVER}/${DIST}/${CODENAME}/extras"
 			if [ -z "${PACKAGE_WITHOUT_OTHERMIRROR}" ] || [ "${PACKAGE_WITHOUT_OTHERMIRROR}" != "${PACKAGE}" ]; then
 				ret="${ret} --repo http://${REPOS_SERVER}/${DIST}/${CODENAME}/${COMPONENT}/${ARCH}"
 			fi
@@ -405,7 +406,6 @@ build_packages() {
 						OTHERMIRROR="$(get_extra_repository "suse" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "x86_64")"
 						if sudo obs-build \
 						             --nosignature \
-						             --repo "http://packages.x2go.org/${l_DIST}/$l_CODENAME/extras" \
 						             --repo "$DOWNLOAD_URL" \
 						             ${OTHERMIRROR} \
 						             --root "/var/cache/obs-build/$l_DIST/$l_CODENAME/x86_64/" \
@@ -483,7 +483,6 @@ build_packages() {
 						OTHERMIRROR="$(get_extra_repository "suse" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "i386")"
 						if linux32 sudo obs-build \
 						                    --nosignature \
-						                    --repo "http://packages.x2go.org/${l_DIST}/$l_CODENAME/extras" \
 						                    --repo "$DOWNLOAD_URL" \
 						                    ${OTHERMIRROR} \
 						                    --root "/var/cache/obs-build/$l_DIST/$l_CODENAME/i386/" \
