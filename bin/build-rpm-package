@@ -133,7 +133,7 @@ check_mock_version_atleast () {
 	# Only accept a string that has number.number.number somewhere.
 	MOCK_VER="$(grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' <<< "${MOCK_VER}")"
 
-	if [ -n "${MOCK_VER}" ]; then
+	if [ -z "${MOCK_VER}" ]; then
 		echo "Error: the reported mock version can not be handled by ${FUNCNAME}()." >&2
 		exit -1
 	fi
