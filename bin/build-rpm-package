@@ -106,6 +106,68 @@ set_vars() {
 	return 0
 }
 
+# Check that mock version is at least the given version number.
+# Returns 0 if the mock version is greater or equal the specified input,
+# 1 otherwise.
+check_mock_version_atleast () {
+	MAJOR="${1:?"Error: no major version passed to ${FUNCNAME}()."}"
+	MINOR="${2:?"Error: no minor version passed to ${FUNCNAME}()."}"
+	PATCH="${3:?"Error: no patch version passed to ${FUNCNAME}()."}"
+
+	# Check input parameters for sanity.
+	SANITY_CHECK_MAJOR="$(sed -e 's/^\([0-9][0-9]*\)$//' <<< "${MAJOR}")"
+	SANITY_CHECK_MINOR="$(sed -e 's/^\([0-9][0-9]*\)$//' <<< "${MINOR}")"
+	SANITY_CHECK_PATCH="$(sed -e 's/^\([0-9][0-9]*\)$//' <<< "${PATCH}")"
+
+	if [ -n "${SANITY_CHECK_MAJOR}" ] || [ -n "${SANITY_CHECK_MINOR}" ] || [ -n "${SANITY_CHECK_PATCH}" ]; then
+		echo "Error: input parameters of ${FUNCNAME}() are not pure integers and failed sanity check." >&2
+		exit -1
+	fi
+
+	MOCK_VER="$(mock --version)"
+
+	# Sanitize ${MOCK_VER}:
+	# Only take the first line into account.
+	MOCK_VER="$(head -n 1 <<< "${MOCK_VER}")"
+
+	# Only accept a string that has number.number.number somewhere.
+	MOCK_VER="$(grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' <<< "${MOCK_VER}")"
+
+	if [ -n "${MOCK_VER}" ]; then
+		echo "Error: the reported mock version can not be handled by ${FUNCNAME}()." >&2
+		exit -1
+	fi
+
+	# The reason for this weird [0-9][0-9]* construct is that POSIX BRE does only specify *
+	# as a special character. POSIX ERE supports + as a special character, but sed is
+	# specified by POSIX to only support BRE. GNU sed supports a \+ special character in
+	# POSIX BRE standard mode, but this is a GNU extension.
+	MOCK_VER_MAJOR="$(sed -e 's/^\([0-9][0-9]*\)\.[0-9][0-9]*\.[0-9][0-9]*/\1/' <<< "${MOCK_VER}")"
+	MOCK_VER_MINOR="$(sed -e 's/^[0-9][0-9]*\.\([0-9][0-9]*\)\.[0-9][0-9]*/\1/' <<< "${MOCK_VER}")"
+	MOCK_VER_PATCH="$(sed -e 's/^[0-9][0-9]*\.[0-9][0-9]*\.\([0-9][0-9]*\)/\1/' <<< "${MOCK_VER}")"
+
+	if [ -z "${MOCK_VER_MAJOR}" ] || [ -z "${MOCK_VER_MINOR}" ] || [ -z "${MOCK_VER_PATCH}" ]; then
+		echo "Error: unable to parse mock version in ${FUNCNAME}()." >&2
+		exit -1
+	else
+		ret="1"
+		if [ "${MOCK_VER_MAJOR}" -gt "${MAJOR}" ]; then
+			ret="0"
+		elif [ "${MOCK_VER_MAJOR}" -eq "${MAJOR}" ]; then
+			if [ "${MOCK_VER_MINOR}" -gt "${MINOR}" ]; then
+				ret="0"
+			elif [ "${MOCK_VER_MINOR}" -eq "${MINOR}" ]; then
+				if [ "${MOCK_VER_PATCH}" -gt "${PATCH}" ] || \
+				   [ "${MOCK_VER_PATCH}" -eq "${PATCH}" ]; then
+					ret="0"
+				fi
+			fi
+		fi
+
+		return "${ret}"
+	fi
+}
+
 get_extra_repository () {
 	TYPE="${1:?"Error: no type passed to ${FUNCNAME}()."}"
 	DIST="${2:?"Error: no distribution passed to ${FUNCNAME}()"}"
