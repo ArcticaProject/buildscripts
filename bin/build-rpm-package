@@ -202,7 +202,7 @@ get_extra_repository () {
 				[ "${MOCK_BUGGY}" -eq "1" ] && ret="${ret}../../"
 
 				# Add config base dir if specified.
-				ret="${ret} ${RPM_MOCK_CONFIG_DIR}/"
+				ret="${ret}${RPM_MOCK_CONFIG_DIR}/"
 
 				# Mock config file names shall follow the format:
 				# distname-distversion-arch[-component-extra_repo_base_name[-extra_repo_full_name]]
