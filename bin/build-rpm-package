@@ -48,10 +48,10 @@ GNUPGHOME=$HOME/.gnupg
 OPENSUSE_DOWNLOAD_URL="http://download.opensuse.org/distribution/#VERSION#/repo/oss/suse/"
 SLE_DOWNLOAD_URL="/srv/mirrors/non-public/sle/#VERSION#/rpms/"
 
-test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
+test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit 1; }
 
 PREFIX=$(echo `basename $0` | cut -d"-" -f1)
-test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo "$0 has no valid context prefix..."; exit -1; }
+test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo "$0 has no valid context prefix..."; exit 1; }
 
 NO_DELAY=${NO_DELAY:-"no"}
 FORCE_BUILD=${FORCE_BUILD:-"no"}
@@ -73,7 +73,7 @@ cleanup () {
 		case "${TMP_MOCK_CFG_DIR}" in
 			("${TEMP_BASE}"*)	;;
 			(*)			echo "Warning: mock temporary config directory is not matching the temporary file base dir ${TEMP_BASE}. Not doing cleanup." >&2
-						exit -1
+						exit 1
 						;;
 		esac
 
@@ -149,7 +149,7 @@ set_vars() {
 		CHECKOUT="${3:-master}"
 	else
 		echo "error: no such package component area for this Git project. Aborting..."
-		exit -1
+		exit 1
 	fi
 	# the DATE might be given as ,,today'' from the command line
 	[ "x$DATE" = "xtoday" ] && DATE="$(date +%Y%m%d)"
@@ -183,7 +183,7 @@ check_mock_version_atleast () {
 
 	if [ -n "${SANITY_CHECK_MAJOR}" ] || [ -n "${SANITY_CHECK_MINOR}" ] || [ -n "${SANITY_CHECK_PATCH}" ]; then
 		echo "Error: input parameters of ${FUNCNAME}() are not pure integers and failed sanity check." >&2
-		exit -1
+		exit 1
 	fi
 
 	typeset MOCK_VER="$(mock --version)"
@@ -197,7 +197,7 @@ check_mock_version_atleast () {
 
 	if [ -z "${MOCK_VER}" ]; then
 		echo "Error: the reported mock version can not be handled by ${FUNCNAME}()." >&2
-		exit -1
+		exit 1
 	fi
 
 	# The reason for this weird [0-9][0-9]* construct is that POSIX BRE does only specify *
@@ -210,7 +210,7 @@ check_mock_version_atleast () {
 
 	if [ -z "${MOCK_VER_MAJOR}" ] || [ -z "${MOCK_VER_MINOR}" ] || [ -z "${MOCK_VER_PATCH}" ]; then
 		echo "Error: unable to parse mock version in ${FUNCNAME}()." >&2
-		exit -1
+		exit 1
 	else
 		typeset ret="1"
 		if [ "${MOCK_VER_MAJOR}" -gt "${MAJOR}" ]; then
@@ -274,7 +274,7 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 	TMP_REGEX='^([[:alpha:]]+)-([[:alnum:]_]+)-[[:alnum:]_]+\.cfg$'
 	if [[ ! "${MOCK_BASE}" =~ ${TMP_REGEX} ]]; then
 		echo "Error: MOCK_BASE parameter not well formed. Must be: 'distro-version-arch.cfg'." >&2
-		exit -1
+		exit 1
 	else
 		DISTRO="${BASH_REMATCH[1]}"
 		VERSION="${BASH_REMATCH[2]}"
@@ -288,13 +288,13 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 		# Must be plain file.
 		if [[ "${!CFG_FILE}" =~ ${TMP_REGEX} ]]; then
 			echo "Error: (implicit) ${CFG_FILE} parameter must not be a path but a simple file name." >&2
-			exit -1
+			exit 1
 		fi
 
 		# Must exist and be readable.
 		if [ ! -f "${RPM_MOCK_CONFIG_DIR}/${!CFG_FILE}" ] || [ ! -r "${RPM_MOCK_CONFIG_DIR}/${!CFG_FILE}" ]; then
 			echo "Error: ${CFG_FILE} parameter must exist, be a regular file and readable." >&2
-			exit -1
+			exit 1
 		fi
 	done
 
@@ -310,7 +310,7 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 
 	if [ "${TARGET}" != "base" ] && [ "${TARGET}" != "full" ]; then
 		echo "Error: TARGET parameter must be either full or base." >&2
-		exit -1
+		exit 1
 	fi
 
 	# Create temporary directory for our soon-to-be temporary mock config file,
@@ -319,14 +319,14 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 		TMP_MOCK_CFG_DIR="$(mktemp -d --tmpdir="${TEMP_BASE}" "${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}-mock-$(repeat_str "X" "24")")"
 		if [ "$?" -ne "0" ]; then
 			echo "Error: creating mock temporary config directory failed. Aborting." >&2
-			exit -1
+			exit 1
 		fi
 	fi
 
 	TMP_MOCK_CFG_FILE="$(mktemp --tmpdir="${TEMP_BASE}" "$(basename "${TMP_MOCK_CFG_DIR}")/${MOCK_BASE%.cfg}-${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}-${COMPONENT}-${TARGET}.$(repeat_str "X" "24").cfg")"
 	if [ "$?" -ne "0" ]; then
 		echo "Error: creating mock temporary config file failed. Aborting." >&2
-		exit -1
+		exit 1
 	fi
 
 	# Save old input field separator value and set it to newline only.
@@ -414,7 +414,7 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 			echo "${line}" >> "${TMP_MOCK_CFG_FILE}"
 		elif [ "${REPO_START}" -eq "0" ] && [[ "${line}" =~ ${TMP_REGEX_END} ]]; then
 			echo "Error: Parsing mock base config file failed: unexpected end of yum configuration, no start found." >&2
-			exit -1
+			exit 1
 		else
 			# Pass-through.
 			echo "${line}" >> "${TMP_MOCK_CFG_FILE}"
@@ -493,7 +493,7 @@ get_extra_repository () {
 		*)
 			echo "Error: unknown type passed to ${FUNCNAME}()" >&2
 			echo "Valid values: suse, redhat." >&2
-			exit -1
+			exit 1
 			;;
 	esac
 
@@ -635,7 +635,7 @@ build_packages() {
 					else
 						cat $PKGDIST/$l_DIST/$l_CODENAME/rpmbuild/SRPMS/build.log
 						rm -Rf "$TEMP_DIR"
-						exit -1
+						exit 1
 					fi
 				fi
 
@@ -685,7 +685,7 @@ build_packages() {
 							rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "$PKGDIST/$l_DIST/$l_CODENAME/SRPM/"*.rpm
 						else
 							rm -Rf "$TEMP_DIR"
-							exit -1
+							exit 1
 						fi
 					else
 						rm -f $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
@@ -719,7 +719,7 @@ build_packages() {
 							else
 								cat $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
 								rm -Rf "$TEMP_DIR"
-								exit -1
+								exit 1
 							fi
 						done
 					fi
@@ -765,7 +765,7 @@ build_packages() {
 							fi
 						else
 							rm -Rf "$TEMP_DIR"
-							exit -1
+							exit 1
 						fi
 					else
 						while [ -d ~mock/${l_DIST}-${l_CODENAME}-i386 ]; do
@@ -800,7 +800,7 @@ build_packages() {
 							else
 								cat $PKGDIST/$l_DIST/$l_CODENAME/i386/build.log
 								rm -Rf "$TEMP_DIR"
-								exit -1
+								exit 1
 							fi
 						done
 					fi
