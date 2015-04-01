@@ -264,6 +264,16 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 		fi
 	done
 
+	typeset DISTRO=""
+	typeset TMP_REGEX="^([[:alpha:]]+)-[[:alnum:]]+-[[:alnum:]].cfg$"
+				# distribution -  version   - arch
+	if [[ ! "${MOCK_BASE}" =~ ${TMP_REGEX} ]]; then
+		echo "Error: MOCK_BASE parameter not well formed. Must be: 'distro-version-arch.cfg'." >&2
+		exit -1
+	else
+		DISTRO="${BASH_REMATCH[1]}"
+	fi
+
 	# Note: there is no way to check for the component's validity,
 	# as LTS releases have "random" names assigned to them.
 
