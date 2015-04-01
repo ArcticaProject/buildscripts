@@ -595,7 +595,7 @@ build_packages() {
 					rm -f $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
 
 					# Obtain packages from our RPM repository.
-					MOCK_CHROOT_CONFIG="$(get_extra_repository "redhat" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "x86_64")"
+					MOCK_CHROOT_CONFIG="$(get_extra_repository "redhat" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "x86_64" "${RPM_WANT_EXTRA_REPOS}")"
 					if mock --buildsrpm \
 					          ${MOCK_CHROOT_CONFIG} \
 					          --resultdir="$PKGDIST/$l_DIST/$l_CODENAME/rpmbuild/SRPMS" \
@@ -635,7 +635,7 @@ build_packages() {
 						done
 
 						# Obtain packages from our RPM repository.
-						OTHERMIRROR="$(get_extra_repository "suse" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "x86_64")"
+						OTHERMIRROR="$(get_extra_repository "suse" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "x86_64" "${RPM_WANT_EXTRA_REPOS}")"
 						if sudo obs-build \
 						             --nosignature \
 						             ${OTHERMIRROR} \
@@ -666,7 +666,7 @@ build_packages() {
 						done
 
 						# Obtain packages from our RPM repository.
-						MOCK_CHROOT_CONFIG="$(get_extra_repository "redhat" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "x86_64")"
+						MOCK_CHROOT_CONFIG="$(get_extra_repository "redhat" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "x86_64" "${RPM_WANT_EXTRA_REPOS}")"
 						ls $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.*.src.rpm | while read srpm; do
 							if mock ${MOCK_CHROOT_CONFIG} --resultdir="$PKGDIST/$l_DIST/$l_CODENAME/x86_64" "$srpm"; then
 								# copy and later sign source RPM
@@ -712,7 +712,7 @@ build_packages() {
 						done
 
 						# Obtain packages from our RPM repository.
-						OTHERMIRROR="$(get_extra_repository "suse" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "i386")"
+						OTHERMIRROR="$(get_extra_repository "suse" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "i386" "${RPM_WANT_EXTRA_REPOS}")"
 						if linux32 sudo obs-build \
 						                    --nosignature \
 						                    ${OTHERMIRROR} \
@@ -746,7 +746,7 @@ build_packages() {
 						rm -f $PKGDIST/$l_DIST/$l_CODENAME/i386/build.log
 
 						# Obtain packages from our RPM repository.
-						MOCK_CHROOT_CONFIG="$(get_extra_repository "redhat" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "i386")"
+						MOCK_CHROOT_CONFIG="$(get_extra_repository "redhat" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "i386" "${RPM_WANT_EXTRA_REPOS}")"
 						ls $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.*.src.rpm | while read srpm; do
 							if nice mock ${MOCK_CHROOT_CONFIG} --resultdir="$PKGDIST/$l_DIST/$l_CODENAME/i386" "$srpm"; then
 								# only copy and sign source RPM if necessary
