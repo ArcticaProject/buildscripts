@@ -60,6 +60,7 @@ RPM_BUILD_FOR=${RPM_BUILD_FOR:-"fedora:$FEDORA_DISTROS epel:$EPEL_DISTROSi opens
 # These parts are not user-servicable.
 TMP_MOCK_CFG_DIR=""
 TMP_MOCK_CFG_FILE=""
+TEMP_BASE="${HOME}/tmp/"
 # End of non-user-servicable part.
 
 set -ex
@@ -123,9 +124,8 @@ function make_boolean () {
 }
 
 set_vars() {
-	TEMP_BASE="$HOME/tmp/"
-	mkdir -p "$TEMP_BASE"
-	chmod 2770 "$TEMP_BASE"
+	mkdir -p "${TEMP_BASE}"
+	chmod 2770 "${TEMP_BASE}"
 
 	# first argv is the name of the Git project
 	PROJECT_PATH="$1"
@@ -163,7 +163,6 @@ set_vars() {
 	LOCK_FILE=$PROJECT_DIR/../.$PROJECT.lock
 
 	# creating paths
-	mkdir -p "$TEMP_BASE"
 	mkdir -p "$PROJECT_DIR"
 	mkdir -p "$PKGDIST"
 
