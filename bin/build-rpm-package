@@ -83,7 +83,8 @@ cleanup () {
 			if [ ! -f "${file}" ]; then
 				echo "Warning: mock temporary config file ${file} is not a regular file. Not unlinking." >&2
 			else
-				rm "${TMP_MOCK_CFG_DIR}/*"
+				# Remove and ignore errors.
+				rm "${TMP_MOCK_CFG_DIR}/${file}" || :
 			fi
 		done
 
