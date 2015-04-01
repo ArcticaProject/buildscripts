@@ -357,7 +357,7 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 
 		# Change some values like $releasever or gpgcheck.
 		if [ "${FETCH_EXTRA_SECTION}" -eq "1" ] || [ "${FETCH_FULL_SECTION}" -eq "1" ]; then
-			TMP_REGEX='^[[:space:]]*gpgcheck[[:space:]]*=[[:space:]]*1[[:space:]]$'
+			TMP_REGEX='^[[:space:]]*gpgcheck[[:space:]]*=[[:space:]]*1[[:space:]]*$'
 			if [[ "${line}" =~ ${TMP_REGEX} ]]; then
 				line="${line/1/0/}"
 			fi
