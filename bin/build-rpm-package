@@ -343,11 +343,27 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 			REPO_START=1
 		elif [ "${REPO_START}" -eq "1" ] && [[ "${line}" =~ ${TMP_REGEX_END} ]]; then
 			# Time to insert whatever is required.
+			printf '\n' >> "${TMP_MOCK_CFG_FILE}"
 
+			# Extras repo.
+			typeset -i i=0
+			for ((i = 0; i < ${#extra_repo[@]}; ++i)); do
+				echo "${extra_repo[${i}]}" >> "${TMP_MOCK_CFG_FILE}"
+			done
+
+			# Full repo if required.
+			if [ "${TARGET}" = "full" ]; then
+				printf '\n' >> "${TMP_MOCK_CFG_FILE}"
+
+				typeset -i i=0
+				for ((i = 0; i < ${#full_repo[@]}; ++i)); do
+					echo "${full_repo[${i}]}" >> "${TMP_MOCK_CFG_FILE}"
+				done
+			fi
 		elif [ "${REPO_START}" -eq "0" ] && [[ "${line}" =~ ${TMP_REGEX_END} ]]; then
 			echo "Error: Parsing mock base config file failed: unexpected end of yum configuration, no start found." >&2
 			exit -1
-		elif [ "${REPO_START}" -eq "0" ]; then
+		else
 			# Write-through.
 			echo "${line}" >> "${TMP_MOCK_CFG_FILE}"
 		fi
