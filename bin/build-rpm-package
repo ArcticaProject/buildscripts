@@ -362,6 +362,11 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 				line="${line/1/0/}"
 			fi
 
+			TMP_REGEX='^[[:space:]]*enabled[[:space:]]*=[[:space:]]*0[[:space:]]*$'
+			if [[ "${line}" =~ ${TMP_REGEX} ]]; then
+				line="${line/0/1/}"
+			fi
+
 			case "${line}" in
 				(*'$releasever'*)	line="${line/'$releasever'/${VERSION}}"
 							;;
