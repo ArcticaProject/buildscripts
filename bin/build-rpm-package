@@ -883,7 +883,12 @@ set_vars "$@" && {
 	if [ "x$(basename $0)" = "x${PREFIX}-build-rpm-package" ] || [ "x$(basename $0)" = "x${PREFIX}-build+upload-rpm-package" ]; then
 		FORCE_BUILD="$(make_boolean "${FORCE_BUILD}")"
 		NO_DELAY="$(make_boolean "${NO_DELAY}")"
-		cd ${PROJECT_DIR} && { pkgneedsbuild ${CHECKOUT} || [ "${FORCE_BUILD}" -eq "1" ] } && {
+
+		# This indentation may look weird, but is actually needed because bash expects either a semicolon or a newline
+		# between (the last) command and a closing curly brace.
+		cd "${PROJECT_DIR}" && {
+			pkgneedsbuild "${CHECKOUT}" || [ "${FORCE_BUILD}" -eq "1" ]
+		} && {
 			if [ "${FORCE_BUILD}" -eq "1" ] && [ "${NO_DELAY}" -eq "0" ]; then
 				delay_build
 			fi
