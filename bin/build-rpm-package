@@ -69,25 +69,23 @@ set -ex
 # RFC SHOULD be called by trap handlers.
 cleanup () {
 	# We always assume the temporary mock config file is below the temporary config directory.
-	if [ -n "${TMP_MOCK_CFG_DIR}" ]; then
-		# Take care of the config file first.
-		if [ -n "${TMP_MOCK_CFG_FILE}" ]; then
-			if [ -e "${TMP_MOCK_CFG_FILE}" ]; then
-				# Explicit test after the general existence test so that we can
-				# print an error message if the file we're looking at is not a
-				# regular file.
-				# BEWARE OF RACE CONDITIONS, though.
-				if [ -f "${TMP_MOCK_CFG_FILE}" ]; then
-					rm "${TMP_MOCK_CFG_DIR}/${TMP_MOCK_CFG_FILE}"
-				else
-					echo "Warning: file '$(readlink -nf "${TMP_MOCK_CFG_DIR}/${TMP_MOCK_CFG_FILE}")' is not a regular file. Not unlinking." >&2
-				fi
+	if [ -n "${TMP_MOCK_CFG_DIR}" ] && [ -e "${TMP_MOCK_CFG_DIR}" ]; then
+		case "${TMP_MOCK_CFG_DIR}" in
+			("${TEMP_BASE}"*)	break ;;
+			(*)			echo "Warning: mock temporary config directory is not matching the temporary file base dir ${TEMP_BASE}. Not doing cleanup." >&2
+						exit -1
+						;;
+		esac
+
+		# Take care of the config file(s) first.
+		typeset file=""
+		for file in "${TMP_MOCK_CFG_DIR}/"*; do
+			if [ ! -f "${file}" ]; then
+				echo "Warning: mock temporary config file ${file} is not a regular file. Not unlinking." >&2
 			else
-				echo "Warning: mock temporary config directory set as ${TMP_MOCK_CFG_DIR}, but mock temporary config file ${TMP_MOCK_CFG_FILE} does not exist." >&2
+				rm "${TMP_MOCK_CFG_DIR}/*"
 			fi
-		else
-			echo "Warning: mock temporary config directory set as ${TMP_MOCK_CFG_DIR}, but mock temporary config file unknown." >&2
-		fi
+		done
 
 		# And only later of the directory itself.
 		if [ -e "${TMP_MOCK_CFG_DIR}" ]; then
@@ -99,12 +97,10 @@ cleanup () {
 		else
 			echo "Warning: mock temporary config directory ${TMP_MOCK_CFG_DIR} does not exist." >&2
 		fi
+	elif [ -n "${TMP_MOCK_CFG_DIR}" ]; then
+		echo "Warning: mock temporary config directory ${TMP_MOCK_CFG_DIR} defined but does not exist. Skipping cleanup." >&2
 	else
-		if [ -n "${TMP_MOCK_CFG_FILE}" ]; then
-			echo "Warning: mock temp not set, but temporary mock config file ${TMP_MOCK_CFG_FILE} set." >&2
-		else
-			echo "Warning: did not find any mock temporary config directory or file set. Not removing anything." >&2
-		fi
+		echo "Warning: mock temporary config directory not defined. Skipping cleanup." >&2
 	fi
 }
 
