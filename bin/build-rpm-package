@@ -313,11 +313,14 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 		exit -1
 	fi
 
-	# Create temporary directory for our soon-to-be temporary mock config file.
-	TMP_MOCK_CFG_DIR="$(mktemp -d --tmpdir="${TEMP_BASE}" "${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}-mock-$(repeat_str "X" "24")")"
-	if [ "$?" -ne "0" ]; then
-		echo "Error: creating mock temporary config directory failed. Aborting." >&2
-		exit -1
+	# Create temporary directory for our soon-to-be temporary mock config file,
+	# if it does not already exist.
+	if [ -z "${TMP_MOCK_CFG_DIR}" ]; then
+		TMP_MOCK_CFG_DIR="$(mktemp -d --tmpdir="${TEMP_BASE}" "${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}-mock-$(repeat_str "X" "24")")"
+		if [ "$?" -ne "0" ]; then
+			echo "Error: creating mock temporary config directory failed. Aborting." >&2
+			exit -1
+		fi
 	fi
 
 	TMP_MOCK_CFG_FILE="$(mktemp --tmpdir="${TEMP_BASE}" "$(basename "${TMP_MOCK_CFG_DIR}")/${MOCK_BASE%.cfg}-${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}-${COMPONENT}-${TARGET}.$(repeat_str "X" "24").cfg")"
@@ -360,7 +363,7 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 			fi
 
 			case "${line}" in
-				(*'$releasever'*)	line="${line/'$releasever'/"${VERSION}"}"
+				(*'$releasever'*)	line="${line/'$releasever'/${VERSION}}"
 							;;
 				(*)			;;
 			esac
