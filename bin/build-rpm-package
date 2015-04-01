@@ -170,7 +170,7 @@ check_mock_version_atleast () {
 
 # Repeats an input string.
 # Returns the repeated input string.
-repeat_str() { # INPUT COUNT
+repeat_str () { # INPUT COUNT
 	typeset INPUT="${1:?"Error: no input string passed to ${FUNCNAME}()."}"
 	typeset COUNT="${2:?"Error: no count passed to ${FUNCNAME}()."}"
 
