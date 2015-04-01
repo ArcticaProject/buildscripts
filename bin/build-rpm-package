@@ -306,11 +306,32 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 	OLDIFS="${IFS}"
 	IFS="$(printf '\n')"
 
-	# Fetch the requested lines from ${CUSTOM_REPO} and store them in an array.
+	# Fetch the requested lines from ${CUSTOM_REPO} and store them in arrays.
 	typeset -a extra_repo
-	typeset -i FETCH_SECTION=0
-	while read line; do
+	typeset -a full_repo
+	typeset -i FETCH_EXTRA_SECTION=0
+	typeset -i FETCH_FULL_SECTION=0
+	TMP_REGEX_EXTRA="^[[:space:]]*\[[[:space:]]*${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}-extras-${DISTRO}[[:space:]]*\][[:space:]]*$"
+	TMP_REGEX_FULL="^[[:space:]]*\[[[:space:]]*${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}-${COMPONENT}-${DISTRO}[[:space:]]*\][[:space:]]*$"
+	TMP_REGEX_OTHER="^[[:space:]]*\[.*\][[:space:]]*$"
 
+	while read line; do
+		if [[ "${line}" =~ ${TMP_REGEX_EXTRA} ]]; then
+			FETCH_EXTRA_SECTION=1
+			FETCH_FULL_SECTION=0
+		elif [[ "${line}" =~ ${TMP_REGEX_FULL} ]]; then
+			FETCH_FULL_SECTION=1
+			FETCH_EXTRA_SECTION=0
+		elif [[ "${line}" =~ ${TMP_REGEX_OTHER} ]]; then
+			FETCH_FULL_SECTION=0
+			FETCH_EXTRA_SECTION=0
+		fi
+
+		if [ "${FETCH_EXTRA_SECTION}" -eq "1" ]; then
+			extra_repo+=("${line}")
+		elif [ "${FETCH_FULL_SECTION}" -eq "1" ]; then
+			full_repo+=("${line}")
+		fi
 	done < "/etc/mock/${CUSTOM_REPO}"
 
 	typeset -i REPO_START=0
