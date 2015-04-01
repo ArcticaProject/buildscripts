@@ -71,7 +71,7 @@ cleanup () {
 	# We always assume the temporary mock config file is below the temporary config directory.
 	if [ -n "${TMP_MOCK_CFG_DIR}" ] && [ -e "${TMP_MOCK_CFG_DIR}" ]; then
 		case "${TMP_MOCK_CFG_DIR}" in
-			("${TEMP_BASE}"*)	break ;;
+			("${TEMP_BASE}"*)	;;
 			(*)			echo "Warning: mock temporary config directory is not matching the temporary file base dir ${TEMP_BASE}. Not doing cleanup." >&2
 						exit -1
 						;;
@@ -261,7 +261,6 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 	typeset TARGET="${3:?"Error: no target (full or base) passed to ${FUNCNAME}()."}"
 
 	# Check argument sanity.
-	typeset DISTRO=""
 
 	# Append .cfg is not already specified.
 	typeset TMP_REGEX='^.*\.cfg$'
@@ -269,13 +268,16 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 		MOCK_BASE="${MOCK_BASE}.cfg"
 	fi
 
+	typeset DISTRO=""
+	typeset VERSION=""
 			   # distribution -   version    - arch
-	TMP_REGEX='^([[:alpha:]]+)-[[:alnum:]_]+-[[:alnum:]_]+\.cfg$'
+	TMP_REGEX='^([[:alpha:]]+)-([[:alnum:]_]+)-[[:alnum:]_]+\.cfg$'
 	if [[ ! "${MOCK_BASE}" =~ ${TMP_REGEX} ]]; then
 		echo "Error: MOCK_BASE parameter not well formed. Must be: 'distro-version-arch.cfg'." >&2
 		exit -1
 	else
 		DISTRO="${BASH_REMATCH[1]}"
+		VERSION="${BASH_REMATCH[2]}"
 	fi
 
 	typeset CUSTOM_REPO="${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}-${DISTRO}.repo"
@@ -337,6 +339,7 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 	typeset TMP_REGEX_FULL="^[[:space:]]*\[[[:space:]]*${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}-${COMPONENT}-${DISTRO}[[:space:]]*\][[:space:]]*\$"
 	typeset TMP_REGEX_OTHER='^[[:space:]]*\[.*\][[:space:]]*$'
 
+	typeset line=""
 	while read line; do
 		if [[ "${line}" =~ ${TMP_REGEX_EXTRA} ]]; then
 			FETCH_EXTRA_SECTION=1
@@ -347,6 +350,20 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 		elif [[ "${line}" =~ ${TMP_REGEX_OTHER} ]]; then
 			FETCH_FULL_SECTION=0
 			FETCH_EXTRA_SECTION=0
+		fi
+
+		# Change some values like $releasever or gpgcheck.
+		if [ "${FETCH_EXTRA_SECTION}" -eq "1" ] || [ "${FETCH_FULL_SECTION}" -eq "1" ]; then
+			TMP_REGEX='^[[:space:]]*gpgcheck[[:space:]]*=[[:space:]]*1[[:space:]]$'
+			if [[ "${line}" =~ ${TMP_REGEX} ]]; then
+				line="${line/1/0/}"
+			fi
+
+			case "${line}" in
+				(*'$releasever'*)	line="${line/'$releasever'/"${VERSION}"}"
+							;;
+				(*)			;;
+			esac
 		fi
 
 		if [ "${FETCH_EXTRA_SECTION}" -eq "1" ]; then
