@@ -880,11 +880,10 @@ delay_build() {
 
 ### MAIN ###
 set_vars "$@" && {
-	if [ "x$(basename $0)" = "x$PREFIX-build-rpm-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-rpm-package" ]; then
-								# Treat any value other than "no" and "0" as true.
+	if [ "x$(basename $0)" = "x${PREFIX}-build-rpm-package" ] || [ "x$(basename $0)" = "x${PREFIX}-build+upload-rpm-package" ]; then
 		FORCE_BUILD="$(make_boolean "${FORCE_BUILD}")"
 		NO_DELAY="$(make_boolean "${NO_DELAY}")"
-		cd $PROJECT_DIR && { pkgneedsbuild $CHECKOUT || [ "${FORCE_BUILD}" -eq "1" ] } && {
+		cd ${PROJECT_DIR} && { pkgneedsbuild ${CHECKOUT} || [ "${FORCE_BUILD}" -eq "1" ] } && {
 			if [ "${FORCE_BUILD}" -eq "1" ] && [ "${NO_DELAY}" -eq "0" ]; then
 				delay_build
 			fi
