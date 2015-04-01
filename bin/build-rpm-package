@@ -56,7 +56,58 @@ NO_DELAY=${NO_DELAY:-"no"}
 FORCE_BUILD=${FORCE_BUILD:-"no"}
 RPM_BUILD_FOR=${RPM_BUILD_FOR:-"fedora:$FEDORA_DISTROS epel:$EPEL_DISTROSi opensuse:$OPENSUSE_DISTROS" sle:$SLE_DISTROS}
 
+# These parts are not user-servicable.
+TMP_MOCK_CFG_DIR=""
+TMP_MOCK_CFG_FILE=""
+# End of non-user-servicable part.
+
 set -ex
+
+# Cleans up temporary directories and files.
+# RFC SHOULD be called by trap handlers.
+cleanup () {
+	# We always assume the temporary mock config file is below the temporary config directory.
+	if [ -n "${TMP_MOCK_CFG_DIR}" ]; then
+		# Take care of the config file first.
+		if [ -n "${TMP_MOCK_CFG_FILE}" ]; then
+			if [ -e "${TMP_MOCK_CFG_FILE}" ]; then
+				# Explicit test after the general existence test so that we can
+				# print an error message if the file we're looking at is not a
+				# regular file.
+				# BEWARE OF RACE CONDITIONS, though.
+				if [ -f "${TMP_MOCK_CFG_FILE}" ]; then
+					rm "${TMP_MOCK_CFG_DIR}/${TMP_MOCK_CFG_FILE}"
+				else
+					echo "Warning: file '$(readlink -nf "${TMP_MOCK_CFG_DIR}/${TMP_MOCK_CFG_FILE}")' is not a regular file. Not unlinking." >&2
+				fi
+			else
+				echo "Warning: mock temporary config directory set as ${TMP_MOCK_CFG_DIR}, but mock temporary config file ${TMP_MOCK_CFG_FILE} does not exist." >&2
+			fi
+		else
+			echo "Warning: mock temporary config directory set as ${TMP_MOCK_CFG_DIR}, but mock temporary config file unknown." >&2
+		fi
+
+		# And only later of the directory itself.
+		if [ -e "${TMP_MOCK_CFG_DIR}" ]; then
+			if [ -d "${TMP_MOCK_CFG_DIR}" ]; then
+				rmdir "${TMP_MOCK_CFG_DIR}" || echo "Warning: unable to remove mock temporary config directory ${TMP_MOCK_CFG_DIR}. Is it non-empty?" >&2
+			else
+				echo "Warning: mock temporary config directory ${TMP_MOCK_CFG_DIR} is not actually a directory. Not unlinking." >&2
+			fi
+		else
+			echo "Warning: mock temporary config directory ${TMP_MOCK_CFG_DIR} does not exist." >&2
+		fi
+	else
+		if [ -n "${TMP_MOCK_CFG_FILE}" ]; then
+			echo "Warning: mock temp not set, but temporary mock config file ${TMP_MOCK_CFG_FILE} set." >&2
+		else
+			echo "Warning: did not find any mock temporary config directory or file set. Not removing anything." >&2
+		fi
+	fi
+}
+
+# Run cleanup() automatically.
+trap cleanup EXIT SIGTERM SIGINT SIGHUP SIGPIPE SIGALRM SIGUSR1 SIGUSR2
 
 set_vars() {
 	TEMP_BASE="$HOME/tmp/"
