@@ -301,6 +301,18 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 		echo "Error: creating mock temporary config file failed. Aborting." >&2
 		exit -1
 	fi
+
+	# Fetch the requested lines from ${CUSTOM_REPO} and store them in an array.
+	typeset -a extra_repo
+	typeset -i FETCH_SECTION=0
+	while read line; do
+
+	done < "/etc/mock/${CUSTOM_REPO}"
+
+	typeset -i REPO_START=0
+	while read line; do
+
+	done < "/etc/mock/${MOCK_BASE}"
 }
 
 get_extra_repository () {
