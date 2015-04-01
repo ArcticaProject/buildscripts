@@ -27,7 +27,7 @@ APP_PACKAGES_NIGHTLY=
 APP_PACKAGES_MAIN=
 
 PREFIX=$(echo `basename $0` | cut -d"-" -f1)
-test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo "$0 has no valid context prefix..."; exit -1; }
+test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo "$0 has no valid context prefix..."; exit 1; }
 
 set -ex
 

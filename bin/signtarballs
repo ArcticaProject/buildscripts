@@ -1,6 +1,6 @@
 #!/bin/bash
 
-test -d _releases_  && cd _releases_ || test -d ../_releases_ && cd ../_releases_ || exit -1
+test -d _releases_  && cd _releases_ || test -d ../_releases_ && cd ../_releases_ || exit 1
 
 find * -type f | egrep ".*(\.zip|\.tar\.gz|\.exe|\.dmg)$" | while read tarball; do
 	test -f "${tarball}.md5" || { printf "md5: "; md5sum "${tarball}" | tee "${tarball}.md5"; }

@@ -28,7 +28,7 @@ ORIGIN=${3:-origin}
 test -z $1 || test -d ./.git || {
   echo "usage: $(basename $0) <REF>"
   echo "Call this command from within the base folder of a Git project's working copy..."
-  exit -1
+  exit 1
 }
 
 # update the build-main branch with our newest blessed reference

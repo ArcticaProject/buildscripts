@@ -36,10 +36,10 @@ REPOS_SERVER="packages.mydomain.org"
 PACKAGES_WITHOUT_OTHERMIRROR="keyring"
 GNUPGHOME=$HOME/.gnupg
 
-test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
+test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit 1; }
 
 PREFIX=$(echo `basename $0` | cut -d"-" -f1)
-test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo "$0 has no valid context prefix..."; exit -1; }
+test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo "$0 has no valid context prefix..."; exit 1; }
 
 NO_DELAY=${NO_DELAY:-"no"}
 FORCE_BUILD=${FORCE_BUILD:-"no"}
@@ -76,7 +76,7 @@ set_vars() {
 		CHECKOUT="${3:-master}"
 	else
 		echo "error: no such package component area for this Git project. Aborting..."
-		exit -1
+		exit 1
 	fi
 	# the DATE might be given as ,,today'' from the command line
 	[ "x$DATE" = "xtoday" ] && DATE="$(date +%Y%m%d)"

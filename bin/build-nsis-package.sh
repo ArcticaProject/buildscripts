@@ -41,7 +41,7 @@ COMPONENT_BUNDLES="baikal"
 REPOS_SERVER="code.x2go.org"
 GNUPGHOME=$HOME/.gnupg
 
-test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit -1; }
+test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit 1; }
 
 NO_DELAY=${NO_DELAY:-"no"}
 FORCE_BUILD=${FORCE_BUILD:-"yes"}
@@ -78,7 +78,7 @@ set_vars() {
 		CHECKOUT="${3:-master}"
 	else
 		echo "error: no such package component area for this Git project. Aborting..."
-		exit -1
+		exit 1
 	fi
 	# the DATE might be given as ,,today'' from the command line
 	[ "x$DATE" = "xtoday" ] && DATE="$(date +%Y%m%d)"
