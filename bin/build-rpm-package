@@ -271,6 +271,19 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 		echo "Error: TARGET parameter must be either full or base." >&2
 		exit -1
 	fi
+
+	# Create temporary directory for our soon-to-be temporary mock config file.
+	TMP_MOCK_CFG_DIR="$(mktemp -d --tmpdir="${TEMP_BASE}" "${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}-mock-$(repeat_str "X" "24")")"
+	if [ "$?" -ne "0" ]; then
+		echo "Error: creating mock temporary config directory failed. Aborting." >&2
+		exit -1
+	fi
+
+	TMP_MOCK_CFG_FILE="$(mktemp --tmpdir="${TEMP_BASE}" "$(basename "${TMP_MOCK_CFG_DIR}")/${MOCK_BASE}-${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}-${COMPONENT}-${TARGET}.$(repeat_str "X" "24").cfg")"
+	if [ "$?" -ne "0" ]; then
+		echo "Error: creating mock temporary config file failed. Aborting." >&2
+		exit -1
+	fi
 }
 
 get_extra_repository () {
