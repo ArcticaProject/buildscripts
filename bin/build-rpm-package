@@ -257,9 +257,9 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 			exit -1
 		}
 
-		# Must exist.
-		if [ ! -f "/etc/mock/${!i}" ]; then
-			echo "Error: ${i} parameter must exist and be a regular file." >&2
+		# Must exist and be readable.
+		if [ ! -f "/etc/mock/${!i}" ] || [ ! -r "/etc/mock/${!i}" ]; then
+			echo "Error: ${i} parameter must exist, be a regular file and readable." >&2
 			exit -1
 		fi
 	done
