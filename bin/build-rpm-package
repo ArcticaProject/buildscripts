@@ -57,11 +57,11 @@ NO_DELAY=${NO_DELAY:-"no"}
 FORCE_BUILD=${FORCE_BUILD:-"no"}
 RPM_BUILD_FOR=${RPM_BUILD_FOR:-"fedora:$FEDORA_DISTROS epel:$EPEL_DISTROSi opensuse:$OPENSUSE_DISTROS" sle:$SLE_DISTROS}
 
-# These parts are not user-servicable.
+# These parts are not user-serviceable.
 TMP_MOCK_CFG_DIR=""
 TMP_MOCK_CFG_FILE=""
 TEMP_BASE="${HOME}/tmp/"
-# End of non-user-servicable part.
+# End of non-user-serviceable part.
 
 set -ex
 
