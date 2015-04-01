@@ -118,6 +118,8 @@ function make_boolean () {
 	esac
 
 	printf "${OPTION}"
+
+	return 0
 }
 
 set_vars() {
@@ -240,7 +242,10 @@ repeat_str () { # INPUT COUNT
 		ret="${ret}$(printf "${INPUT}")"
 		i=$(($i + 1))
 	done
+
 	printf "${ret}"
+
+	return 0
 }
 
 # Creates a custom mock config file given a base config (taken from
@@ -393,6 +398,8 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 
 	# Reset input field separator to original value.
 	IFS="${OLDIFS}"
+
+	return 0
 }
 
 # Fetches extras repositories, if requested.
@@ -464,6 +471,8 @@ get_extra_repository () {
 			exit -1
 			;;
 	esac
+
+	return 0
 }
 
 prepare_workspace() {
