@@ -882,8 +882,10 @@ delay_build() {
 set_vars "$@" && {
 	if [ "x$(basename $0)" = "x$PREFIX-build-rpm-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-rpm-package" ]; then
 								# Treat any value other than "no" and "0" as true.
-		cd $PROJECT_DIR && pkgneedsbuild $CHECKOUT || ( [ "x$FORCE_BUILD" != "xno" ] && [ "x$FORCE_BUILD" != "x0" ] ) && {
-			if [ "x$FORCE_BUILD" != "xno" ] && [ "x$FORCE_BUILD" != "x0" ] && ( [ "x$NO_DELAY" = "xno" ] || [ "x$NO_DELAY" = "x0" ] ); then
+		FORCE_BUILD="$(make_boolean "${FORCE_BUILD}")"
+		NO_DELAY="$(make_boolean "${NO_DELAY}")"
+		cd $PROJECT_DIR && { pkgneedsbuild $CHECKOUT || [ "${FORCE_BUILD}" -eq "1" ] } && {
+			if [ "${FORCE_BUILD}" -eq "1" ] && [ "${NO_DELAY}" -eq "0" ]; then
 				delay_build
 			fi
 			lock_workspace
@@ -895,7 +897,7 @@ set_vars "$@" && {
 			unlock_workspace
 		}
 	fi
-	if [ "x$(basename $0)" = "x$PREFIX-upload-rpm-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-rpm-package" ]; then
+	if [ "x$(basename $0)" = "x${PREFIX}-upload-rpm-package" ] || [ "x$(basename $0)" = "x${PREFIX}-build+upload-rpm-package" ]; then
 		upload_packages
 	fi
 }
