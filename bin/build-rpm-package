@@ -265,7 +265,7 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 	fi
 
 			   # distribution -   version    - arch
-	TMP_REGEX='^([[:alpha:]]+)-[[:alnum:]_]+-[[:alnum]_]+\.cfg$'
+	TMP_REGEX='^([[:alpha:]]+)-[[:alnum:]_]+-[[:alnum:]_]+\.cfg$'
 	if [[ ! "${MOCK_BASE}" =~ ${TMP_REGEX} ]]; then
 		echo "Error: MOCK_BASE parameter not well formed. Must be: 'distro-version-arch.cfg'." >&2
 		exit -1
