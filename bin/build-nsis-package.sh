@@ -266,7 +266,7 @@ delay_build() {
 }
 
 ### MAIN ###
-set_vars $@ && {
+set_vars "$@" && {
 	if [ "x$(basename $0)" = "xbuild-nsis-package.sh" ] || [ "x$(basename $0)" = "xbuild+upload-nsis-package.sh" ]; then
 								# Treat any value other than "no" and "0" as true.
 		cd $PROJECT_DIR && pkgneedsbuild $CHECKOUT || ( [ "x$FORCE_BUILD" != "xno" ] && [ "x$FORCE_BUILD" != "x0" ] ) && {
