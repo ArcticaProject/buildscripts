@@ -360,6 +360,8 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 					echo "${full_repo[${i}]}" >> "${TMP_MOCK_CFG_FILE}"
 				done
 			fi
+
+			echo "${line}" >> "${TMP_MOCK_CFG_FILE}"
 		elif [ "${REPO_START}" -eq "0" ] && [[ "${line}" =~ ${TMP_REGEX_END} ]]; then
 			echo "Error: Parsing mock base config file failed: unexpected end of yum configuration, no start found." >&2
 			exit -1
@@ -368,6 +370,12 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 			echo "${line}" >> "${TMP_MOCK_CFG_FILE}"
 		fi
 	done < "/etc/mock/${MOCK_BASE}"
+
+	# Reset input field separator to original value.
+	IFS="${OLDIFS}"
+
+	# Strictly speaking not necessary, but do it anyway.
+	printf "${TMP_MOCK_CFG_FILE}"
 }
 
 get_extra_repository () {
