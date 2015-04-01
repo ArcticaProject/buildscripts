@@ -168,6 +168,20 @@ check_mock_version_atleast () {
 	fi
 }
 
+# Repeats an input string.
+# Returns the repeated input string.
+repeat_str() { # INPUT COUNT
+	typeset INPUT="${1:?"Error: no input string passed to ${FUNCNAME}()."}"
+	typeset COUNT="${2:?"Error: no count passed to ${FUNCNAME}()."}"
+
+	typeset ret=""
+	typeset -i i=0
+	while [ "${i}" -lt "${COUNT}" ]; do
+		ret="${ret}$(printf "${INPUT}")"
+	done
+	printf "${ret}"
+}
+
 get_extra_repository () {
 	typeset TYPE="${1:?"Error: no type passed to ${FUNCNAME}()."}"
 	typeset DIST="${2:?"Error: no distribution passed to ${FUNCNAME}()."}"
