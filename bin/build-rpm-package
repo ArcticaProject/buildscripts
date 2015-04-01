@@ -235,35 +235,18 @@ repeat_str () { # INPUT COUNT
 }
 
 # Creates a custom mock config file given a base config (taken from
-# /etc/mock/), a custom repository file (also taken from /etc/mock/),
-# the build component and the target specification ("full" or "base").
+# /etc/mock/), the build component and the target specification ("full" or "base").
 # Base refers to adding x2go-extras only, while full means also
 # adding the full X2Go upstream repository with all published files.
 # The created config file path is returned.
 create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 	typeset MOCK_BASE="${1:?"Error: no mock base config passed to ${FUNCNAME}()."}"
-	typeset CUSTOM_REPO="${2:?"Error: no mock custom repository file passed to ${FUNCNAME}()."}"
-	typeset COMPONENT="${3:?"Error: no component (X2Go release group) passed to ${FUNCNAME}()."}"
-	typeset TARGET="${4:?"Error: no target (full or base) passed to ${FUNCNAME}()."}"
+	typeset COMPONENT="${2:?"Error: no component (X2Go release group) passed to ${FUNCNAME}()."}"
+	typeset TARGET="${3:?"Error: no target (full or base) passed to ${FUNCNAME}()."}"
 
 	typeset ret=""
 
 	# Check argument sanity.
-	typeset i=""
-	for i in MOCK_BASE CUSTOM_REPO; do
-		# Must be plain file.
-		grep -q -s "/" <<< "${!i}" && {
-			echo "Error: ${i} parameter must not be a path but a simple file name." >&2
-			exit -1
-		}
-
-		# Must exist and be readable.
-		if [ ! -f "/etc/mock/${!i}" ] || [ ! -r "/etc/mock/${!i}" ]; then
-			echo "Error: ${i} parameter must exist, be a regular file and readable." >&2
-			exit -1
-		fi
-	done
-
 	typeset DISTRO=""
 	typeset TMP_REGEX='^([[:alpha:]]+)-[[:alnum:]]+-[[:alnum:]].cfg$'
 				# distribution -  version   - arch
@@ -273,6 +256,24 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 	else
 		DISTRO="${BASH_REMATCH[1]}"
 	fi
+
+	typeset CUSTOM_REPO="${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}-${DISTRO}.repo"
+
+	typeset CFG_FILE=""
+	TMP_REGEX='/'
+	for CFG_FILE in MOCK_BASE CUSTOM_REPO; do
+		# Must be plain file.
+		if [[ "${!CFG_FILE}" =~ ${TMP_REGEX} ]]; then
+			echo "Error: (implicit) ${CFG_FILE} parameter must not be a path but a simple file name." >&2
+			exit -1
+		fi
+
+		# Must exist and be readable.
+		if [ ! -f "${RPM_MOCK_CONFIG_DIR}/${!CFG_FILE}" ] || [ ! -r "${RPM_MOCK_CONFIG_DIR}/${!CFG_FILE}" ]; then
+			echo "Error: ${CFG_FILE} parameter must exist, be a regular file and readable." >&2
+			exit -1
+		fi
+	done
 
 	# Rename "main" to "release" and "heuler" to "nightly".
 	if [ "${COMPONENT}" = "main" ]; then
