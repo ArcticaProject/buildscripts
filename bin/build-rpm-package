@@ -109,6 +109,18 @@ cleanup () {
 # Run cleanup() automatically.
 trap cleanup EXIT SIGTERM SIGINT SIGHUP SIGPIPE SIGALRM SIGUSR1 SIGUSR2
 
+# FIXME: this should really be in a common.(sh) file!
+function make_boolean () {
+	typeset -l OPTION="${1}"
+
+	case "${OPTION}" in
+		("0"|"no"|"false"|"") OPTION="0";;
+		(*) OPTION="1";;
+	esac
+
+	printf "${OPTION}"
+}
+
 set_vars() {
 	TEMP_BASE="$HOME/tmp/"
 	mkdir -p "$TEMP_BASE"
