@@ -32,6 +32,7 @@ EPEL_DISTROS="6,7"
 OPENSUSE_DISTROS="12.2,12.3,13.1,13.2"
 SLE_DISTROS="11.2,11.3,12.0"
 RPM_REPOS_BASE=/var/www/
+RPM_WANT_EXTRA_REPOS="0"
 RPM_MOCK_CONFIG_DIR="/etc/mock"
 RPM_EXTRA_REPO_MOCK_CONFIG_BASE=""
 RPM_EXTRA_REPO_MOCK_CONFIG_FULL_NAME=""
@@ -391,6 +392,13 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 	printf "${TMP_MOCK_CFG_FILE}"
 }
 
+# Fetches extras repositories, if requested.
+# Takes the build system type (suse or redhat -- implicitly means OBS or mock),
+# the distribution, its version (either a real number or a codename),
+# the build component (X2Go release group), the package, the architecture
+# and an optional boolean value that determines whether to add any additional
+# repositories at all.
+# Returns a string that can be passed to obs-build or mock.
 get_extra_repository () {
 	typeset TYPE="${1:?"Error: no type passed to ${FUNCNAME}()."}"
 	typeset DIST="${2:?"Error: no distribution passed to ${FUNCNAME}()."}"
@@ -398,6 +406,7 @@ get_extra_repository () {
 	typeset COMPONENT="${4:?"Error: no component (X2Go release group) passed to ${FUNCNAME}()."}"
 	typeset PACKAGE="${5:?"Error: no package passed to ${FUNCAME}()."}"
 	typeset ARCH="${6:?"Error: no architecture passed to ${FUNCNAME}()."}"
+	typeset WANT_EXTRA="$(make_boolean "${7}")"
 
 	typeset ret=""
 	# Note: we always add the extras repo, because that's defined as "packages missing from the main repository".
