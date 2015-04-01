@@ -257,8 +257,15 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 
 	# Check argument sanity.
 	typeset DISTRO=""
+
+	# Append .cfg is not already specified.
+	typeset TMP_REGEX='^.*\.cfg$'
+	if [[ ! "${MOCK_BASE}" =~ ${TMP_REGEX} ]]; then
+		MOCK_BASE="${MOCK_BASE}.cfg"
+	fi
+
 			   # distribution -   version    - arch
-	typeset TMP_REGEX='^([[:alpha:]]+)-[[:alnum:]_]+-[[:alnum]_]+\.cfg$'
+	TMP_REGEX='^([[:alpha:]]+)-[[:alnum:]_]+-[[:alnum]_]+\.cfg$'
 	if [[ ! "${MOCK_BASE}" =~ ${TMP_REGEX} ]]; then
 		echo "Error: MOCK_BASE parameter not well formed. Must be: 'distro-version-arch.cfg'." >&2
 		exit -1
@@ -306,7 +313,7 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 		exit -1
 	fi
 
-	TMP_MOCK_CFG_FILE="$(mktemp --tmpdir="${TEMP_BASE}" "$(basename "${TMP_MOCK_CFG_DIR}")/${MOCK_BASE}-${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}-${COMPONENT}-${TARGET}.$(repeat_str "X" "24").cfg")"
+	TMP_MOCK_CFG_FILE="$(mktemp --tmpdir="${TEMP_BASE}" "$(basename "${TMP_MOCK_CFG_DIR}")/${MOCK_BASE%.cfg}-${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}-${COMPONENT}-${TARGET}.$(repeat_str "X" "24").cfg")"
 	if [ "$?" -ne "0" ]; then
 		echo "Error: creating mock temporary config file failed. Aborting." >&2
 		exit -1
