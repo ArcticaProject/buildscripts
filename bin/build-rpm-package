@@ -274,6 +274,13 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 		DISTRO="${BASH_REMATCH[1]}"
 	fi
 
+	# Rename "main" to "release" and "heuler" to "nightly".
+	if [ "${COMPONENT}" = "main" ]; then
+		COMPONENT="release"
+	elif [ "${COMPONENT}" = "heuler" ]; then
+		COMPONENT="nightly"
+	fi
+
 	# Note: there is no way to check for the component's validity,
 	# as LTS releases have "random" names assigned to them.
 
