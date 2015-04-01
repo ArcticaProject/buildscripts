@@ -335,8 +335,22 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 	done < "/etc/mock/${CUSTOM_REPO}"
 
 	typeset -i REPO_START=0
-	while read line; do
+	TMP_REGEX='^[[:space:]]*config_opts\['"'"'yum\.conf'"'"'\][[:space:]]*=[[:space:]]*"""[[:space:]]*$'
+	typeset TMP_REGEX_END='^[[:space:]]*"""[[:space:]]*$'
 
+	while read line; do
+		if [[ "${line}" =~ ${TMP_REGEX} ]]; then
+			REPO_START=1
+		elif [ "${REPO_START}" -eq "1" ] && [[ "${line}" =~ ${TMP_REGEX_END} ]]; then
+			# Time to insert whatever is required.
+
+		elif [ "${REPO_START}" -eq "0" ] && [[ "${line}" =~ ${TMP_REGEX_END} ]]; then
+			echo "Error: Parsing mock base config file failed: unexpected end of yum configuration, no start found." >&2
+			exit -1
+		elif [ "${REPO_START}" -eq "0" ]; then
+			# Write-through.
+			echo "${line}" >> "${TMP_MOCK_CFG_FILE}"
+		fi
 	done < "/etc/mock/${MOCK_BASE}"
 }
 
