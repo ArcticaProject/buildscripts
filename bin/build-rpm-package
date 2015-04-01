@@ -409,13 +409,16 @@ get_extra_repository () {
 	typeset WANT_EXTRA="$(make_boolean "${7}")"
 
 	typeset ret=""
-	# Note: we always add the extras repo, because that's defined as "packages missing from the main repository".
+	# Note: we always add the extras repo, because that's defined as "packages missing from the main repository",
+	# unless explicitly overridden via ${WANT_EXTRA}.
 	case "${TYPE}" in
 		"suse")
 			# FIXME: make this package repository consistent with our main ones.
-			ret="--repo http://${REPOS_SERVER}/${DIST}/${CODENAME}/extras"
-			if [ -z "${PACKAGE_WITHOUT_OTHERMIRROR}" ] || [ "${PACKAGE_WITHOUT_OTHERMIRROR}" != "${PACKAGE}" ]; then
-				ret="${ret} --repo http://${REPOS_SERVER}/${DIST}/${CODENAME}/${COMPONENT}/${ARCH}"
+			if [ "${WANT_EXTRA}" -eq "1" ]; then
+				ret="--repo http://${REPOS_SERVER}/${DIST}/${CODENAME}/extras"
+				if [ -z "${PACKAGE_WITHOUT_OTHERMIRROR}" ] || [ "${PACKAGE_WITHOUT_OTHERMIRROR}" != "${PACKAGE}" ]; then
+					ret="${ret} --repo http://${REPOS_SERVER}/${DIST}/${CODENAME}/${COMPONENT}/${ARCH}"
+				fi
 			fi
 			;;
 		"redhat")
