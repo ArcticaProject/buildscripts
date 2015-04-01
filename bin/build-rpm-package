@@ -302,6 +302,10 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 		exit -1
 	fi
 
+	# Save old input field separator value and set it to newline only.
+	OLDIFS="${IFS}"
+	IFS="$(printf '\n')"
+
 	# Fetch the requested lines from ${CUSTOM_REPO} and store them in an array.
 	typeset -a extra_repo
 	typeset -i FETCH_SECTION=0
