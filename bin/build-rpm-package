@@ -247,13 +247,13 @@ repeat_str () { # INPUT COUNT
 # /etc/mock/), the build component and the target specification ("full" or "base").
 # Base refers to adding x2go-extras only, while full means also
 # adding the full X2Go upstream repository with all published files.
-# The created config file path is returned.
+#
+# Calling this function in a subshell is an error, as it NEEDS to modify
+# variables in global scope!
 create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 	typeset MOCK_BASE="${1:?"Error: no mock base config passed to ${FUNCNAME}()."}"
 	typeset COMPONENT="${2:?"Error: no component (X2Go release group) passed to ${FUNCNAME}()."}"
 	typeset TARGET="${3:?"Error: no target (full or base) passed to ${FUNCNAME}()."}"
-
-	typeset ret=""
 
 	# Check argument sanity.
 	typeset DISTRO=""
@@ -393,9 +393,6 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 
 	# Reset input field separator to original value.
 	IFS="${OLDIFS}"
-
-	# Strictly speaking not necessary, but do it anyway.
-	printf "${TMP_MOCK_CFG_FILE}"
 }
 
 # Fetches extras repositories, if requested.
@@ -447,10 +444,11 @@ get_extra_repository () {
 					WANT="full"
 				fi
 
-				typeset GEN_CONFIG="$(create_mock_config "${DIST}-${CODENAME}-${ARCH}" "${COMPONENT}" "${WANT}")"
+				create_mock_config "${DIST}-${CODENAME}-${ARCH}" "${COMPONENT}" "${WANT}"
 
 				# Remove the .cfg extension again... and maybe add it back later.
-				ret="${ret}${GEN_CONFIG%.cfg}"
+				ret="${ret}${TMP_MOCK_CFG_FILE%.cfg}"
+
 			else
 				ret="${ret}${RPM_MOCK_CONFIG_DIR}/${DIST}-${CODENAME}-${ARCH}"
 			fi
