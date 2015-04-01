@@ -265,7 +265,7 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 	done
 
 	typeset DISTRO=""
-	typeset TMP_REGEX="^([[:alpha:]]+)-[[:alnum:]]+-[[:alnum:]].cfg$"
+	typeset TMP_REGEX='^([[:alpha:]]+)-[[:alnum:]]+-[[:alnum:]].cfg$'
 				# distribution -  version   - arch
 	if [[ ! "${MOCK_BASE}" =~ ${TMP_REGEX} ]]; then
 		echo "Error: MOCK_BASE parameter not well formed. Must be: 'distro-version-arch.cfg'." >&2
@@ -311,9 +311,9 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 	typeset -a full_repo
 	typeset -i FETCH_EXTRA_SECTION=0
 	typeset -i FETCH_FULL_SECTION=0
-	TMP_REGEX_EXTRA="^[[:space:]]*\[[[:space:]]*${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}-extras-${DISTRO}[[:space:]]*\][[:space:]]*$"
-	TMP_REGEX_FULL="^[[:space:]]*\[[[:space:]]*${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}-${COMPONENT}-${DISTRO}[[:space:]]*\][[:space:]]*$"
-	TMP_REGEX_OTHER="^[[:space:]]*\[.*\][[:space:]]*$"
+	typeset TMP_REGEX_EXTRA="^[[:space:]]*\[[[:space:]]*${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}-extras-${DISTRO}[[:space:]]*\][[:space:]]*\$"
+	typeset TMP_REGEX_FULL="^[[:space:]]*\[[[:space:]]*${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}-${COMPONENT}-${DISTRO}[[:space:]]*\][[:space:]]*\$"
+	typeset TMP_REGEX_OTHER='^[[:space:]]*\[.*\][[:space:]]*$'
 
 	while read line; do
 		if [[ "${line}" =~ ${TMP_REGEX_EXTRA} ]]; then
