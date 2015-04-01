@@ -33,7 +33,7 @@ OPENSUSE_DISTROS="12.2,12.3,13.1,13.2"
 SLE_DISTROS="11.2,11.3,12.0"
 RPM_REPOS_BASE=/var/www/
 RPM_MOCK_CONFIG_DIR=""
-RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME=""
+RPM_EXTRA_REPO_MOCK_CONFIG_BASE=""
 RPM_EXTRA_REPO_MOCK_CONFIG_FULL_NAME=""
 
 
@@ -290,13 +290,13 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 	fi
 
 	# Create temporary directory for our soon-to-be temporary mock config file.
-	TMP_MOCK_CFG_DIR="$(mktemp -d --tmpdir="${TEMP_BASE}" "${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}-mock-$(repeat_str "X" "24")")"
+	TMP_MOCK_CFG_DIR="$(mktemp -d --tmpdir="${TEMP_BASE}" "${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}-mock-$(repeat_str "X" "24")")"
 	if [ "$?" -ne "0" ]; then
 		echo "Error: creating mock temporary config directory failed. Aborting." >&2
 		exit -1
 	fi
 
-	TMP_MOCK_CFG_FILE="$(mktemp --tmpdir="${TEMP_BASE}" "$(basename "${TMP_MOCK_CFG_DIR}")/${MOCK_BASE}-${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}-${COMPONENT}-${TARGET}.$(repeat_str "X" "24").cfg")"
+	TMP_MOCK_CFG_FILE="$(mktemp --tmpdir="${TEMP_BASE}" "$(basename "${TMP_MOCK_CFG_DIR}")/${MOCK_BASE}-${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}-${COMPONENT}-${TARGET}.$(repeat_str "X" "24").cfg")"
 	if [ "$?" -ne "0" ]; then
 		echo "Error: creating mock temporary config file failed. Aborting." >&2
 		exit -1
@@ -311,8 +311,8 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 	typeset -a full_repo
 	typeset -i FETCH_EXTRA_SECTION=0
 	typeset -i FETCH_FULL_SECTION=0
-	typeset TMP_REGEX_EXTRA="^[[:space:]]*\[[[:space:]]*${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}-extras-${DISTRO}[[:space:]]*\][[:space:]]*\$"
-	typeset TMP_REGEX_FULL="^[[:space:]]*\[[[:space:]]*${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}-${COMPONENT}-${DISTRO}[[:space:]]*\][[:space:]]*\$"
+	typeset TMP_REGEX_EXTRA="^[[:space:]]*\[[[:space:]]*${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}-extras-${DISTRO}[[:space:]]*\][[:space:]]*\$"
+	typeset TMP_REGEX_FULL="^[[:space:]]*\[[[:space:]]*${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}-${COMPONENT}-${DISTRO}[[:space:]]*\][[:space:]]*\$"
 	typeset TMP_REGEX_OTHER='^[[:space:]]*\[.*\][[:space:]]*$'
 
 	while read line; do
@@ -422,8 +422,8 @@ get_extra_repository () {
 
 				# Add mandatory, default value.
 				ret="${ret}${DIST}-${CODENAME}-${ARCH}"
-				if [ -n "${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}" ]; then
-					ret="${ret}-${COMPONENT}-${RPM_EXTRA_REPO_MOCK_CONFIG_BASE_NAME}"
+				if [ -n "${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}" ]; then
+					ret="${ret}-${COMPONENT}-${RPM_EXTRA_REPO_MOCK_CONFIG_BASE}"
 
 					if [ -n "${RPM_EXTRA_REPO_MOCK_CONFIG_FULL_NAME}" ] && [ -z "${PACKAGE_WITHOUT_OTHERMIRROR}" ] || \
 					   [ "${PACKAGE_WITHOUT_OTHERMIRROR}" != "${PACKAGE}" ]; then
