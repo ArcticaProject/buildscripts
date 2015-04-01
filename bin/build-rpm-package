@@ -105,7 +105,7 @@ cleanup () {
 }
 
 # Run cleanup() automatically.
-trap cleanup EXIT SIGTERM SIGINT SIGHUP SIGPIPE SIGALRM SIGUSR1 SIGUSR2
+trap cleanup ERR EXIT SIGTERM SIGINT SIGHUP SIGPIPE SIGALRM SIGUSR1 SIGUSR2
 
 # FIXME: this should really be in a common.(sh) file!
 function make_boolean () {
