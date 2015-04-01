@@ -178,6 +178,7 @@ repeat_str () { # INPUT COUNT
 	typeset -i i=0
 	while [ "${i}" -lt "${COUNT}" ]; do
 		ret="${ret}$(printf "${INPUT}")"
+		i=$(($i + 1))
 	done
 	printf "${ret}"
 }
