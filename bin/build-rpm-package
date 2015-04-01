@@ -359,12 +359,12 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 		if [ "${FETCH_EXTRA_SECTION}" -eq "1" ] || [ "${FETCH_FULL_SECTION}" -eq "1" ]; then
 			TMP_REGEX='^[[:space:]]*gpgcheck[[:space:]]*=[[:space:]]*1[[:space:]]*$'
 			if [[ "${line}" =~ ${TMP_REGEX} ]]; then
-				line="${line/1/0/}"
+				line="${line/1/0}"
 			fi
 
 			TMP_REGEX='^[[:space:]]*enabled[[:space:]]*=[[:space:]]*0[[:space:]]*$'
 			if [[ "${line}" =~ ${TMP_REGEX} ]]; then
-				line="${line/0/1/}"
+				line="${line/0/1}"
 			fi
 
 			case "${line}" in
