@@ -808,7 +808,7 @@ build_packages() {
 			done
 		}
 	done
-	rm -Rf "$TEMP_DIR"
+	rm -Rf "${TEMP_DIR}"
 	return 0
 }
 
