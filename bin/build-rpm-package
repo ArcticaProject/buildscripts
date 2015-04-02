@@ -55,7 +55,7 @@ test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo
 
 NO_DELAY=${NO_DELAY:-"no"}
 FORCE_BUILD=${FORCE_BUILD:-"no"}
-RPM_BUILD_FOR=${RPM_BUILD_FOR:-"fedora:$FEDORA_DISTROS epel:$EPEL_DISTROSi opensuse:$OPENSUSE_DISTROS" sle:$SLE_DISTROS}
+RPM_BUILD_FOR=${RPM_BUILD_FOR:-"fedora:$FEDORA_DISTROS epel:$EPEL_DISTROS opensuse:$OPENSUSE_DISTROS sle:$SLE_DISTROS"}
 
 # These parts are not user-serviceable.
 TMP_MOCK_CFG_DIR=""
