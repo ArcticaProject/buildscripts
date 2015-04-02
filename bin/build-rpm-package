@@ -560,7 +560,15 @@ clear_pkgdist() {
 }
 
 build_packages() {
-	echo "$RPM_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
+	# Do spawn a subshell here. Functions like get_extra_repository() need to
+	# change global variables in the main process.
+	typeset -a RPM_BUILD_FOR_ARR
+	typeset OLDIFS="${IFS}"
+	IFS=" "
+	read -a RPM_BUILD_FOR_ARR <<< "${RPM_BUILD_FOR}"
+	IFS="${OLDIFS}"
+
+	for line in "${RPM_BUILD_FOR_ARR[@]}"; do
 		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		echo "$RPM_DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
