@@ -560,7 +560,7 @@ clear_pkgdist() {
 }
 
 build_packages() {
-	# Do spawn a subshell here. Functions like get_extra_repository() need to
+	# Do NOT spawn a subshell here. Functions like get_extra_repository() need to
 	# change global variables in the main process.
 	typeset -a RPM_BUILD_FOR_ARR
 	typeset OLDIFS="${IFS}"
