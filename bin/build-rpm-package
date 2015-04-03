@@ -61,6 +61,7 @@ test -f "${HOME}/.buildscripts/${PREFIX}.conf" && . "${HOME}/.buildscripts/${PRE
 TMP_MOCK_CFG_DIR=""
 TMP_MOCK_CFG_FILE=""
 TEMP_BASE="${HOME}/tmp/"
+typeset -ag temp_cleanup
 # End of non-user-serviceable part.
 
 set -ex
@@ -103,6 +104,14 @@ cleanup () {
 	else
 		echo "Warning: mock temporary config directory not defined. Skipping cleanup." >&2
 	fi
+
+	# Cleanup the other temporary dirs afterwards.
+	typeset temp_dir=""
+	for temp_dir in "${temp_cleanup[@]}"; do
+		if [ -n "${temp_dir}" ] && [ -d "${temp_dir}" ]; then
+			rm -Rf -- "${temp_dir}"
+		fi
+	done
 }
 
 # Run cleanup() automatically.
@@ -593,6 +602,7 @@ build_packages() {
 
 				# tar upstream sources from our Git clone
 				TEMP_DIR="$(mktemp -d --tmpdir="${TEMP_BASE}")"
+				temp_cleanup+=("${TEMP_DIR}")
 				mkdir -p -- "${TEMP_DIR}/${PROJECT}"
 				chmod -Rf -- 2770 "${TEMP_DIR}"
 
