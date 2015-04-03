@@ -45,7 +45,31 @@ test -f "${HOME}/.buildscripts/${PREFIX}.conf" && . "${HOME}/.buildscripts/${PRE
 : ${FORCE_BUILD:="no"}
 : ${DEB_BUILD_FOR:="debian:${DEBIAN_DISTROS} ubuntu:${UBUNTU_DISTROS}"}
 
+# These parts are not user-serviceable.
+TEMP_CLEANUP=""
+# End of non-user-serviceable part.
+
 set -ex
+
+# Cleans up temporary directories and files.
+# RFC SHOULD be called by trap handlers.
+cleanup () {
+	typeset -a temp_cleanup_arr
+	typeset OLDIFS="${IFS}"
+	IFS=":"
+	read -a temp_cleanup_arr <<< "${TEMP_CLEANUP}"
+	IFS="${OLDIFS}"
+
+	typeset temp_dir=""
+	for temp_dir in "${temp_cleanup_arr[@]}"; do
+		if [ -d "${temp_dir}" ]; then
+			rm -Rf "${temp_dir}"
+		fi
+	done
+}
+
+# Run cleanup() automatically.
+trap cleanup ERR EXIT SIGTERM SIGINT SIGHUP SIGPIPE SIGALRM SIGUSR1 SIGUSR2
 
 set_vars() {
 	USE_SUDO="yes"
@@ -190,6 +214,7 @@ build_packages() {
 				test -z "${CODENAMES}" || grep "${CODENAMES}" <<< "${line}" || break
 
 				TEMP_DIR="$(mktemp -d --tmpdir=${TEMP_BASE})"
+				TEMP_CLEANUP="${TEMP_CLEANUP}:${TEMP_DIR}"
 				mkdir -p -- "${TEMP_DIR}/${PROJECT}"
 				chmod 2770 -Rf -- "${TEMP_DIR}"
 
