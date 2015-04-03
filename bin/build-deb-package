@@ -56,7 +56,7 @@ set -ex
 cleanup () {
 	typeset temp_dir=""
 	for temp_dir in "${temp_cleanup[@]}"; do
-		if [ -d "${temp_dir}" ]; then
+		if [ -n "${temp_dir}" ] && [ -d "${temp_dir}" ]; then
 			rm -Rf "${temp_dir}"
 		fi
 	done
