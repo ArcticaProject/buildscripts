@@ -17,14 +17,14 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
-export PATH=~/bin:$PATH
+export PATH="${HOME}/bin:${PATH}"
 
 GIT_USER="gituser"
 GIT_HOSTNAME="git.mydomain.org"
 
 DEBEMAIL="firstname.lastname@mydomain.org"
 DEBFULLNAME="Firstname Lastname"
-GPG_KEY=
+GPG_KEY=""
 DEB_DISTS_SUPPORTED="debian ubuntu"
 DEBIAN_DISTROS="lenny,squeeze,wheezy,jessie,sid"
 UBUNTU_DISTROS="lucid,precise"
@@ -34,68 +34,67 @@ COMPONENT_NIGHTLY="nightly"
 COMPONENT_BUNDLES="bundle-release1 bundle-release2"
 REPOS_SERVER="packages.mydomain.org"
 PACKAGES_WITHOUT_OTHERMIRROR="keyring"
-GNUPGHOME=$HOME/.gnupg
+GNUPGHOME="${HOME}/.gnupg"
 
-test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit 1; }
+test -z "${1}" && { echo "usage: $(basename "${0}") [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit 1; }
 
-PREFIX=$(echo `basename $0` | cut -d"-" -f1)
-test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo "$0 has no valid context prefix..."; exit 1; }
+PREFIX="$(cut -d"-" -f1 <<< "$(basename "${0}")")"
+test -f "${HOME}/.buildscripts/${PREFIX}.conf" && . "${HOME}/.buildscripts/${PREFIX}.conf" || { echo "${0} has no valid context prefix..." >&2; exit 1; }
 
-NO_DELAY=${NO_DELAY:-"no"}
-FORCE_BUILD=${FORCE_BUILD:-"no"}
-DEB_BUILD_FOR=${DEB_BUILD_FOR:-"debian:$DEBIAN_DISTROS ubuntu:$UBUNTU_DISTROS"}
+: ${NO_DELAY:="no"}
+: ${FORCE_BUILD:="no"}
+: ${DEB_BUILD_FOR:="debian:${DEBIAN_DISTROS} ubuntu:${UBUNTU_DISTROS}"}
 
 set -ex
 
 set_vars() {
 	USE_SUDO="yes"
 	PDEBUILD="pdebuild --pbuilder qemubuilder"
-	TEMP_BASE="$HOME/tmp/"
-	mkdir -p "$TEMP_BASE"
-	chmod 2770 "$TEMP_BASE"
+	TEMP_BASE="${HOME}/tmp/"
+	mkdir -p -- "${TEMP_BASE}"
+	chmod 2770 "${TEMP_BASE}"
 
 	# first argv is the name of the Git project
-	PROJECT_PATH="$1"
-	PROJECT_PATH=${PROJECT_PATH/%.git/}
-	PROJECT="$(basename $PROJECT_PATH)"
+	PROJECT_PATH="${1}"
+	PROJECT_PATH="${PROJECT_PATH/%.git/}"
+	PROJECT="$(basename "${PROJECT_PATH}")"
 
 	# grab repository component area from command line (2nd argv) or guess it
-	ARGV2_COMPONENT="$(echo "$2/" | cut -d"/" -f1)"
-	ARGV2_CODENAME="$(echo "$2/" | cut -d"/" -f2)"
+	ARGV2_COMPONENT="$(cut -d"/" -f1 <<< "${2}/")"
+	ARGV2_CODENAME="$(cut -d"/" -f2 <<< "${2}/")"
 	COMPONENT="${ARGV2_COMPONENT:-${COMPONENT:-$COMPONENT_NIGHTLY}}"
 	CODENAMES="${ARGV2_CODENAME:-${CODENAMES}}"
-	[ -n "$ARGV2_CODENAME" ] && FORCE_BUILD="yes" || true
+	[ -n "${ARGV2_CODENAME}" ] && FORCE_BUILD="yes" || true
 	DATE="${DATE:-$(date +%Y%m%d)}"
-	if [ "x$COMPONENT" = "x$COMPONENT_MAIN" ]; then
+	if [ "x${COMPONENT}" = "x${COMPONENT_MAIN}" ]; then
 		CHECKOUT="${3:-build-main}"
-	elif [ "x$COMPONENT" = "x${COMPONENT_MAIN}-test" ]; then
+	elif [ "x${COMPONENT}" = "x${COMPONENT_MAIN}-test" ]; then
 		CHECKOUT="${3:-build-main-test}"
-	elif echo "$COMPONENT_RELEASES" | grep "$COMPONENT" >/dev/null; then
+	elif grep -qs "$COMPONENT" <<< "${COMPONENT_RELEASES}"; then
 		CHECKOUT="${3:-build-$COMPONENT}"
-	elif [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
+	elif [ "x${COMPONENT}" = "x${COMPONENT_NIGHTLY}" ]; then
 		CHECKOUT="${3:-master}"
 	else
 		echo "error: no such package component area for this Git project. Aborting..."
 		exit 1
 	fi
 	# the DATE might be given as ,,today'' from the command line
-	[ "x$DATE" = "xtoday" ] && DATE="$(date +%Y%m%d)"
+	[ "x${DATE}" = "xtoday" ] && DATE="$(date +%Y%m%d)"
 
 	# setting paths
-	PROJECT_DIR="$HOME/build/$COMPONENT/$PROJECT"
-	PKGDIST="$HOME/pkg-dist/$COMPONENT/$PROJECT"
+	PROJECT_DIR="${HOME}/build/${COMPONENT}/${PROJECT}"
+	PKGDIST="${HOME}/pkg-dist/${COMPONENT}/${PROJECT}"
 
 	# build for other architectures than amd64/i386
-	EXTRA_ARCHS="${EXTRA_ARCHS:-}"
-	EXTRA_ARCHS_ONLY="${EXTRA_ARCHS_ONLY:-}"
+	: ${EXTRA_ARCHS:=""}
+	: ${EXTRA_ARCHS_ONLY:=""}
 
 	# lock file
-	LOCK_FILE=$PROJECT_DIR/../.$PROJECT.lock
+	LOCK_FILE="${PROJECT_DIR}/../.${PROJECT}.lock"
 
 	# creating paths
-	mkdir -p "$TEMP_BASE"
-	mkdir -p "$PROJECT_DIR"
-	mkdir -p "$PKGDIST"
+	mkdir -p -- "${PROJECT_DIR}"
+	mkdir -p -- "${PKGDIST}"
 
 	return 0
 }
@@ -103,34 +102,34 @@ set_vars() {
 prepare_workspace() {
 	# make sure our local working copy is up to date...
 
-	if [ -d "$PROJECT_DIR/.git" ]; then 
+	if [ -d "${PROJECT_DIR}/.git" ]; then
 		cd "$PROJECT_DIR" && git reset --hard
-		git checkout --force $CHECKOUT || git checkout --force -b $CHECKOUT
-		git pull origin $CHECKOUT
+		git checkout --force "${CHECKOUT}" || git checkout --force -b "${CHECKOUT}"
+		git pull origin "${CHECKOUT}"
 		git fetch origin upstream:upstream || true
 		git fetch origin pristine-tar:pristine-tar || true
-		# and again, get the $CHECKOUT refspec in pure state
+		# and again, get the ${CHECKOUT} refspec in pure state
 		git reset --hard
 		git clean -df
 	else
-		cd "$(dirname $PROJECT_DIR)"
-		git clone git://$GIT_HOSTNAME/$PROJECT_PATH.git
-		cd "$PROJECT"
-		git checkout --force $CHECKOUT || git checkout --force -b $CHECKOUT;
+		cd "$(dirname "${PROJECT_DIR}")"
+		git clone "git://${GIT_HOSTNAME}/${PROJECT_PATH}.git"
+		cd "${PROJECT}"
+		git checkout --force "${CHECKOUT}" || git checkout --force -b "${CHECKOUT}"
 		git fetch origin upstream:upstream
 		git fetch origin pristine-tar:pristine-tar || true
 		git clean -df
 	fi
 
-	GIT_OBJECT_ID=`git show-ref -s heads/master`
-	cd "$PROJECT_DIR"
+	GIT_OBJECT_ID="$(git show-ref -s heads/master)"
+	cd "${PROJECT_DIR}"
 
 	# by default we build for all current debian versions
-	if [ "x$ARGV2_CODENAME" != "x" ]; then
-		if echo "$DEBIAN_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
-			DEB_BUILD_FOR="debian:$ARGV2_CODENAME"
-		elif echo "$UBUNTU_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
-			DEB_BUILD_FOR="ubuntu:$ARGV2_CODENAME"
+	if [ "x${ARGV2_CODENAME}" != "x" ]; then
+		if grep -qs "${ARGV2_CODENAME}" <<< "${DEBIAN_DISTROS}"; then
+			DEB_BUILD_FOR="debian:${ARGV2_CODENAME}"
+		elif grep -qs "${ARGV2_CODENAME}" <<< "${UBUNTU_DISTROS}"; then
+			DEB_BUILD_FOR="ubuntu:${ARGV2_CODENAME}"
 		fi
 	fi
 	return 0
@@ -138,39 +137,39 @@ prepare_workspace() {
 
 clear_pkgdist() {
 	# pkgdist directory cleanup
-	echo "$DEB_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
-		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
-		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
-		echo "$DEB_DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
-			for l_CODENAME in $l_CODENAMES; do
+	echo "${DEB_BUILD_FOR}" | sed -e 's/ /\n/g' | while read line; do
+		l_DIST="$(cut -d":" -f1 <<< "${line/: /:}" | tr [:upper:] [:lower:])"
+		l_CODENAMES="${CODENAMES:-$(cut -d":" -f2- <<< "${line/: /:}" | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
+		grep -qs "${l_DIST}" <<< "${DEB_DISTS_SUPPORTED}" && {
+			for l_CODENAME in ${l_CODENAMES}; do
 
 				# in case we build a special CODENAME (squeeze, wheezy, lucid, ...) do skip
 				# the wrong distribution here...
-				test -z $CODENAMES || echo $line | grep $CODENAMES || break
+				test -z "${CODENAMES}" || grep "${CODENAMES}" <<< "${line}" || break
 
-				if [ "x$EXTRA_ARCHS_ONLY" = "x" ]; then
+				if [ "x${EXTRA_ARCHS_ONLY}" = "x" ]; then
 					for l_ARCH in amd64 i386; do
-						[ "x$SKIP_ARCH" != "x$l_ARCH" ] && {
-							mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
-							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/dupload.conf"
-							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.changes
-							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.upload
-							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.build
-							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.dsc
-							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/$PROJECT_"*.tar.gz
-							rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/"*.deb
+						[ "x${SKIP_ARCH}" != "x${l_ARCH}" ] && {
+							mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}"
+							rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/dupload.conf"
+							rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.changes
+							rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.upload
+							rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.build
+							rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.dsc
+							rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.tar.gz
+							rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/"*.deb
 						}
 					done
 				fi
-				for l_EXTRA_ARCH in $EXTRA_ARCHS; do 
-					mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH"
-					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/dupload.conf"
-					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_"*.changes
-					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_"*.upload
-					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_"*.build
-					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_"*.dsc
-					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/$PROJECT_"*.tar.gz
-					rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH/"*.deb
+				for l_EXTRA_ARCH in ${EXTRA_ARCHS}; do
+					mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}"
+					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}/dupload.conf"
+					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}/${PROJECT}_"*.changes
+					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}/${PROJECT}_"*.upload
+					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}/${PROJECT}_"*.build
+					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}/${PROJECT}_"*.dsc
+					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}/${PROJECT}_"*.tar.gz
+					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}/"*.deb
 				done
 			done
 		}
@@ -180,109 +179,106 @@ clear_pkgdist() {
 
 build_packages() {
 	# use pbuilder for building all variants of this package
-	echo "$DEB_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
-		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
-		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
-		echo "$DEB_DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
-			for l_CODENAME in $l_CODENAMES; do
+	echo "${DEB_BUILD_FOR}" | sed -e 's/ /\n/g' | while read line; do
+		l_DIST="$(cut -d":" -f1 <<< "${line/: /:}" | tr [:upper:] [:lower:])"
+		l_CODENAMES="${CODENAMES:-$(cut -d":" -f2- <<< "${line/: /:}" | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
+		grep -qs "${l_DIST}" <<< "${DEB_DISTS_SUPPORTED}" && {
+			for l_CODENAME in ${l_CODENAMES}; do
 
 				# in case we build a special CODENAME (squeeze, wheezy, lucid, ...) do skip
 				# the wrong distribution here...
-				test -z $CODENAMES || echo $line | grep $CODENAMES || break
+				test -z "${CODENAMES}" || grep "${CODENAMES}" <<< "${line}" || break
 
-				TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
-				mkdir -p "$TEMP_DIR/$PROJECT"
-				chmod 2770 "$TEMP_DIR" -Rf
+				TEMP_DIR="$(mktemp -d --tmpdir=${TEMP_BASE})"
+				mkdir -p -- "${TEMP_DIR}/${PROJECT}"
+				chmod 2770 -Rf -- "${TEMP_DIR}"
 
-				cd "$PROJECT_DIR"
-				git clone "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
-				cd "$TEMP_DIR/$PROJECT"
-				git checkout $CHECKOUT || git checkout master
-				find $PROJECT_DIR/../ -type f -maxdepth 0 -mindepth 0 | grep $PROJECT_*.orig.tar.gz &>/dev/null && cp $PROJECT_DIR/../$PROJECT_*.orig.tar.gz ..
-				GITREV=$(gitrevno)
-
-				# we always build native packages for our repos
-				SA_OPTION=""
+				cd "${PROJECT_DIR}"
+				git clone "${PROJECT_DIR}" "${TEMP_DIR}/${PROJECT}/"
+				cd "${TEMP_DIR}/${PROJECT}"
+				git checkout "${CHECKOUT}" || git checkout master
+				find "${PROJECT_DIR}/../" -type f -maxdepth 0 -mindepth 0 | grep -qs "${PROJECT}_"*.orig.tar.gz && cp -- "${PROJECT_DIR}/../${PROJECT}_"*.orig.tar.gz ..
+				GITREV="$(gitrevno)"
 
 				# we always build native packages for our repos
 				SA_OPTION=""
-				test -f debian/source/format && cat debian/source/format | egrep '^3.0.*\(quilt\)$' >/dev/null && {
+				test -f "debian/source/format" && grep -Eqs '^3.0.*\(quilt\)$' "debian/source/format" && {
 					git fetch origin upstream:upstream
-					UPSTREAM_VERSION=$(dpkg-parsechangelog | grep Version: | cut -d " " -f2 | sed -e 's/-.*//' -e 's/^.*://')
-					REVISION=$(dpkg-parsechangelog | grep Version: | cut -d " " -f2 | sed -e 's/.*-//')
-					git archive --prefix=${PROJECT}-${UPSTREAM_VERSION}/ -o ../${PROJECT}_${UPSTREAM_VERSION}.orig.tar.gz upstream/${UPSTREAM_VERSION} && {
+					UPSTREAM_VERSION="$(dpkg-parsechangelog | grep "Version:" | cut -d " " -f2 | sed -e 's/-.*//' -e 's/^.*://')"
+					REVISION="$(dpkg-parsechangelog | grep "Version:" | cut -d " " -f2 | sed -e 's/.*-//')"
+					git archive --prefix="${PROJECT}-${UPSTREAM_VERSION}/" -o "../${PROJECT}_${UPSTREAM_VERSION}.orig.tar.gz" "upstream/${UPSTREAM_VERSION}" && {
 						SA_OPTION="--debbuildopts=-sa"
-					} || echo "1.0" > debian/source/format
+					} || echo "1.0" > "debian/source/format"
 				}
 
 				# for Ubuntu version is the codename of the distribution release
-				VERSION=$l_CODENAME
+				VERSION="${l_CODENAME}"
 
 				# translate the version name for Debian releases
-				[ "x$l_CODENAME" = "xsid" ] && VERSION=unstable
+				[ "x${l_CODENAME}" = "xsid" ] && VERSION="unstable"
 				#[ "x$l_CODENAME" = "xjessie" ] && VERSION=testing
 				#[ "x$l_CODENAME" = "xwheezy" ] && VERSION=stable
 				#[ "x$l_CODENAME" = "xoldstable" ] && VERSION=oldstable
 
 				# modify the section for non-main package builds
-				[ "x$COMPONENT" != "xmain" ] && {
-					mv debian/control debian/control.tmp
-					cat debian/control.tmp | sed  "s#Section:[\ ]*\(.*\)#Section: $COMPONENT/\1#g" > debian/control
+				[ "x${COMPONENT}" != "xmain" ] && {
+					mv -- "debian/control" "debian/control.tmp"
+					sed "s,Section:[\ ]*\(.*\),Section: ${COMPONENT}/\1,g" debian/control.tmp > debian/control
 				}
 
 				# modify changelog for this build
-				if [ "$COMPONENT" != "$COMPONENT_NIGHTLY" ]; then
-					dch --distribution $VERSION --force-distribution -l "+git$DATE.$GITREV+$l_CODENAME.$COMPONENT." "Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository (Git commit: $GIT_OBJECT_ID)."
+				if [ "${COMPONENT}" != "${COMPONENT_NIGHTLY}" ]; then
+					dch --distribution "${VERSION}" --force-distribution -l "+git${DATE}.${GITREV}+${l_CODENAME}.${COMPONENT}." "Auto-built ${l_DIST} ${l_CODENAME} package for ${REPOS_SERVER} repository (Git commit: ${GIT_OBJECT_ID})."
 				else
-					dch --distribution $VERSION --force-distribution -l "~git$DATE.$GITREV+$l_CODENAME.$COMPONENT." "Development-Snapshot!!! Auto-built $l_DIST $l_CODENAME package for $REPOS_SERVER repository (Git commit: $GIT_OBJECT_ID)."
+					dch --distribution "${VERSION}" --force-distribution -l "~git${DATE}.${GITREV}+${l_CODENAME}.${COMPONENT}." "Development-Snapshot!!! Auto-built ${l_DIST} ${l_CODENAME} package for ${REPOS_SERVER} repository (Git commit: ${GIT_OBJECT_ID})."
 				fi
-				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{amd64,i386}
+				mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/"{amd64,i386}
 				OTHERMIRROR=""
-				if [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
-					echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT_MAIN $COMPONENT"
+				if [ "x${COMPONENT}" = "x${COMPONENT_NIGHTLY}" ]; then
+					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} ${COMPONENT_MAIN} ${COMPONENT}"
 				else
-					echo $PACKAGE_WITHOUT_OTHERMIRROR | grep $PROJECT >/dev/null || OTHERMIRROR="deb http://$REPOS_SERVER/$l_DIST $l_CODENAME $COMPONENT"
+					grep "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} ${COMPONENT}"
 				fi
-				if [ $PROJECT = "x2gomatebindings" ] && [ $l_CODENAME = "wheezy" ]; then
-					OTHERMIRROR="deb http://packages.mate-desktop.org/repo/debian $l_CODENAME main"
+				if [ "${PROJECT}" = "x2gomatebindings" ] && [ "${l_CODENAME}" = "wheezy" ]; then
+					OTHERMIRROR="deb http://packages.mate-desktop.org/repo/debian ${l_CODENAME} main"
 				fi
 
 				# create git changelog immediately prior to building the package
 				git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
 
-				[ "x$USE_SUDO" != "xyes" ] && {
-					[ "x$EXTRA_ARCHS_ONLY" = "x" ] && {
-						[ "x$SKIP_ARCH" != "xamd64" ] && cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
-							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 nice $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/amd64" -- --allow-untrusted $SA_OPTION 0<&-
+				[ "x${USE_SUDO}" != "xyes" ] && {
+					[ "x${EXTRA_ARCHS_ONLY}" = "x" ] && {
+						[ "x${SKIP_ARCH}" != "xamd64" ] && grep -Eqs 'Architecture.*(all|any|amd64)' "debian/control" && {
+							DIST="${l_DIST}" CODENAME="${l_CODENAME}" ARCH="amd64" nice ${PDEBUILD} --auto-debsign --debsign-k "${GPG_KEY}" --buildresult "${PKGDIST}/${l_DIST}/${l_CODENAME}/amd64" -- --allow-untrusted ${SA_OPTION} 0<&-
 						}
-						[ "x$SKIP_ARCH" != "xi386" ] && cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
-							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386 nice $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/i386"  -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
+						[ "x${SKIP_ARCH}" != "xi386" ] && grep -Eqs 'Architecture.*(any|i386)' "debian/control" && {
+							DIST="${l_DIST}" CODENAME="${l_CODENAME}" ARCH="i386" nice ${PDEBUILD} --auto-debsign --debsign-k "${GPG_KEY}" --buildresult "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386" -- --binary-arch --allow-untrusted ${SA_OPTION} 0<&-
 						}
 					}
-					for extra_arch in $EXTRA_ARCHS; do
-						mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch"
-						cat debian/control | egrep "Architecture.*(any|$extra_arch)" >/dev/null && {
-							DIST=$l_DIST CODENAME=$l_CODENAME ARCH=$extra_arch $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch" -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
+					for extra_arch in ${EXTRA_ARCHS}; do
+						mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${extra_arch}"
+						grep -Eqs "Architecture.*(any|$extra_arch)" "debian/control" && {
+							DIST="${l_DIST}" CODENAME="${l_CODENAME}" ARCH="${extra_arch}" ${PDEBUILD} --auto-debsign --debsign-k "${GPG_KEY}" --buildresult "${PKGDIST}/${l_DIST}/${l_CODENAME}/${extra_arch}" -- --binary-arch --allow-untrusted ${SA_OPTION} 0<&-
 						}
 					done
 				}
-				[ "x$USE_SUDO" = "xyes" ] && {
-					[ "x$EXTRA_ARCHS_ONLY" = "x" ] && {
-						[ "x$SKIP_ARCH" != "xamd64" ] && cat debian/control | egrep 'Architecture.*(all|any|amd64)' >/dev/null && {
-							nice sudo GNUPGHOME=$GNUPGHOME DIST=$l_DIST CODENAME=$l_CODENAME ARCH=amd64 OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult $PKGDIST/$l_DIST/$l_CODENAME/amd64 -- --allow-untrusted $SA_OPTION 0<&-
+				[ "x${USE_SUDO}" = "xyes" ] && {
+					[ "x${EXTRA_ARCHS_ONLY}" = "x" ] && {
+						[ "x${SKIP_ARCH}" != "xamd64" ] && grep -Eqs 'Architecture.*(all|any|amd64)' "debian/control" && {
+							nice sudo GNUPGHOME="${GNUPGHOME}" DIST="${l_DIST}" CODENAME="${l_CODENAME}" ARCH="amd64" OTHERMIRROR="${OTHERMIRROR}" ${PDEBUILD} --auto-debsign --debsign-k "${GPG_KEY}" --buildresult "${PKGDIST}/${l_DIST}/${l_CODENAME}/amd64" -- --allow-untrusted ${SA_OPTION} 0<&-
 						}
-						[ "x$SKIP_ARCH" != "xi386" ] && cat debian/control | egrep 'Architecture.*(any|i386)' >/dev/null && {
-							nice sudo GNUPGHOME=$GNUPGHOME DIST=$l_DIST CODENAME=$l_CODENAME ARCH=i386  OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult $PKGDIST/$l_DIST/$l_CODENAME/i386  -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
+						[ "x${SKIP_ARCH}" != "xi386" ] && grep -Eqs 'Architecture.*(any|i386)' "debian/control" && {
+							nice sudo GNUPGHOME="${GNUPGHOME}" DIST="${l_DIST}" CODENAME="${l_CODENAME}" ARCH="i386" OTHERMIRROR="${OTHERMIRROR}" ${PDEBUILD} --auto-debsign --debsign-k "${GPG_KEY}" --buildresult "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386" -- --binary-arch --allow-untrusted ${SA_OPTION} 0<&-
 						}
 					}
-					for extra_arch in $EXTRA_ARCHS; do
-						mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch"
-						cat debian/control | egrep "Architecture.*(any|$extra_arch)" >/dev/null && {
-							nice sudo GNUPGHOME=$GNUPGHOME DIST=$l_DIST CODENAME=$l_CODENAME ARCH=$extra_arch OTHERMIRROR="$OTHERMIRROR" $PDEBUILD --auto-debsign --debsign-k $GPG_KEY --buildresult "$PKGDIST/$l_DIST/$l_CODENAME/$extra_arch" -- --binary-arch --allow-untrusted $SA_OPTION 0<&-
+					for extra_arch in ${EXTRA_ARCHS}; do
+						mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${extra_arch}"
+						grep -Eqs "Architecture.*(any|$extra_arch)" "debian/control" && {
+							nice sudo GNUPGHOME="${GNUPGHOME}" DIST="${l_DIST}" CODENAME="${l_CODENAME}" ARCH="${extra_arch}" OTHERMIRROR="${OTHERMIRROR}" ${PDEBUILD} --auto-debsign --debsign-k "${GPG_KEY}" --buildresult "${PKGDIST}/${l_DIST}/${l_CODENAME}/${extra_arch}" -- --binary-arch --allow-untrusted ${SA_OPTION} 0<&-
 						}
 					done
 				}
-				rm -Rf "$TEMP_DIR"
+				rm -Rf -- "${TEMP_DIR}"
 			done
 		}
 	done
@@ -291,28 +287,28 @@ build_packages() {
 
 upload_packages() {
 	# dupload the new packages to the reprepro repository
-	echo "$DEB_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
-		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
-		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
-		for l_CODENAME in $l_CODENAMES; do
+	echo "${DEB_BUILD_FOR}" | sed -e 's/ /\n/g' | while read line; do
+		l_DIST="$(cut -d":" -f1 <<< "${line/: /:}" | tr [:upper:] [:lower:])"
+		l_CODENAMES="${CODENAMES:-$(cut -d":" -f2- <<< "${line/: /:}" | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
+		for l_CODENAME in ${l_CODENAMES}; do
 
 			# in case we build a special CODENAME (squeeze, wheezy, lucid, ...) do skip
 			# the wrong distribution here...
-			test -z $CODENAMES || echo $line | grep $CODENAMES || break
+			test -z "${CODENAMES}" || grep "${CODENAMES}" <<< "${line}" || break
 
-			if [ "x$EXTRA_ARCHS_ONLY" = "x" ]; then	
+			if [ "x${EXTRA_ARCHS_ONLY}" = "x" ]; then
 				for l_ARCH in amd64 i386; do
-					[ "x$SKIP_ARCH" != "x$l_ARCH" ] && {
-						cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
-						test -f ./dupload.conf || ln -s ~/.dupload.conf.$PREFIX ./dupload.conf
-						ls $PROJECT_*.changes &>/dev/null && dupload -c --to $PREFIX-$l_DIST-$l_CODENAME $PROJECT_*.changes 0<&-
+					[ "x${SKIP_ARCH}" != "x${l_ARCH}" ] && {
+						cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}"
+						test -f "./dupload.conf" || ln -s -- "${HOME}/.dupload.conf.${PREFIX}" "./dupload.conf"
+						ls -- "${PROJECT}_"*.changes >/dev/null 2>&1 && dupload -c --to "${PREFIX}-${l_DIST}-${l_CODENAME}" "${PROJECT}_"*.changes 0<&-
 					}
 				done
 			fi
-			for l_EXTRA_ARCH in $EXTRA_ARCHS; do 
-				cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_EXTRA_ARCH"
-				test -f ./dupload.conf || ln -s ~/.dupload.conf.$PREFIX ./dupload.conf
-				ls $PROJECT_*.changes &>/dev/null && dupload -c --to $PREFIX-$l_DIST-$l_CODENAME $PROJECT_*.changes 0<&-
+			for l_EXTRA_ARCH in ${EXTRA_ARCHS}; do
+				cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}"
+				test -f "./dupload.conf" || ln -s -- "${HOME}/.dupload.conf.${PREFIX}" "./dupload.conf"
+				ls -- "${PROJECT}_"*.changes >/dev/null 2>&1 && dupload -c --to "${PREFIX}-${l_DIST}-${l_CODENAME}" "${PROJECT}_"*.changes 0<&-
 			done
 		done
 	done
@@ -320,9 +316,10 @@ upload_packages() {
 }
 
 wait_for_lock() {
-	while [ -f $LOCK_FILE ]; do
-		pid=$(head -n1 $LOCK_FILE)
-		if ! ps $pid 1>/dev/null; then rm -f $LOCK_FILE
+	while [ -f "${LOCK_FILE}" ]; do
+		pid="$(head -n1 "${LOCK_FILE}")"
+		if ! ps "${pid}" 1>/dev/null; then
+			rm -f -- "${LOCK_FILE}"
 		else
 			echo "PROJECT directory is locked, sleeping for 10 seconds..."
 			sleep 10
@@ -333,11 +330,11 @@ wait_for_lock() {
 lock_workspace() {
 	wait_for_lock
 
-	echo $$ > $LOCK_FILE
+	echo "${$}" > "${LOCK_FILE}"
 }
 
 unlock_workspace() {
-	rm -f $LOCK_FILE
+	rm -f -- "${LOCK_FILE}"
 }
 
 delay_build() {
@@ -346,10 +343,10 @@ delay_build() {
 
 ### MAIN ###
 set_vars "$@" && {
-	if [ "x$(basename $0)" = "x$PREFIX-build-deb-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-deb-package" ]; then
-								# Treat any value other than "no" and "0" as true.
-		cd $PROJECT_DIR && pkgneedsbuild $CHECKOUT || ( [ "x$FORCE_BUILD" != "xno" ] && [ "x$FORCE_BUILD" != "x0" ] ) && {
-			if [ "x$FORCE_BUILD" != "xno" ] && [ "x$FORCE_BUILD" != "x0" ] && ( [ "x$NO_DELAY" = "xno" ] || [ "x$NO_DELAY" = "x0" ] ); then
+	if [ "x$(basename "${0}")" = "x${PREFIX}-build-deb-package" ] || [ "x$(basename "${0}")" = "x${PREFIX}-build+upload-deb-package" ]; then
+									# Treat any value other than "no" and "0" as true.
+		cd "${PROJECT_DIR}" && pkgneedsbuild "${CHECKOUT}" || ( [ "x${FORCE_BUILD}" != "xno" ] && [ "x${FORCE_BUILD}" != "x0" ] ) && {
+			if [ "x${FORCE_BUILD}" != "xno" ] && [ "x${FORCE_BUILD}" != "x0" ] && ( [ "x${NO_DELAY}" = "xno" ] || [ "x${NO_DELAY}" = "x0" ] ); then
 				delay_build
 			fi
 			lock_workspace
@@ -361,7 +358,7 @@ set_vars "$@" && {
 			unlock_workspace
 		}
 	fi
-	if [ "x$(basename $0)" = "x$PREFIX-upload-deb-package" ] || [ "x$(basename $0)" = "x$PREFIX-build+upload-deb-package" ]; then
+	if [ "x$(basename "${0}")" = "x${PREFIX}-upload-deb-package" ] || [ "x$(basename "${0}")" = "x${PREFIX}-build+upload-deb-package" ]; then
 		upload_packages
 	fi
 }
