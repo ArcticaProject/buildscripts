@@ -666,7 +666,6 @@ build_packages() {
 						rm -Rf -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/rpmbuild/SRPMS/build.log"
 					else
 						cat "${PKGDIST}/${l_DIST}/${l_CODENAME}/rpmbuild/SRPMS/build.log"
-						rm -Rf -- "$TEMP_DIR"
 						exit 1
 					fi
 				fi
@@ -716,7 +715,6 @@ build_packages() {
 							done
 							rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "${PKGDIST}/${l_DIST}/${l_CODENAME}/SRPM/"*.rpm
 						else
-							rm -Rf -- "${TEMP_DIR}"
 							exit 1
 						fi
 					else
@@ -750,7 +748,6 @@ build_packages() {
 								cat "${PKGDIST}/${l_DIST}/${l_CODENAME}/x86_64/build.log"
 							else
 								cat "${PKGDIST}/${l_DIST}/${l_CODENAME}/x86_64/build.log"
-								rm -Rf -- "${TEMP_DIR}"
 								exit 1
 							fi
 						done
@@ -796,7 +793,6 @@ build_packages() {
 								rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "${PKGDIST}/${l_DIST}/${l_CODENAME}/SRPM/"*.rpm
 							fi
 						else
-							rm -Rf -- "${TEMP_DIR}"
 							exit 1
 						fi
 					else
@@ -831,7 +827,6 @@ build_packages() {
 								cat "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386/build.log"
 							else
 								cat "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386/build.log"
-								rm -Rf -- "${TEMP_DIR}"
 								exit 1
 							fi
 						done
@@ -840,7 +835,6 @@ build_packages() {
 			done
 		}
 	done
-	rm -Rf -- "${TEMP_DIR}"
 	return 0
 }
 
