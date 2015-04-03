@@ -18,7 +18,7 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
-export PATH=~/bin:$PATH
+export PATH="${HOME}/bin:${PATH}"
 
 GIT_USER="gituser"
 GIT_HOSTNAME="git.mydomain.org"
@@ -31,7 +31,7 @@ FEDORA_DISTROS="18,19,20,21,rawhide"
 EPEL_DISTROS="6,7"
 OPENSUSE_DISTROS="12.2,12.3,13.1,13.2"
 SLE_DISTROS="11.2,11.3,12.0"
-RPM_REPOS_BASE=/var/www/
+RPM_REPOS_BASE="/var/www/"
 RPM_WANT_EXTRA_REPOS="0"
 RPM_MOCK_CONFIG_DIR="/etc/mock"
 RPM_EXTRA_REPO_MOCK_CONFIG_BASE=""
@@ -43,19 +43,19 @@ COMPONENT_NIGHTLY="nightly"
 COMPONENT_BUNDLES="bundle-release1 bundle-release2"
 REPOS_SERVER="packages.mydomain.org"
 PACKAGES_WITHOUT_OTHERMIRROR="keyring"
-GNUPGHOME=$HOME/.gnupg
+GNUPGHOME="${HOME}/.gnupg"
 
 OPENSUSE_DOWNLOAD_URL="http://download.opensuse.org/distribution/#VERSION#/repo/oss/suse/"
 SLE_DOWNLOAD_URL="/srv/mirrors/non-public/sle/#VERSION#/rpms/"
 
-test -z $1 && { echo "usage: $(basename $0) [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit 1; }
+test -z "${1}" && { echo "usage: $(basename "${0}") [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit 1; }
 
-PREFIX=$(echo `basename $0` | cut -d"-" -f1)
-test -f ~/.buildscripts/$PREFIX.conf && . ~/.buildscripts/$PREFIX.conf || { echo "$0 has no valid context prefix..."; exit 1; }
+PREFIX="$(cut -d"-" -f1 <<< "$(basename "${0}")")"
+test -f "${HOME}/.buildscripts/${PREFIX}.conf" && . "${HOME}/.buildscripts/${PREFIX.conf}" || { echo "${0} has no valid context prefix..." >&2; exit 1; }
 
-NO_DELAY=${NO_DELAY:-"no"}
-FORCE_BUILD=${FORCE_BUILD:-"no"}
-RPM_BUILD_FOR=${RPM_BUILD_FOR:-"fedora:$FEDORA_DISTROS epel:$EPEL_DISTROS opensuse:$OPENSUSE_DISTROS sle:$SLE_DISTROS"}
+: ${NO_DELAY:="no"}
+: ${FORCE_BUILD:="no"}
+: ${RPM_BUILD_FOR:="fedora:${FEDORA_DISTROS} epel:${EPEL_DISTROS} opensuse:${OPENSUSE_DISTROS} sle:${SLE_DISTROS}"}
 
 # These parts are not user-serviceable.
 TMP_MOCK_CFG_DIR=""
@@ -84,14 +84,14 @@ cleanup () {
 				echo "Warning: mock temporary config file ${file} is not a regular file. Not unlinking." >&2
 			else
 				# Remove and ignore errors.
-				rm "${file}" || :
+				rm -- "${file}" || :
 			fi
 		done
 
 		# And only later of the directory itself.
 		if [ -e "${TMP_MOCK_CFG_DIR}" ]; then
 			if [ -d "${TMP_MOCK_CFG_DIR}" ]; then
-				rmdir "${TMP_MOCK_CFG_DIR}" || echo "Warning: unable to remove mock temporary config directory ${TMP_MOCK_CFG_DIR}. Is it non-empty?" >&2
+				rmdir -- "${TMP_MOCK_CFG_DIR}" || echo "Warning: unable to remove mock temporary config directory ${TMP_MOCK_CFG_DIR}. Is it non-empty?" >&2
 			else
 				echo "Warning: mock temporary config directory ${TMP_MOCK_CFG_DIR} is not actually a directory. Not unlinking." >&2
 			fi
@@ -123,47 +123,47 @@ function make_boolean () {
 }
 
 set_vars() {
-	mkdir -p "${TEMP_BASE}"
+	mkdir -p -- "${TEMP_BASE}"
 	chmod 2770 "${TEMP_BASE}"
 
 	# first argv is the name of the Git project
-	PROJECT_PATH="$1"
-	PROJECT_PATH=${PROJECT_PATH/%.git/}
-	PROJECT="$(basename $PROJECT_PATH)"
+	PROJECT_PATH="${1}"
+	PROJECT_PATH="${PROJECT_PATH/%.git/}"
+	PROJECT="$(basename "${PROJECT_PATH}")"
 
 	# grab repository component area from command line (2nd argv) or guess it
-	ARGV2_COMPONENT="$(echo "$2/" | cut -d"/" -f1)"
-	ARGV2_CODENAME="$(echo "$2/" | cut -d"/" -f2)"
+	ARGV2_COMPONENT="$(cut -d"/" -f1 <<< "${2}/")"
+	ARGV2_CODENAME="$(cut -d"/" -f2 <<< "${2}/")"
 	COMPONENT="${ARGV2_COMPONENT:-${COMPONENT:-$COMPONENT_NIGHTLY}}"
 	CODENAMES="${ARGV2_CODENAME:-${CODENAMES}}"
-	[ -n "$ARGV2_CODENAME" ] && FORCE_BUILD="yes" || true
+	[ -n "${ARGV2_CODENAME}" ] && FORCE_BUILD="yes" || true
 	DATE="${DATE:-$(date +%Y%m%d)}"
-	if [ "x$COMPONENT" = "x$COMPONENT_MAIN" ]; then
+	if [ "x${COMPONENT}" = "x${COMPONENT_MAIN}" ]; then
 		CHECKOUT="${3:-build-main}"
-	elif [ "x$COMPONENT" = "x${COMPONENT_MAIN}-test" ]; then
+	elif [ "x${COMPONENT}" = "x${COMPONENT_MAIN}-test" ]; then
 		CHECKOUT="${3:-build-main-test}"
 		COMPONENT="maintest"
-	elif echo "$COMPONENT_RELEASES" | grep "$COMPONENT" >/dev/null; then
+	elif grep -qs "${COMPONENT}" <<< "${COMPONENT_RELEASES}"; then
 		CHECKOUT="${3:-build-$COMPONENT}"
-	elif [ "x$COMPONENT" = "x$COMPONENT_NIGHTLY" ]; then
+	elif [ "x${COMPONENT}" = "x$COMPONENT_NIGHTLY" ]; then
 		CHECKOUT="${3:-master}"
 	else
 		echo "error: no such package component area for this Git project. Aborting..."
 		exit 1
 	fi
 	# the DATE might be given as ,,today'' from the command line
-	[ "x$DATE" = "xtoday" ] && DATE="$(date +%Y%m%d)"
+	[ "x${DATE}" = "xtoday" ] && DATE="$(date +%Y%m%d)"
 
 	# setting paths
-	PROJECT_DIR="$HOME/build/$COMPONENT/$PROJECT"
-	PKGDIST="$HOME/pkg-dist/$COMPONENT/$PROJECT"
+	PROJECT_DIR="${HOME}/build/${COMPONENT}/${PROJECT}"
+	PKGDIST="${HOME}/pkg-dist/${COMPONENT}/${PROJECT}"
 
 	# lock file
-	LOCK_FILE=$PROJECT_DIR/../.$PROJECT.lock
+	LOCK_FILE="${PROJECT_DIR}/../.${PROJECT}.lock"
 
 	# creating paths
-	mkdir -p "$PROJECT_DIR"
-	mkdir -p "$PKGDIST"
+	mkdir -p -- "${PROJECT_DIR}"
+	mkdir -p -- "${PKGDIST}"
 
 	return 0
 }
@@ -502,33 +502,33 @@ get_extra_repository () {
 
 prepare_workspace() {
 	# make sure our local working copy is up to date...
-	if [ -d "$PROJECT_DIR/.git" ]; then 
-		cd "$PROJECT_DIR" && git reset --hard
-		git checkout --force $CHECKOUT || git checkout --force -b $CHECKOUT
-		git pull origin $CHECKOUT
+	if [ -d "${PROJECT_DIR}/.git" ]; then
+		cd "${PROJECT_DIR}" && git reset --hard
+		git checkout --force "${CHECKOUT}" || git checkout --force -b "${CHECKOUT}"
+		git pull origin "${CHECKOUT}"
 		git fetch origin upstream:upstream || true
 		git fetch origin pristine-tar:pristine-tar || true
-		# and again, get the $CHECKOUT refspec in pure state
+		# and again, get the ${CHECKOUT} refspec in pure state
 		git reset --hard
 		git clean -df
 	else
-		cd "$(dirname $PROJECT_DIR)"
-		git clone git://$GIT_HOSTNAME/$PROJECT_PATH.git
-		cd "$PROJECT"
-		git checkout --force $CHECKOUT || git checkout --force -b $CHECKOUT;
+		cd "$(dirname "${PROJECT_DIR}")"
+		git clone "git://${GIT_HOSTNAME}/${PROJECT_PATH}.git"
+		cd "${PROJECT}"
+		git checkout --force "${CHECKOUT}" || git checkout --force -b "${CHECKOUT}"
 		git fetch origin upstream:upstream
 		git fetch origin pristine-tar:pristine-tar || true
 		git clean -df
 	fi
 
-	GIT_OBJECT_ID=`git show-ref -s heads/master`
-	cd "$PROJECT_DIR"
+	GIT_OBJECT_ID="$(git show-ref -s heads/master)"
+	cd "${PROJECT_DIR}"
 
-	if [ "x$ARGV2_CODENAME" != "x" ]; then
-		if echo "$FEDORA_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
-			RPM_BUILD_FOR="fedora:$ARGV2_CODENAME"
-		elif echo "$EPEL_DISTROS" | grep $ARGV2_CODENAME >/dev/null; then
-			RPM_BUILD_FOR="epel:$ARGV2_CODENAME"
+	if [ "x${ARGV2_CODENAME}" != "x" ]; then
+		if grep -qs "${ARGV2_CODENAME}" <<< "${FEDORA_DISTROS}"; then
+			RPM_BUILD_FOR="fedora:${ARGV2_CODENAME}"
+		elif grep -qs "${ARGV2_CODENAME}" <<< "${EPEL_DISTROS}"; then
+			RPM_BUILD_FOR="epel:${ARGV2_CODENAME}"
 		fi
 	fi
 	return 0
@@ -536,21 +536,21 @@ prepare_workspace() {
 
 clear_pkgdist() {
 	# pkgdist directory cleanup
-	echo "$RPM_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
-		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
-		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
-		echo "$RPM_DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
-			for l_CODENAME in $l_CODENAMES; do
+	echo "${RPM_BUILD_FOR}" | sed -e 's/ /\n/g' | while read line; do
+		l_DIST="$(cut -d":" -f1 <<< "${line/: /:}" | tr [:upper:] [:lower:])"
+		l_CODENAMES="${CODENAMES:-$(cut -d":" -f2- <<< "${line/: /:}" | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
+		grep -qs "${l_DIST}" <<< "${RPM_DISTS_SUPPORTED}" && {
+			for l_CODENAME in ${l_CODENAMES}; do
 
-				test -z $CODENAMES || echo $line | grep $CODENAMES || break
+				test -z "${CODENAMES}" || grep "${CODENAMES}" <<< "${line}" || break
 
 				# Yes, "SRPM" is technically not an architecture.
 				for l_ARCH in x86_64 i386 SRPM; do
-					if [ "x$SKIP_ARCH" != "x$l_ARCH" ]; then
-						mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/"*
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-"*.src.rpm
-						rm -f "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/"*.rpm
+					if [ "x${SKIP_ARCH}" != "x${l_ARCH}" ]; then
+						mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}"
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/rpmbuild/SOURCES/"*
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/rpmbuild/SRPMS/${PROJECT}-"*.src.rpm
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/"*.rpm
 					fi
 				done
 			done
@@ -569,104 +569,106 @@ build_packages() {
 	IFS="${OLDIFS}"
 
 	for line in "${RPM_BUILD_FOR_ARR[@]}"; do
-		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
-		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
-		echo "$RPM_DISTS_SUPPORTED" | grep $l_DIST >/dev/null && {
-			for l_CODENAME in $l_CODENAMES; do
+		l_DIST="$(cut -d":" -f1 <<< "${line/: /:}" | tr [:upper:] [:lower:])"
+		l_CODENAMES="${CODENAMES:-$(cut -d":" -f2- <<< "${line/: /:}" | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
+		grep -qs "${l_DIST}" <<< "${RPM_DISTS_SUPPORTED}" && {
+			for l_CODENAME in ${l_CODENAMES}; do
 
-				test -z $CODENAMES || echo $line | grep $CODENAMES || break
+				test -z "${CODENAMES}" || grep "${CODENAMES}" <<< "${line}" || break
 
 				# create rpmbuild subdirectories
-				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES
+				mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/rpmbuild/SOURCES"
 
 				# tar upstream sources from our Git clone
-				TEMP_DIR="$(mktemp -d --tmpdir=$TEMP_BASE)"
-				mkdir -p "$TEMP_DIR/$PROJECT"
-				chmod 2770 "$TEMP_DIR" -Rf
+				TEMP_DIR="$(mktemp -d --tmpdir="${TEMP_BASE}")"
+				mkdir -p -- "${TEMP_DIR}/${PROJECT}"
+				chmod -Rf -- 2770 "${TEMP_DIR}"
 
 				cd "$PROJECT_DIR"
-				git clone "$PROJECT_DIR" "$TEMP_DIR/$PROJECT/"
-				cd $TEMP_DIR
-				GITREV=$(cd $PROJECT && gitrevno && cd - 1>/dev/null)
+				git clone "${PROJECT_DIR}" "${TEMP_DIR}/${PROJECT}/"
+				cd "${TEMP_DIR}"
+				GITREV="$(cd "${PROJECT}" && gitrevno && cd - 1>/dev/null)"
 
 				# create git changelog immediately prior to building the SRPM package
-				cd $PROJECT && git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog && cd - 1>/dev/null
+				pushd "${PROJECT}" >/dev/null 2>&1 && \
+				git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog && \
+				popd >/dev/null 2>&1
 
-				rm -Rf "$PROJECT/.git"
-				mv $PROJECT/$PROJECT.spec .
+				rm -Rf -- "${PROJECT}/.git"
+				mv -- "${PROJECT}/${PROJECT}.spec" .
 
-				UPSTREAM_VERSION=$(cat $PROJECT.spec | egrep "^Version:.*" | awk '{ print $2 }')
-				PKG_RELEASE=$(cat $PROJECT.spec | egrep "^Release:.*" | awk '{ print $2 }')
-				PKG_SRCRELEASE=$(echo $PKG_RELEASE | sed -e 's/%{?dist}//')
+				UPSTREAM_VERSION="$(grep -E -- "^Version:.*" "${PROJECT}.spec" | awk '{ print $2 }')"
+				PKG_RELEASE="$(grep -E -- "^Release:.*" "${PROJECT}.spec" | awk '{ print $2 }')"
+				PKG_SRCRELEASE="$(sed -e 's/%{?dist}//' <<< "${PKG_RELEASE}")"
 
-				IS_NOARCH=$(cat $PROJECT.spec | egrep "^BuildArch:.*noarch\$" 1>/dev/null 2>/dev/null && echo yes || echo no)
+				IS_NOARCH="$(grep -qsE -- "^BuildArch:.*noarch\$" "${PROJECT}.spec" && echo "yes" || echo "no")"
 
-				if [ "$COMPONENT" = "$COMPONENT_NIGHTLY" ]; then
+				if [ "${COMPONENT}" = "${COMPONENT_NIGHTLY}" ]; then
 					IS_RELEASE="0"
 				else
 					IS_RELEASE="1"
 				fi
-				sed -i $PROJECT.spec -e "s/%{?dist}/.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT%{?dist}/"
+				sed -i "${PROJECT}.spec" -e "s/%{?dist}/.${IS_RELEASE}.git${DATE}.${GITREV}.${COMPONENT}%{?dist}/"
 
-				# apply patches from debian/patches/* so that they end up in the tarbal
+				# apply patches from debian/patches/* so that they end up in the tarball
 				# ... esp. relevant for NX (redistributed)
-				if [ -f $PROJECT/debian/patches/series ]; then
-					( cd $PROJECT && QUILT_PATCHES=debian/patches quilt push -a && rm .pc/ -Rf; )
+				if [ -f "${PROJECT}/debian/patches/series" ]; then
+					( cd "${PROJECT}" && QUILT_PATCHES=debian/patches quilt push -a && rm -Rf -- .pc/; )
 				fi
 
-				cat $PROJECT.spec | egrep "^Source[1-9]+:.*" | sed "s/%{name}/$PROJECT/" | awk '{ print $2 }' | while read source_file; do
-					find $PROJECT/rpm/$source_file -maxdepth 0 1> /dev/null && cp $PROJECT/rpm/$source_file $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/ && continue
-					find $PROJECT/$source_file -maxdepth 0 1> /dev/null && cp $PROJECT/$source_file $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/
+				grep -E "^Source[1-9]+:.*" "${PROJECT}.spec" | sed "s/%{name}/${PROJECT}/" | awk '{ print $2 }' | while read source_file; do
+					find "${PROJECT}/rpm/${source_file}" -maxdepth 0 1> /dev/null && cp -- "${PROJECT}/rpm/${source_file}" "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/rpmbuild/SOURCES/" && continue
+					find "${PROJECT}/${source_file}" -maxdepth 0 1> /dev/null && cp -- "${PROJECT}/${source_file}" "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/rpmbuild/SOURCES/"
 				done
 
-				mv $TEMP_DIR/$PROJECT $TEMP_DIR/$PROJECT-$UPSTREAM_VERSION
-				tar -czf $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/$PROJECT-$UPSTREAM_VERSION.tar.gz $PROJECT-$UPSTREAM_VERSION
+				mv -- "${TEMP_DIR}/${PROJECT}" "${TEMP_DIR}/${PROJECT}-${UPSTREAM_VERSION}"
+				tar -czf "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/rpmbuild/SOURCES/${PROJECT}-${UPSTREAM_VERSION}.tar.gz" "${PROJECT}-${UPSTREAM_VERSION}"
 
-				cp $PROJECT.spec $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES
+				cp -- "${PROJECT}.spec" "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/rpmbuild/SOURCES"
 
-				if [ "x$l_DIST" = "xfedora" ] || [ "x$l_DIST" = "xepel" ]; then
-					while [ -d ~mock/${l_DIST}-${l_CODENAME}-x86_64 ]; do
+				if [ "x${l_DIST}" = "xfedora" ] || [ "x${l_DIST}" = "xepel" ]; then
+					while [ -d ~mock/"${l_DIST}-${l_CODENAME}-x86_64" ]; do
 						echo "Waiting for some other build to finish..."
 						sleep 30
 					done
-					rm -f $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
+					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/x86_64/build.log"
 
 					# Obtain packages from our RPM repository.
 					get_extra_repository "redhat" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "x86_64" "${RPM_WANT_EXTRA_REPOS}"
 					if mock --buildsrpm \
 					          ${MOCK_CHROOT_CONFIG} \
-					          --resultdir="$PKGDIST/$l_DIST/$l_CODENAME/rpmbuild/SRPMS" \
-					          --spec "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/$PROJECT.spec" \
-					          --sources "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/"; then
-						cat "$PKGDIST/$l_DIST/$l_CODENAME/rpmbuild/SRPMS/build.log"
-						rm -Rf "$PKGDIST/$l_DIST/$l_CODENAME/rpmbuild/SRPMS/build.log"
+					          --resultdir="${PKGDIST}/${l_DIST}/${l_CODENAME}/rpmbuild/SRPMS" \
+					          --spec "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/rpmbuild/SOURCES/${PROJECT}.spec" \
+					          --sources "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/rpmbuild/SOURCES/"; then
+						cat "${PKGDIST}/${l_DIST}/${l_CODENAME}/rpmbuild/SRPMS/build.log"
+						rm -Rf -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/rpmbuild/SRPMS/build.log"
 					else
-						cat $PKGDIST/$l_DIST/$l_CODENAME/rpmbuild/SRPMS/build.log
-						rm -Rf "$TEMP_DIR"
+						cat "${PKGDIST}/${l_DIST}/${l_CODENAME}/rpmbuild/SRPMS/build.log"
+						rm -Rf -- "$TEMP_DIR"
 						exit 1
 					fi
 				fi
 
 				# clean up the Git clone from the temp folder
-				cd && rm $TEMP_DIR/$PROJECT -Rf
+				cd && rm -Rf -- "${TEMP_DIR}/${PROJECT}"
 
 				# modify changelog for this build
 				### TODO: add changelog entry for this automatic build
 
-				mkdir -p $PKGDIST/$l_DIST/$l_CODENAME/{x86_64,i386,SRPM}
+				mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/"{x86_64,i386,SRPM}
 
-				if [ "x$SKIP_ARCH" != "xx86_64" ] || [ "$IS_NOARCH" = "yes" ]; then
-					if [ "x$l_DIST" = "xopensuse" ] || [ "x$l_DIST" = "xsle" ]; then
-						BUILD_RESULT=/home/abuild/rpmbuild/
-						if [ "x$l_DIST" = "xopensuse" ]; then
-							DOWNLOAD_URL=$(echo "$OPENSUSE_DOWNLOAD_URL" | sed "s/#VERSION#/$l_CODENAME/")
-						elif [ "x$l_DIST" = "xsle" ]; then
-							DOWNLOAD_URL=$(echo "$SLE_DOWNLOAD_URL" | sed "s/#VERSION#/$l_CODENAME/")
-							if [ "$l_CODENAME" = "11.2" ] || [ "$l_CODENAME" = "11.3" ]; then
-								BUILD_RESULT=/usr/src/packages
+				if [ "x${SKIP_ARCH}" != "xx86_64" ] || [ "${IS_NOARCH}" = "yes" ]; then
+					if [ "x${l_DIST}" = "xopensuse" ] || [ "x${l_DIST}" = "xsle" ]; then
+						BUILD_RESULT="/home/abuild/rpmbuild/"
+						if [ "x${l_DIST}" = "xopensuse" ]; then
+							DOWNLOAD_URL="$(sed "s/#VERSION#/${l_CODENAME}/" <<< "${OPENSUSE_DOWNLOAD_URL}")"
+						elif [ "x${l_DIST}" = "xsle" ]; then
+							DOWNLOAD_URL="$(sed "s/#VERSION#/${l_CODENAME}/" <<< "${SLE_DOWNLOAD_URL}")"
+							if [ "${l_CODENAME}" = "11.2" ] || [ "${l_CODENAME}" = "11.3" ]; then
+								BUILD_RESULT="/usr/src/packages"
 							fi
 						fi
-						while ps ax | grep -E "build.*/var/cache/obs-build/$l_DIST/$l_CODENAME/x86_64/" | grep "sudo obs"; do
+						while ps ax | grep -E "build.*/var/cache/obs-build/${l_DIST}/${l_CODENAME}/x86_64/" | grep "sudo obs"; do
 							echo "Waiting for some other build to finish..."
 							sleep 30
 						done
@@ -676,74 +678,74 @@ build_packages() {
 						if sudo obs-build \
 						             --nosignature \
 						             ${OTHERMIRROR} \
-						             --repo "$DOWNLOAD_URL" \
-						             --root "/var/cache/obs-build/$l_DIST/$l_CODENAME/x86_64/" \
+						             --repo "${DOWNLOAD_URL}" \
+						             --root "/var/cache/obs-build/${l_DIST}/${l_CODENAME}/x86_64/" \
 						             --clean \
-						             $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/$PROJECT.spec; then
-							mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/x86_64/"
-							find "/var/cache/obs-build/$l_DIST/$l_CODENAME/x86_64/$BUILD_RESULT/RPMS/" -type f | egrep '.*\.rpm$' | egrep -v '.*\.src\.rpm$' | while read rpmfile; do
-								cp "$rpmfile" "$PKGDIST/$l_DIST/$l_CODENAME/x86_64/"
+						             "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/rpmbuild/SOURCES/${PROJECT}.spec"; then
+							mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/x86_64/"
+							find "/var/cache/obs-build/${l_DIST}/${l_CODENAME}/x86_64/${BUILD_RESULT}/RPMS/" -type f | grep -E '.*\.rpm$' | grep -Ev '.*\.src\.rpm$' | while read rpmfile; do
+								cp "${rpmfile}" "${PKGDIST}/${l_DIST}/${l_CODENAME}/x86_64/"
 							done
-							rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "$PKGDIST/$l_DIST/$l_CODENAME/x86_64/"*.rpm
+							rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "${PKGDIST}/${l_DIST}/${l_CODENAME}/x86_64/"*.rpm
 
 							# also copy and sign source RPM's
-							find "/var/cache/obs-build/$l_DIST/$l_CODENAME/x86_64/$BUILD_RESULT/SRPMS/" -type f | egrep '.*\.rpm$' | while read rpmfile; do
-								cp "$rpmfile" "$PKGDIST/$l_DIST/$l_CODENAME/SRPM/"
+							find "/var/cache/obs-build/${l_DIST}/${l_CODENAME}/x86_64/${BUILD_RESULT}/SRPMS/" -type f | grep -E '.*\.rpm$' | while read rpmfile; do
+								cp "${rpmfile}" "$PKGDIST/${l_DIST}/${l_CODENAME}/SRPM/"
 							done
-							rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "$PKGDIST/$l_DIST/$l_CODENAME/SRPM/"*.rpm
+							rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "${PKGDIST}/${l_DIST}/${l_CODENAME}/SRPM/"*.rpm
 						else
-							rm -Rf "$TEMP_DIR"
+							rm -Rf -- "${TEMP_DIR}"
 							exit 1
 						fi
 					else
-						rm -f $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
-						while [ -d ~mock/${l_DIST}-${l_CODENAME}-x86_64 ]; do
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/x86_64/build.log"
+						while [ -d ~mock/"${l_DIST}-${l_CODENAME}-x86_64" ]; do
 							echo "Waiting for some other build to finish..."
 							sleep 30
 						done
 
 						# Obtain packages from our RPM repository.
 						get_extra_repository "redhat" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "x86_64" "${RPM_WANT_EXTRA_REPOS}"
-						ls $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.*.src.rpm | while read srpm; do
-							if mock ${MOCK_CHROOT_CONFIG} --resultdir="$PKGDIST/$l_DIST/$l_CODENAME/x86_64" "$srpm"; then
+						find "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/rpmbuild/SRPMS/${PROJECT}-${UPSTREAM_VERSION}-${PKG_SRCRELEASE}.${IS_RELEASE}.git${DATE}.${GITREV}.${COMPONENT}".*.src.rpm | while read srpm; do
+							if mock ${MOCK_CHROOT_CONFIG} --resultdir="${PKGDIST}/${l_DIST}/${l_CODENAME}/x86_64" "${srpm}"; then
 								# copy and later sign source RPM
-								cp "$srpm" "$PKGDIST/$l_DIST/$l_CODENAME/SRPM/"
+								cp "${srpm}" "${PKGDIST}/${l_DIST}/${l_CODENAME}/SRPM/"
 
 								# Clean up source RPM files. We copy them manually.
-								find "${PKGDIST}/${l_DIST}/${l_CODENAME}/x86_64" -type 'f' -iname '*.src.rpm' -exec rm -f '{}' \;
+								find "${PKGDIST}/${l_DIST}/${l_CODENAME}/x86_64" -type 'f' -iname '*.src.rpm' -exec rm -f -- '{}' \;
 
-								if [ "$l_DIST" = "epel" ] && [ "$l_CODENAME" = "5" ]; then
+								if [ "${l_DIST}" = "epel" ] && [ "${l_CODENAME}" = "5" ]; then
 									# References:
 									# /usr/lib/rpm/macros
 									# http://adminotes.blogspot.fr/2011/12/centos-6-rpm-sign-problem-v4-signatures.html
 									RPMMACRO_V3SIGN="%__gpg_sign_cmd %{__gpg} /usr/bin/gpg --force-v3-sigs --digest-algo=sha1 --batch --no-verbose --no-armor --passphrase-fd 3 --no-secmem-warning -u \"%{_gpg_name}\" -sbo %{__signature_filename} %{__plaintext_filename}"
-									rpmsign-unattended -D "%_gpg_name debian@x2go.org" -D "$RPMMACRO_V3SIGN" --addsign $PKGDIST/$l_DIST/$l_CODENAME/x86_64/*.rpm
-									rpmsign-unattended -D "%_gpg_name debian@x2go.org" -D "$RPMMACRO_V3SIGN" --addsign $PKGDIST/$l_DIST/$l_CODENAME/SRPM/*.rpm
+									rpmsign-unattended -D "%_gpg_name debian@x2go.org" -D "${RPMMACRO_V3SIGN}" --addsign "${PKGDIST}/${l_DIST}/${l_CODENAME}/x86_64/"*.rpm
+									rpmsign-unattended -D "%_gpg_name debian@x2go.org" -D "${RPMMACRO_V3SIGN}" --addsign "${PKGDIST}/${l_DIST}/${l_CODENAME}/SRPM/"*.rpm
 								else
-									rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign $PKGDIST/$l_DIST/$l_CODENAME/x86_64/*.rpm
-									rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign $PKGDIST/$l_DIST/$l_CODENAME/SRPM/*.rpm
+									rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "${PKGDIST}/${l_DIST}/${l_CODENAME}/x86_64/"*.rpm
+									rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "${PKGDIST}/${l_DIST}/${l_CODENAME}/SRPM/"*.rpm
 								fi
-								cat $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
+								cat "${PKGDIST}/${l_DIST}/${l_CODENAME}/x86_64/build.log"
 							else
-								cat $PKGDIST/$l_DIST/$l_CODENAME/x86_64/build.log
-								rm -Rf "$TEMP_DIR"
+								cat "${PKGDIST}/${l_DIST}/${l_CODENAME}/x86_64/build.log"
+								rm -Rf -- "${TEMP_DIR}"
 								exit 1
 							fi
 						done
 					fi
 				fi
-				if [ "x$SKIP_ARCH" != "xi386" ] && [ "$IS_NOARCH" != "yes" ]; then
-					if [ "x$l_DIST" = "xopensuse" ] || [ "x$l_DIST" = "xsle" ]; then
-						BUILD_RESULT=/home/abuild/rpmbuild/
+				if [ "x${SKIP_ARCH}" != "xi386" ] && [ "${IS_NOARCH}" != "yes" ]; then
+					if [ "x${l_DIST}" = "xopensuse" ] || [ "x${l_DIST}" = "xsle" ]; then
+						BUILD_RESULT="/home/abuild/rpmbuild/"
 						if [ "x$l_DIST" = "xopensuse" ]; then
-							DOWNLOAD_URL=$(echo "$OPENSUSE_DOWNLOAD_URL" | sed "s/#VERSION#/$l_CODENAME/")
+							DOWNLOAD_URL="$(sed "s/#VERSION#/${l_CODENAME}/" <<< "${OPENSUSE_DOWNLOAD_URL}")"
 						elif [ "x$l_DIST" = "xsle" ]; then
-							DOWNLOAD_URL=$(echo "$SLE_DOWNLOAD_URL" | sed "s/#VERSION#/$l_CODENAME/")
-							if [ "$l_CODENAME" = "11.2" ] || [ "$l_CODENAME" = "11.3" ]; then
-								BUILD_RESULT=/usr/src/packages
+							DOWNLOAD_URL="$(sed "s/#VERSION#/${l_CODENAME}/" <<< "${SLE_DOWNLOAD_URL}")"
+							if [ "${l_CODENAME}" = "11.2" ] || [ "${l_CODENAME}" = "11.3" ]; then
+								BUILD_RESULT="/usr/src/packages"
 							fi
 						fi
-						while ps ax | grep -E "build.*/var/cache/obs-build/$l_DIST/$l_CODENAME/i386/" | grep "sudo obs"; do
+						while ps ax | grep -E "build.*/var/cache/obs-build/${l_DIST}/${l_CODENAME}/i386/" | grep "sudo obs"; do
 							echo "Waiting for some other build to finish..."
 							sleep 30
 						done
@@ -753,61 +755,61 @@ build_packages() {
 						if linux32 sudo obs-build \
 						                    --nosignature \
 						                    ${OTHERMIRROR} \
-						                    --repo "$DOWNLOAD_URL" \
-						                    --root "/var/cache/obs-build/$l_DIST/$l_CODENAME/i386/" \
+						                    --repo "${DOWNLOAD_URL}" \
+						                    --root "/var/cache/obs-build/${l_DIST}/${l_CODENAME}/i386/" \
 						                    --clean \
-						                    $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SOURCES/$PROJECT.spec; then
-							mkdir -p "$PKGDIST/$l_DIST/$l_CODENAME/i386/"
-							find "/var/cache/obs-build/$l_DIST/$l_CODENAME/i386/$BUILD_RESULT/RPMS/" -type f | egrep '.*\.rpm$' | egrep -v '.*\.src\.rpm$' | while read rpmfile; do
-								cp "$rpmfile" "$PKGDIST/$l_DIST/$l_CODENAME/i386/"
+						                    "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/rpmbuild/SOURCES/${PROJECT}.spec"; then
+							mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386/"
+							find "/var/cache/obs-build/${l_DIST}/${l_CODENAME}/i386/${BUILD_RESULT}/RPMS/" -type f | grep -E '.*\.rpm$' | grep -Ev '.*\.src\.rpm$' | while read rpmfile; do
+								cp "${rpmfile}" "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386/"
 							done
-							rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "$PKGDIST/$l_DIST/$l_CODENAME/i386/"*.rpm
+							rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386/"*.rpm
 
 							# copy and later sign source RPM's, if needed (that is, not already generated by x86_64/noarch code above)
-							SEARCH_SRPM="$(find "$PKGDIST/$l_DIST/$l_CODENAME/SRPM" -type 'f' -name "*.src.rpm" -print)"
-							if [ -z "$SEARCH_SRPM" ]; then
-								find "/var/cache/obs-build/$l_DIST/$l_CODENAME/i386/$BUILD_RESULT/SRPMS/" -type 'f' | egrep '.*\.src\.rpm$' | while read rpmfile; do
-									cp "$rpmfile" "$PKGDIST/$l_DIST/$l_CODENAME/SRPM/"
+							SEARCH_SRPM="$(find "${PKGDIST}/${l_DIST}/${l_CODENAME}/SRPM" -type 'f' -name "*.src.rpm" -print)"
+							if [ -z "${SEARCH_SRPM}" ]; then
+								find "/var/cache/obs-build/${l_DIST}/${l_CODENAME}/i386/${BUILD_RESULT}/SRPMS/" -type 'f' | grep -E '.*\.src\.rpm$' | while read rpmfile; do
+									cp "${rpmfile}" "${PKGDIST}/${l_DIST}/${l_CODENAME}/SRPM/"
 								done
-								rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "$PKGDIST/$l_DIST/$l_CODENAME/SRPM/"*.rpm
+								rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "${PKGDIST}/${l_DIST}/${l_CODENAME}/SRPM/"*.rpm
 							fi
 						else
-							rm -Rf "$TEMP_DIR"
+							rm -Rf -- "${TEMP_DIR}"
 							exit 1
 						fi
 					else
-						while [ -d ~mock/${l_DIST}-${l_CODENAME}-i386 ]; do
+						while [ -d ~mock/"${l_DIST}-${l_CODENAME}-i386" ]; do
 							echo "Waiting for some other build to finish..."
 							sleep 30
 						done
-						rm -f $PKGDIST/$l_DIST/$l_CODENAME/i386/build.log
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386/build.log"
 
 						# Obtain packages from our RPM repository.
 						get_extra_repository "redhat" "${l_DIST}" "${l_CODENAME}" "${COMPONENT}" "${PROJECT}" "i386" "${RPM_WANT_EXTRA_REPOS}"
-						ls $PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH/rpmbuild/SRPMS/$PROJECT-$UPSTREAM_VERSION-$PKG_SRCRELEASE.$IS_RELEASE.git$DATE.$GITREV.$COMPONENT.*.src.rpm | while read srpm; do
-							if nice mock ${MOCK_CHROOT_CONFIG} --resultdir="$PKGDIST/$l_DIST/$l_CODENAME/i386" "$srpm"; then
+						find "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/rpmbuild/SRPMS/${PROJECT}-${UPSTREAM_VERSION}-${PKG_SRCRELEASE}.${IS_RELEASE}.git${DATE}.${GITREV}.${COMPONENT}".*.src.rpm | while read srpm; do
+							if nice mock ${MOCK_CHROOT_CONFIG} --resultdir="${PKGDIST}/${l_DIST}/${l_CODENAME}/i386" "${srpm}"; then
 								# only copy and sign source RPM if necessary
-								SIGN_SRPM=0
-								if [ ! -e "$PKGDIST/$l_DIST/$l_CODENAME/SRPM/$(basename "$srpm")" ]; then
-									cp "$srpm" "$PKGDIST/$l_DIST/$l_CODENAME/SRPM/"
-									SIGN_SRPM=1
+								SIGN_SRPM="0"
+								if [ ! -e "${PKGDIST}/${l_DIST}/${l_CODENAME}/SRPM/$(basename "${srpm}")" ]; then
+									cp "${srpm}" "${PKGDIST}/${l_DIST}/${l_CODENAME}/SRPM/"
+									SIGN_SRPM="1"
 								fi
 
 								# Clean up source RPM files. We copy them manually.
-								find "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386" -type 'f' -iname '*.src.rpm' -exec rm -f '{}' \;
+								find "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386" -type 'f' -iname '*.src.rpm' -exec rm -f -- '{}' \;
 
-								if [ "$l_DIST" = "epel" ] && [ "$l_CODENAME" = "5" ]; then
+								if [ "${l_DIST}" = "epel" ] && [ "${l_CODENAME}" = "5" ]; then
 									RPMMACRO_V3SIGN="%__gpg_sign_cmd /usr/bin/gpg --force-v3-sigs --digest-algo=sha1 --batch --no-verbose --no-armor --passphrase-fd 3 --no-secmem-warning -u \"%_gpg_name\" -sbo %{__signature_filename} %{__plaintext_filename}"
-									rpmsign-unattended -D "%_gpg_name debian@x2go.org" -D "$RPMMACRO_V3SIGN" --addsign $PKGDIST/$l_DIST/$l_CODENAME/i386/*.rpm
-									[ "x$SIGN_SRPM" = "x1" ] && rpmsign-unattended -D "%_gpg_name debian@x2go.org" -D "$RPMMACRO_V3SIGN" --addsign $PKGDIST/$l_DIST/$l_CODENAME/SRPM/*.rpm
+									rpmsign-unattended -D "%_gpg_name debian@x2go.org" -D "${RPMMACRO_V3SIGN}" --addsign "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386/"*.rpm
+									[ "x${SIGN_SRPM}" = "x1" ] && rpmsign-unattended -D "%_gpg_name debian@x2go.org" -D "${RPMMACRO_V3SIGN}" --addsign "${PKGDIST}/${l_DIST}/${l_CODENAME}/SRPM/"*.rpm
 								else
-									rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign $PKGDIST/$l_DIST/$l_CODENAME/i386/*.rpm
-									[ "x$SIGN_SRPM" = "x1" ] && rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign $PKGDIST/$l_DIST/$l_CODENAME/i386/*.rpm
+									rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386/"*.rpm
+									[ "x$SIGN_SRPM" = "x1" ] && rpmsign-unattended -D "%_gpg_name debian@x2go.org" --addsign "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386/"*.rpm
 								fi
-								cat $PKGDIST/$l_DIST/$l_CODENAME/i386/build.log
+								cat "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386/build.log"
 							else
-								cat $PKGDIST/$l_DIST/$l_CODENAME/i386/build.log
-								rm -Rf "$TEMP_DIR"
+								cat "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386/build.log"
+								rm -Rf -- "${TEMP_DIR}"
 								exit 1
 							fi
 						done
@@ -816,44 +818,42 @@ build_packages() {
 			done
 		}
 	done
-	rm -Rf "${TEMP_DIR}"
+	rm -Rf -- "${TEMP_DIR}"
 	return 0
 }
 
 upload_packages() {
 	# dupload the new packages to the reprepro repository
 
-	echo "$RPM_BUILD_FOR" | sed -e 's/ /\n/g' | while read line; do
-		l_DIST="$(echo ${line/: /:} | cut -d":" -f1 | tr [:upper:] [:lower:])"
-		l_CODENAMES="${CODENAMES:-$(echo ${line/: /:} | cut -d":" -f2- | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
-		for l_CODENAME in $l_CODENAMES; do
+	echo "${RPM_BUILD_FOR}" | sed -e 's/ /\n/g' | while read line; do
+		l_DIST="$(cut -d":" -f1 <<< "${line/: /:}" | tr [:upper:] [:lower:])"
+		l_CODENAMES="${CODENAMES:-$(cut -d":" -f2- <<< "${line/: /:}" | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
+		for l_CODENAME in ${l_CODENAMES}; do
 
-			test -z $CODENAMES || echo $line | grep $CODENAMES || break
+			test -z "${CODENAMES}" || grep "${CODENAMES}" <<< "${line}" || break
 
 			# Yes, "SRPM" is technically not an architecture.
 			for l_ARCH in x86_64 i386 SRPM; do
-				if [ "x$SKIP_ARCH" != "x$l_ARCH" ]; then
-
+				if [ "x${SKIP_ARCH}" != "x${l_ARCH}" ]; then
 					# create remote directories in archive
-					0</dev/null ssh $REPOS_SERVER mkdir -p $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/rpms/$PROJECT
-					0</dev/null ssh $REPOS_SERVER mkdir -p $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/repodata
+					0</dev/null ssh "${REPOS_SERVER}" "mkdir -p -- ${RPM_REPOS_BASE}/${l_DIST}/${l_CODENAME}/${COMPONENT}/${l_ARCH}/rpms/${PROJECT}"
+					0</dev/null ssh "${REPOS_SERVER}" "mkdir -p -- ${RPM_REPOS_BASE}/${l_DIST}/${l_CODENAME}/${COMPONENT}/${l_ARCH}/repodata"
 
 					# remove rpm packages of the same name (pattern)
-					0</dev/null ssh $REPOS_SERVER rm -f $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/rpms/$PROJECT/*.rpm
+					0</dev/null ssh "${REPOS_SERVER}" "rm -f -- ${RPM_REPOS_BASE}/${l_DIST}/${l_CODENAME}/${COMPONENT}/${l_ARCH}/rpms/${PROJECT}/*.rpm"
 
 					# copy (s)rpms into repo
-					cd "$PKGDIST/$l_DIST/$l_CODENAME/$l_ARCH"
-					scp *.rpm $REPOS_SERVER:$RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/rpms/$PROJECT/ || true
+					cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}"
+					scp *.rpm "${REPOS_SERVER}:${RPM_REPOS_BASE}/${l_DIST}/${l_CODENAME}/${COMPONENT}/${l_ARCH}/rpms/${PROJECT}/" || true
 
 					CREATEREPO_OPTS=""
-					if [ "$l_DIST" = "epel" ] && [ "$l_CODENAME" = "5" ]; then
+					if [ "${l_DIST}" = "epel" ] && [ "${l_CODENAME}" = "5" ]; then
 						CREATEREPO_OPTS="-s sha"
 					fi
-					0</dev/null ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/ && createrepo ${CREATEREPO_OPTS} ."
+					0</dev/null ssh "${REPOS_SERVER}" "cd ${RPM_REPOS_BASE}/${l_DIST}/${l_CODENAME}/${COMPONENT}/${l_ARCH}/ && createrepo ${CREATEREPO_OPTS} ."
 
-					0</dev/null ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/repodata &&  rm -f repomd.xml.asc && gpg -a -u ${GPG_KEY} --detach-sign repomd.xml" 1>/dev/null 2>/dev/null
-					0</dev/null ssh $REPOS_SERVER "cd $RPM_REPOS_BASE/$l_DIST/$l_CODENAME/$COMPONENT/$l_ARCH/repodata && test -e repomd.xml.key || gpg -a --output repomd.xml.key --export ${GPG_KEY} "
-
+					0</dev/null ssh "${REPOS_SERVER}" "cd ${RPM_REPOS_BASE}/${l_DIST}/${l_CODENAME}/${COMPONENT}/${l_ARCH}/repodata &&  rm -f -- repomd.xml.asc && gpg -a -u ${GPG_KEY} --detach-sign repomd.xml" 1>/dev/null 2>/dev/null
+					0</dev/null ssh "${REPOS_SERVER}" "cd ${RPM_REPOS_BASE}/${l_DIST}/${l_CODENAME}/${COMPONENT}/${l_ARCH}/repodata && test -e repomd.xml.key || gpg -a --output repomd.xml.key --export ${GPG_KEY}"
 				fi
 			done
 		done
@@ -862,9 +862,10 @@ upload_packages() {
 }
 
 wait_for_lock() {
-	while [ -f $LOCK_FILE ]; do
-		pid=$(head -n1 $LOCK_FILE)
-		if ! ps $pid 1>/dev/null; then rm -f $LOCK_FILE
+	while [ -f "${LOCK_FILE}" ]; do
+		pid="$(head -n1 "${LOCK_FILE}")"
+		if ! ps "${pid}" 1>/dev/null; then
+			rm -f -- "${LOCK_FILE}"
 		else
 			echo "PROJECT directory is locked, sleeping for 10 seconds..."
 			sleep 10
@@ -874,11 +875,11 @@ wait_for_lock() {
 
 lock_workspace() {
 	wait_for_lock
-	echo $$ > $LOCK_FILE
+	echo "${$}" > "${LOCK_FILE}"
 }
 
 unlock_workspace() {
-	rm -f $LOCK_FILE
+	rm -f -- "${LOCK_FILE}"
 }
 
 delay_build() {
@@ -888,7 +889,7 @@ delay_build() {
 
 ### MAIN ###
 set_vars "$@" && {
-	if [ "x$(basename $0)" = "x${PREFIX}-build-rpm-package" ] || [ "x$(basename $0)" = "x${PREFIX}-build+upload-rpm-package" ]; then
+	if [ "x$(basename "${0}")" = "x${PREFIX}-build-rpm-package" ] || [ "x$(basename "${0}")" = "x${PREFIX}-build+upload-rpm-package" ]; then
 		FORCE_BUILD="$(make_boolean "${FORCE_BUILD}")"
 		NO_DELAY="$(make_boolean "${NO_DELAY}")"
 
@@ -909,7 +910,7 @@ set_vars "$@" && {
 			unlock_workspace
 		}
 	fi
-	if [ "x$(basename $0)" = "x${PREFIX}-upload-rpm-package" ] || [ "x$(basename $0)" = "x${PREFIX}-build+upload-rpm-package" ]; then
+	if [ "x$(basename "${0}")" = "x${PREFIX}-upload-rpm-package" ] || [ "x$(basename "${0}")" = "x${PREFIX}-build+upload-rpm-package" ]; then
 		upload_packages
 	fi
 }
