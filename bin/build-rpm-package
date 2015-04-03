@@ -534,6 +534,9 @@ prepare_workspace() {
 	return 0
 }
 
+# Cleans up the pkgdist directory used for building packages.
+# Does not take parameters.
+# Does not "return" anything.
 clear_pkgdist() {
 	# pkgdist directory cleanup
 	echo "${RPM_BUILD_FOR}" | sed -e 's/ /\n/g' | while read line; do
@@ -822,6 +825,9 @@ build_packages() {
 	return 0
 }
 
+# Uploads the build packages.
+# Has no parameters.
+# Does not "return" any value.
 upload_packages() {
 	# dupload the new packages to the reprepro repository
 
