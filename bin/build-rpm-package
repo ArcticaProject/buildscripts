@@ -597,6 +597,9 @@ build_packages() {
 
 				test -z "${CODENAMES}" || grep "${CODENAMES}" <<< "${line}" || break
 
+				# FIXME: Builds currently break without this. This should really be merged/transformed into an arch loop.
+				typeset l_ARCH=""
+
 				# create rpmbuild subdirectories
 				mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/rpmbuild/SOURCES"
 
