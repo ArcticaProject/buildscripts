@@ -573,13 +573,14 @@ clear_pkgdist() {
 build_packages() {
 	# Do NOT spawn a subshell here. Functions like get_extra_repository() need to
 	# change global variables in the main process.
-	typeset -a RPM_BUILD_FOR_ARR
+	typeset -a rpm_build_for_arr
 	typeset OLDIFS="${IFS}"
 	IFS=" "
-	read -a RPM_BUILD_FOR_ARR <<< "${RPM_BUILD_FOR}"
+	read -a rpm_build_for_arr <<< "${RPM_BUILD_FOR}"
 	IFS="${OLDIFS}"
 
-	for line in "${RPM_BUILD_FOR_ARR[@]}"; do
+	typeset line=""
+	for line in "${rpm_build_for_arr[@]}"; do
 		l_DIST="$(cut -d":" -f1 <<< "${line/: /:}" | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(cut -d":" -f2- <<< "${line/: /:}" | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		grep -qs "${l_DIST}" <<< "${RPM_DISTS_SUPPORTED}" && {
