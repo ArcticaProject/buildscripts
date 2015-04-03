@@ -161,7 +161,17 @@ prepare_workspace() {
 
 clear_pkgdist() {
 	# pkgdist directory cleanup
-	echo "${DEB_BUILD_FOR}" | sed -e 's/ /\n/g' | while read line; do
+
+	# Do NOT spawn a subshell here.
+	# Allow changing global variables in the main process.
+	typeset -a deb_build_for_arr
+	typeset OLDIFS="${IFS}"
+	IFS=" "
+	read -a deb_build_for_arr <<< "${DEB_BUILD_FOR}"
+	IFS="${OLDIFS}"
+
+	typeset line=""
+	for line in "${deb_build_for_arr[@]}"; do
 		l_DIST="$(cut -d":" -f1 <<< "${line/: /:}" | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(cut -d":" -f2- <<< "${line/: /:}" | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		grep -qs "${l_DIST}" <<< "${DEB_DISTS_SUPPORTED}" && {
@@ -203,7 +213,17 @@ clear_pkgdist() {
 
 build_packages() {
 	# use pbuilder for building all variants of this package
-	echo "${DEB_BUILD_FOR}" | sed -e 's/ /\n/g' | while read line; do
+
+	# Do NOT spawn a subshell here.
+	# Allow changing global variables in the main process.
+	typeset -a deb_build_for_arr
+	typeset OLDIFS="${IFS}"
+	IFS=" "
+	read -a deb_build_for_arr <<< "${DEB_BUILD_FOR}"
+	IFS="${OLDIFS}"
+
+	typeset line=""
+	for line in "${deb_build_for_arr[@]}"; do
 		l_DIST="$(cut -d":" -f1 <<< "${line/: /:}" | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(cut -d":" -f2- <<< "${line/: /:}" | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		grep -qs "${l_DIST}" <<< "${DEB_DISTS_SUPPORTED}" && {
@@ -312,7 +332,17 @@ build_packages() {
 
 upload_packages() {
 	# dupload the new packages to the reprepro repository
-	echo "${DEB_BUILD_FOR}" | sed -e 's/ /\n/g' | while read line; do
+
+	# Do NOT spawn a subshell here.
+	# Allow changing global variables in the main process.
+	typeset -a deb_build_for_arr
+	typeset OLDIFS="${IFS}"
+	IFS=" "
+	read -a deb_build_for_arr <<< "${DEB_BUILD_FOR}"
+	IFS="${OLDIFS}"
+
+	typeset line=""
+	for line in "${deb_build_for_arr[@]}"; do
 		l_DIST="$(cut -d":" -f1 <<< "${line/: /:}" | tr [:upper:] [:lower:])"
 		l_CODENAMES="${CODENAMES:-$(cut -d":" -f2- <<< "${line/: /:}" | sed -e 's/,/ /g' | tr [:upper:] [:lower:])}"
 		for l_CODENAME in ${l_CODENAMES}; do
