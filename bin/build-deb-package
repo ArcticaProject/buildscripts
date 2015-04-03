@@ -317,7 +317,6 @@ build_packages() {
 						}
 					done
 				}
-				rm -Rf -- "${TEMP_DIR}"
 			done
 		}
 	done
