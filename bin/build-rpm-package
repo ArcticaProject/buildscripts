@@ -51,7 +51,7 @@ SLE_DOWNLOAD_URL="/srv/mirrors/non-public/sle/#VERSION#/rpms/"
 test -z "${1}" && { echo "usage: $(basename "${0}") [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit 1; }
 
 PREFIX="$(cut -d"-" -f1 <<< "$(basename "${0}")")"
-test -f "${HOME}/.buildscripts/${PREFIX}.conf" && . "${HOME}/.buildscripts/${PREFIX.conf}" || { echo "${0} has no valid context prefix..." >&2; exit 1; }
+test -f "${HOME}/.buildscripts/${PREFIX}.conf" && . "${HOME}/.buildscripts/${PREFIX}.conf" || { echo "${0} has no valid context prefix..." >&2; exit 1; }
 
 : ${NO_DELAY:="no"}
 : ${FORCE_BUILD:="no"}
