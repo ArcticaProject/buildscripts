@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2011 by Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+# Copyright (C) 2011-2015 by Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
 #
 # This is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
 COMPONENT_MAIN="main"
-COMPONENT_BAIKAL="baikal"
+COMPONENT_LTS="lts"
 COMPONENT_NIGHTLY="nightly"
 
 LIB_PACKAGES_NIGHTLY=
@@ -66,9 +66,9 @@ CODENAME=${2:-""}
     done
 }
 
-# build all packages tagged as build-baikal
-[ "x$COMPONENT" = "x$COMPONENT_BAIKAL" ] || [ -z $COMPONENT ] && {
-    echo -e $LIB_PACKAGES_BAIKAL $APP_PACKAGES_BAIKAL | while read pkg comp checkout; do
+# build all packages marked as lts
+[ "x$COMPONENT" = "x$COMPONENT_LTS" ] || [ -z $COMPONENT ] && {
+    echo -e $LIB_PACKAGES_LTS $APP_PACKAGES_LTS | while read pkg comp checkout; do
 	if [ -n $CODENAME ]; then
 		comp="$comp/$CODENAME"
 	fi
@@ -84,5 +84,5 @@ CODENAME=${2:-""}
 
 echo "Component: $COMPONENT"
 echo "Main: $COMPONENT_MAIN"
-echo "Baikal: $COMPONENT_BAIKAL"
+echo "LTS: $COMPONENT_LTS"
 echo "Nightly: $COMPONENT_NIGHTLY"

@@ -1,0 +1,13 @@
+package config;
+
+### Arctica packages for Debian
+$cfg{"arctica-debian-production"} = {
+        fqdn => "packages.arctica-project.org",
+        login => "repo-admin",
+        method => "scpb",
+        incoming => "/srv/sites/x2go.org/packages/debian/incoming/production",
+        queuedir => "/srv/sites/x2go.org/packages/debian/upload/production",
+        dinstall_runs => 1,
+};
+
+1;
