@@ -278,10 +278,6 @@ build_packages() {
 				else
 					grep "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} ${COMPONENT}"
 				fi
-				if [ "${PROJECT}" = "x2gomatebindings" ] && [ "${l_CODENAME}" = "wheezy" ]; then
-					OTHERMIRROR="deb http://packages.mate-desktop.org/repo/debian ${l_CODENAME} main"
-				fi
-
 				# create git changelog immediately prior to building the package
 				git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
 
