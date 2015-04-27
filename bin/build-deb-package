@@ -139,7 +139,7 @@ prepare_workspace() {
 		git clean -df
 	fi
 
-	GIT_OBJECT_ID="$(git show-ref -s heads/master)"
+	GIT_OBJECT_ID="$(git rev-parse --verify HEAD)"
 	cd "${PROJECT_DIR}"
 
 	# by default we build for all current debian versions
