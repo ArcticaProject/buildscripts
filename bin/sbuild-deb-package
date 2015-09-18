@@ -27,7 +27,7 @@ DEBFULLNAME="Firstname Lastname"
 GPG_KEY=""
 DEB_DISTS_SUPPORTED="debian ubuntu"
 DEBIAN_DISTROS="lenny,squeeze,wheezy,jessie,sid"
-UBUNTU_DISTROS="lucid,precise"
+UBUNTU_DISTROS="lucid,precise,trusty"
 
 COMPONENT_MAIN="main"
 COMPONENT_NIGHTLY="nightly"
@@ -36,12 +36,13 @@ REPOS_SERVER="packages.mydomain.org"
 PACKAGES_WITHOUT_OTHERMIRROR="keyring"
 GNUPGHOME="${HOME}/.gnupg"
 
+TIMESTAMP=$(date +%s%N)
+
 test -z "${1}" && { echo "usage: $(basename "${0}") [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit 1; }
 
 PREFIX="$(cut -d"-" -f1 <<< "$(basename "${0}")")"
 test -f "${HOME}/.buildscripts/${PREFIX}.conf" && . "${HOME}/.buildscripts/${PREFIX}.conf" || { echo "${0} has no valid context prefix..." >&2; exit 1; }
 
-: ${NO_DELAY:="no"}
 : ${FORCE_BUILD:="no"}
 : ${DEB_BUILD_FOR:="debian:${DEBIAN_DISTROS} ubuntu:${UBUNTU_DISTROS}"}
 
@@ -56,7 +57,7 @@ set -ex
 cleanup () {
 	typeset temp_dir=""
 	for temp_dir in "${temp_cleanup[@]}"; do
-		if [ -n "${temp_dir}" ] && [ -d "${temp_dir}" ]; then
+		if [ -d "${temp_dir}" ]; then
 			rm -Rf -- "${temp_dir}"
 		fi
 	done
@@ -66,8 +67,7 @@ cleanup () {
 trap cleanup ERR EXIT SIGTERM SIGINT SIGHUP SIGPIPE SIGALRM SIGUSR1 SIGUSR2
 
 set_vars() {
-	USE_SUDO="yes"
-	PDEBUILD="pdebuild --pbuilder qemubuilder"
+	SBUILD="sbuild"
 	TEMP_BASE="${HOME}/tmp/"
 	mkdir -p -- "${TEMP_BASE}"
 	chmod 2770 "${TEMP_BASE}"
@@ -100,47 +100,15 @@ set_vars() {
 	[ "x${DATE}" = "xtoday" ] && DATE="$(date +%Y%m%d)"
 
 	# setting paths
-	PROJECT_DIR="${HOME}/build/${COMPONENT}/${PROJECT}"
+	PROJECT_DIR="${HOME}/build/${COMPONENT}/${TIMESTAMP}/${PROJECT}"
+	temp_cleanup+=("${PROJECT_DIR}")
+	temp_cleanup+=("$(dirname ${PROJECT_DIR})")
+
 	PKGDIST="${HOME}/pkg-dist/${COMPONENT}/${PROJECT}"
-
-	# build for other architectures than amd64/i386
-	: ${EXTRA_ARCHS:=""}
-	: ${EXTRA_ARCHS_ONLY:=""}
-
-	# lock file
-	LOCK_FILE="${PROJECT_DIR}/../.${PROJECT}.lock"
 
 	# creating paths
 	mkdir -p -- "${PROJECT_DIR}"
 	mkdir -p -- "${PKGDIST}"
-
-	return 0
-}
-
-prepare_workspace() {
-	# make sure our local working copy is up to date...
-
-	if [ -d "${PROJECT_DIR}/.git" ]; then
-		cd "$PROJECT_DIR" && git reset --hard
-		git checkout --force "${CHECKOUT}" || git checkout --force -b "${CHECKOUT}"
-		git pull origin "${CHECKOUT}"
-		git fetch origin upstream:upstream || true
-		git fetch origin pristine-tar:pristine-tar || true
-		# and again, get the ${CHECKOUT} refspec in pure state
-		git reset --hard
-		git clean -df
-	else
-		cd "$(dirname "${PROJECT_DIR}")"
-		git clone "git://${GIT_HOSTNAME}/${PROJECT_PATH}.git"
-		cd "${PROJECT}"
-		git checkout --force "${CHECKOUT}" || git checkout --force -b "${CHECKOUT}"
-		git fetch origin upstream:upstream
-		git fetch origin pristine-tar:pristine-tar || true
-		git clean -df
-	fi
-
-	GIT_OBJECT_ID="$(git show-ref -s heads/master)"
-	cd "${PROJECT_DIR}"
 
 	# by default we build for all current debian versions
 	if [ "x${ARGV2_CODENAME}" != "x" ]; then
@@ -150,6 +118,28 @@ prepare_workspace() {
 			DEB_BUILD_FOR="ubuntu:${ARGV2_CODENAME}"
 		fi
 	fi
+
+	return 0
+}
+
+prepare_workspace() {
+	# make sure our local working copy is up to date...
+
+	my_DIST="$1"
+	my_CODENAME="$2"
+	my_WORKDIR="$(dirname ${PROJECT_DIR})"
+
+	cd ${my_WORKDIR}
+	if [ ! -d ${PROJECT}/.git ]; then
+		git clone "git://${GIT_HOSTNAME}/${PROJECT_PATH}.git"
+		cd "${PROJECT}"
+		git checkout --force "${CHECKOUT}" || git checkout --force -b "${CHECKOUT}"
+
+		GIT_OBJECT_ID="$(git rev-parse --verify HEAD)"
+	fi
+
+	cd "${PROJECT_DIR}"
+
 	return 0
 }
 
@@ -175,29 +165,17 @@ clear_pkgdist() {
 				# the wrong distribution here...
 				test -z "${CODENAMES}" || grep "${CODENAMES}" <<< "${line}" || break
 
-				if [ "x${EXTRA_ARCHS_ONLY}" = "x" ]; then
-					for l_ARCH in amd64 i386; do
-						[ "x${SKIP_ARCH}" != "x${l_ARCH}" ] && {
-							mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}"
-							rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/dupload.conf"
-							rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.changes
-							rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.upload
-							rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.build
-							rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.dsc
-							rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.tar.gz
-							rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/"*.deb
-						}
-					done
-				fi
-				for l_EXTRA_ARCH in ${EXTRA_ARCHS}; do
-					mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}"
-					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}/dupload.conf"
-					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}/${PROJECT}_"*.changes
-					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}/${PROJECT}_"*.upload
-					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}/${PROJECT}_"*.build
-					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}/${PROJECT}_"*.dsc
-					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}/${PROJECT}_"*.tar.gz
-					rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}/"*.deb
+				for l_ARCH in amd64 i386; do
+					[ "x${SKIP_ARCH}" != "x${l_ARCH}" ] && {
+						mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}"
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/dupload.conf"
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.changes
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.upload
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.build
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.dsc
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${PROJECT}_"*.tar.gz
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/"*.deb
+					}
 				done
 			done
 		}
@@ -223,12 +201,16 @@ build_packages() {
 		grep -qs "${l_DIST}" <<< "${DEB_DISTS_SUPPORTED}" && {
 			for l_CODENAME in ${l_CODENAMES}; do
 
+				# prepare workspace
+				prepare_workspace "${l_DIST}" "${l_CODENAME}"
+
 				# in case we build a special CODENAME (squeeze, wheezy, lucid, ...) do skip
 				# the wrong distribution here...
 				test -z "${CODENAMES}" || grep "${CODENAMES}" <<< "${line}" || break
 
 				TEMP_DIR="$(mktemp -d --tmpdir=${TEMP_BASE})"
 				temp_cleanup+=("${TEMP_DIR}")
+
 				mkdir -p -- "${TEMP_DIR}/${PROJECT}"
 				chmod 2770 -Rf -- "${TEMP_DIR}"
 
@@ -236,7 +218,7 @@ build_packages() {
 				git clone "${PROJECT_DIR}" "${TEMP_DIR}/${PROJECT}/"
 				cd "${TEMP_DIR}/${PROJECT}"
 				git checkout "${CHECKOUT}" || git checkout master
-				find "${PROJECT_DIR}/../" -type f -maxdepth 0 -mindepth 0 | grep -qs "${PROJECT}_"*.orig.tar.gz && cp -- "${PROJECT_DIR}/../${PROJECT}_"*.orig.tar.gz ..
+				find "${PROJECT_DIR}/../" -maxdepth 0 -mindepth 0 -type f | grep -qs "${PROJECT}_"*.orig.tar.gz && cp -- "${PROJECT_DIR}/../${PROJECT}_"*.orig.tar.gz ..
 				GITREV="$(gitrevno)"
 
 				# we always build native packages for our repos
@@ -246,7 +228,7 @@ build_packages() {
 					UPSTREAM_VERSION="$(dpkg-parsechangelog | grep "Version:" | cut -d " " -f2 | sed -e 's/-.*//' -e 's/^.*://')"
 					REVISION="$(dpkg-parsechangelog | grep "Version:" | cut -d " " -f2 | sed -e 's/.*-//')"
 					git archive --prefix="${PROJECT}-${UPSTREAM_VERSION}/" -o "../${PROJECT}_${UPSTREAM_VERSION}.orig.tar.gz" "upstream/${UPSTREAM_VERSION}" && {
-						SA_OPTION="--debbuildopts=-sa"
+						SA_OPTION="--debbuildopts=\"-sa\""
 					} || echo "1.0" > "debian/source/format"
 				}
 
@@ -274,44 +256,37 @@ build_packages() {
 				mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/"{amd64,i386}
 				OTHERMIRROR=""
 				if [ "x${COMPONENT}" = "x${COMPONENT_NIGHTLY}" ]; then
-					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} ${COMPONENT_MAIN} ${COMPONENT}"
+					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="--extra-repository=\"deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} ${COMPONENT_MAIN} ${COMPONENT}\""
 				else
-					grep "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} ${COMPONENT}"
+					grep "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="--extra-repository=\"deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} ${COMPONENT}\""
 				fi
 				# create git changelog immediately prior to building the package
-				git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog.gitlog
+				git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog
 
-				[ "x${USE_SUDO}" != "xyes" ] && {
-					[ "x${EXTRA_ARCHS_ONLY}" = "x" ] && {
-						[ "x${SKIP_ARCH}" != "xamd64" ] && grep -Eqs 'Architecture.*(all|any|amd64)' "debian/control" && {
-							DIST="${l_DIST}" CODENAME="${l_CODENAME}" ARCH="amd64" nice ${PDEBUILD} --auto-debsign --debsign-k "${GPG_KEY}" --buildresult "${PKGDIST}/${l_DIST}/${l_CODENAME}/amd64" -- --allow-untrusted ${SA_OPTION} 0<&-
-						}
-						[ "x${SKIP_ARCH}" != "xi386" ] && grep -Eqs 'Architecture.*(any|i386)' "debian/control" && {
-							DIST="${l_DIST}" CODENAME="${l_CODENAME}" ARCH="i386" nice ${PDEBUILD} --auto-debsign --debsign-k "${GPG_KEY}" --buildresult "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386" -- --binary-arch --allow-untrusted ${SA_OPTION} 0<&-
-						}
-					}
-					for extra_arch in ${EXTRA_ARCHS}; do
-						mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${extra_arch}"
-						grep -Eqs "Architecture.*(any|$extra_arch)" "debian/control" && {
-							DIST="${l_DIST}" CODENAME="${l_CODENAME}" ARCH="${extra_arch}" ${PDEBUILD} --auto-debsign --debsign-k "${GPG_KEY}" --buildresult "${PKGDIST}/${l_DIST}/${l_CODENAME}/${extra_arch}" -- --binary-arch --allow-untrusted ${SA_OPTION} 0<&-
-						}
+				# build the source package
+				dpkg-buildpackage -uc -us -S
+				cd ..
+				DSCFILE="$(pwd)/$(ls -1 "${PROJECT}_"*.dsc | head -n1)"
+
+				[ "x${SKIP_ARCH}" != "xamd64" ] && grep -Eqs 'Architecture.*(all|any|amd64)' "${TEMP_DIR}/${PROJECT}/debian/control" && {
+					cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/amd64"
+					tac ${DSCFILE} | while read line; do
+						if echo $line | grep -E "^Files:" 1>/dev/null; then break; fi
+						# each line contains a file that is part of the src:package
+						filename="$(echo $line | cut -d" " -f3-)"
+						cp "${TEMP_DIR}/${filename}" .
 					done
+					nice ${SBUILD} -j2 -sAd "${VERSION}" -k "${GPG_KEY}" -c "arctica-${l_CODENAME}" ${SA_OPTION} "${DSCFILE}"
 				}
-				[ "x${USE_SUDO}" = "xyes" ] && {
-					[ "x${EXTRA_ARCHS_ONLY}" = "x" ] && {
-						[ "x${SKIP_ARCH}" != "xamd64" ] && grep -Eqs 'Architecture.*(all|any|amd64)' "debian/control" && {
-							nice sudo GNUPGHOME="${GNUPGHOME}" DIST="${l_DIST}" CODENAME="${l_CODENAME}" ARCH="amd64" OTHERMIRROR="${OTHERMIRROR}" ${PDEBUILD} --auto-debsign --debsign-k "${GPG_KEY}" --buildresult "${PKGDIST}/${l_DIST}/${l_CODENAME}/amd64" -- --allow-untrusted ${SA_OPTION} 0<&-
-						}
-						[ "x${SKIP_ARCH}" != "xi386" ] && grep -Eqs 'Architecture.*(any|i386)' "debian/control" && {
-							nice sudo GNUPGHOME="${GNUPGHOME}" DIST="${l_DIST}" CODENAME="${l_CODENAME}" ARCH="i386" OTHERMIRROR="${OTHERMIRROR}" ${PDEBUILD} --auto-debsign --debsign-k "${GPG_KEY}" --buildresult "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386" -- --binary-arch --allow-untrusted ${SA_OPTION} 0<&-
-						}
-					}
-					for extra_arch in ${EXTRA_ARCHS}; do
-						mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${extra_arch}"
-						grep -Eqs "Architecture.*(any|$extra_arch)" "debian/control" && {
-							nice sudo GNUPGHOME="${GNUPGHOME}" DIST="${l_DIST}" CODENAME="${l_CODENAME}" ARCH="${extra_arch}" OTHERMIRROR="${OTHERMIRROR}" ${PDEBUILD} --auto-debsign --debsign-k "${GPG_KEY}" --buildresult "${PKGDIST}/${l_DIST}/${l_CODENAME}/${extra_arch}" -- --binary-arch --allow-untrusted ${SA_OPTION} 0<&-
-						}
+				[ "x${SKIP_ARCH}" != "xi386" ] && grep -Eqs 'Architecture.*(any|i386)' "${TEMP_DIR}/${PROJECT}/debian/control" && {
+					cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386"
+					tac ${DSCFILE} | while read line; do
+						if echo $line | grep -E "^Files:" 1>/dev/null; then break; fi
+						# each line contains a file that is part of the src:package
+						filename="$(echo $line | cut -d" " -f3-)"
+						cp "${TEMP_DIR}/${filename}" .
 					done
+					nice ${SBUILD} -j2 -sAd "${VERSION}" -k "${GPG_KEY}" -c "arctica-${l_CODENAME}-i386" --arch=i386 --debbuildopts="-B" "${DSCFILE}"
 				}
 			done
 		}
@@ -340,49 +315,16 @@ upload_packages() {
 			# the wrong distribution here...
 			test -z "${CODENAMES}" || grep "${CODENAMES}" <<< "${line}" || break
 
-			if [ "x${EXTRA_ARCHS_ONLY}" = "x" ]; then
-				for l_ARCH in amd64 i386; do
-					[ "x${SKIP_ARCH}" != "x${l_ARCH}" ] && {
-						cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}"
-						test -f "./dupload.conf" || ln -s -- "${HOME}/.dupload.conf.${PREFIX}" "./dupload.conf"
-						ls -- "${PROJECT}_"*.changes >/dev/null 2>&1 && dupload -c --to "${PREFIX}-${l_DIST}-${l_CODENAME}" "${PROJECT}_"*.changes 0<&-
-					}
-				done
-			fi
-			for l_EXTRA_ARCH in ${EXTRA_ARCHS}; do
-				cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_EXTRA_ARCH}"
-				test -f "./dupload.conf" || ln -s -- "${HOME}/.dupload.conf.${PREFIX}" "./dupload.conf"
-				ls -- "${PROJECT}_"*.changes >/dev/null 2>&1 && dupload -c --to "${PREFIX}-${l_DIST}-${l_CODENAME}" "${PROJECT}_"*.changes 0<&-
+			for l_ARCH in amd64 i386; do
+				[ "x${SKIP_ARCH}" != "x${l_ARCH}" ] && {
+					cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}"
+					test -f "./dupload.conf" || ln -s -- "${HOME}/.dupload.conf.${PREFIX}" "./dupload.conf" && true
+					ls -- "${PROJECT}_"*.changes >/dev/null 2>&1 && dupload --to "${PREFIX}-${l_DIST}-${COMPONENT}" "${PROJECT}_"*.changes 0<&-
+				}
 			done
 		done
 	done
 	return 0
-}
-
-wait_for_lock() {
-	while [ -f "${LOCK_FILE}" ]; do
-		pid="$(head -n1 "${LOCK_FILE}")"
-		if ! ps "${pid}" 1>/dev/null; then
-			rm -f -- "${LOCK_FILE}"
-		else
-			echo "PROJECT directory is locked, sleeping for 10 seconds..."
-			sleep 10
-		fi
-	done
-}
-
-lock_workspace() {
-	wait_for_lock
-
-	echo "${$}" > "${LOCK_FILE}"
-}
-
-unlock_workspace() {
-	rm -f -- "${LOCK_FILE}"
-}
-
-delay_build() {
-	sleep $[ ( $RANDOM % 30 )  + 1 ]s
 }
 
 ### MAIN ###
@@ -390,16 +332,8 @@ set_vars "$@" && {
 	if [ "x$(basename "${0}")" = "x${PREFIX}-build-deb-package" ] || [ "x$(basename "${0}")" = "x${PREFIX}-build+upload-deb-package" ]; then
 									# Treat any value other than "no" and "0" as true.
 		cd "${PROJECT_DIR}" && pkgneedsbuild "${CHECKOUT}" || ( [ "x${FORCE_BUILD}" != "xno" ] && [ "x${FORCE_BUILD}" != "x0" ] ) && {
-			if [ "x${FORCE_BUILD}" != "xno" ] && [ "x${FORCE_BUILD}" != "x0" ] && ( [ "x${NO_DELAY}" = "xno" ] || [ "x${NO_DELAY}" = "x0" ] ); then
-				delay_build
-			fi
-			lock_workspace
-			prepare_workspace && {
-				unlock_workspace
-				clear_pkgdist
-				build_packages
-			}
-			unlock_workspace
+			clear_pkgdist
+			build_packages
 		}
 	fi
 	if [ "x$(basename "${0}")" = "x${PREFIX}-upload-deb-package" ] || [ "x$(basename "${0}")" = "x${PREFIX}-build+upload-deb-package" ]; then

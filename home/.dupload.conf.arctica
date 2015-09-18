@@ -1,13 +1,44 @@
 package config;
 
-### Arctica packages for Debian
-$cfg{"arctica-debian-production"} = {
+### released Arctica packages for Debian
+$cfg{"arctica-debian-main"} = {
         fqdn => "packages.arctica-project.org",
-        login => "repos-admin",
+        login => "arctica-admin",
         method => "scpb",
-        incoming => "/srv/sites/arctica-project.org/packages/debian/incoming/production",
-        queuedir => "/srv/sites/arctica-project.org/packages/debian/upload/production",
+        incoming => "/srv/sites/arctica-project.org/packages/debian/incoming/",
+        queuedir => "/srv/sites/arctica-project.org/packages/debian/upload/",
         dinstall_runs => 1,
 };
+
+### nightly-built Arctica packages for Debian
+$cfg{"arctica-debian-nightly"} = {
+        fqdn => "packages.arctica-project.org",
+        login => "arctica-admin",
+        method => "scpb",
+        incoming => "/srv/sites/arctica-project.org/packages/debian-nightly/incoming/",
+        queuedir => "/srv/sites/arctica-project.org/packages/debian-nightly/upload/",
+        dinstall_runs => 1,
+};
+
+### released Arctica packages for Ubuntu
+$cfg{"arctica-ubuntu-main"} = {
+        fqdn => "packages.arctica-project.org",
+        login => "arctica-admin",
+        method => "scpb",
+        incoming => "/srv/sites/arctica-project.org/packages/ubuntu/incoming/",
+        queuedir => "/srv/sites/arctica-project.org/packages/ubuntu/upload/",
+        dinstall_runs => 1,
+};
+
+### nightly-built Arctica packages for Ubuntu
+$cfg{"arctica-ubuntu-nightly"} = {
+        fqdn => "packages.arctica-project.org",
+        login => "arctica-admin",
+        method => "scpb",
+        incoming => "/srv/sites/arctica-project.org/packages/ubuntu-nightly/incoming/",
+        queuedir => "/srv/sites/arctica-project.org/packages/ubuntu-nightly/upload/",
+        dinstall_runs => 1,
+};
+
 
 1;
