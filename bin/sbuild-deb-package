@@ -256,7 +256,7 @@ build_packages() {
 				mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/"{amd64,i386}
 				OTHERMIRROR=""
 				if [ "x${COMPONENT}" = "x${COMPONENT_NIGHTLY}" ]; then
-					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="--extra-repository=\"deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} ${COMPONENT_MAIN} ${COMPONENT}\""
+					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="--extra-repository=\"deb http://${REPOS_SERVER}/${l_DIST}-nightly ${l_CODENAME} ${COMPONENT_MAIN} ${COMPONENT}\""
 				else
 					grep "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="--extra-repository=\"deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} ${COMPONENT}\""
 				fi
@@ -276,7 +276,7 @@ build_packages() {
 						filename="$(echo $line | cut -d" " -f3-)"
 						cp "${TEMP_DIR}/${filename}" .
 					done
-					nice ${SBUILD} -j2 -sAd "${VERSION}" -k "${GPG_KEY}" -c "arctica-${l_CODENAME}" ${SA_OPTION} "${DSCFILE}"
+					nice ${SBUILD} -j2 -sAd "${VERSION}" -k "${GPG_KEY}" -c "arctica-${l_CODENAME}" ${OTHERMIRROR} ${SA_OPTION} "${DSCFILE}"
 				}
 				[ "x${SKIP_ARCH}" != "xi386" ] && grep -Eqs 'Architecture.*(any|i386)' "${TEMP_DIR}/${PROJECT}/debian/control" && {
 					cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386"
@@ -286,7 +286,7 @@ build_packages() {
 						filename="$(echo $line | cut -d" " -f3-)"
 						cp "${TEMP_DIR}/${filename}" .
 					done
-					nice ${SBUILD} -j2 -sAd "${VERSION}" -k "${GPG_KEY}" -c "arctica-${l_CODENAME}-i386" --arch=i386 --debbuildopts="-B" "${DSCFILE}"
+					nice ${SBUILD} -j2 -sAd "${VERSION}" -k "${GPG_KEY}" -c "arctica-${l_CODENAME}-i386" ${OTHERMIRROR} --arch=i386 --debbuildopts="-B" "${DSCFILE}"
 				}
 			done
 		}
