@@ -3,7 +3,7 @@ package config;
 ### released Arctica packages for Debian
 $cfg{"arctica-debian-main"} = {
         fqdn => "packages.arctica-project.org",
-        login => "arctica-admin",
+        login => "arctica-uploader",
         method => "scpb",
         incoming => "/srv/sites/arctica-project.org/packages/debian/incoming/",
         queuedir => "/srv/sites/arctica-project.org/packages/debian/upload/",
@@ -13,7 +13,7 @@ $cfg{"arctica-debian-main"} = {
 ### nightly-built Arctica packages for Debian
 $cfg{"arctica-debian-nightly"} = {
         fqdn => "packages.arctica-project.org",
-        login => "arctica-admin",
+        login => "arctica-uploader",
         method => "scpb",
         incoming => "/srv/sites/arctica-project.org/packages/debian-nightly/incoming/",
         queuedir => "/srv/sites/arctica-project.org/packages/debian-nightly/upload/",
@@ -23,7 +23,7 @@ $cfg{"arctica-debian-nightly"} = {
 ### released Arctica packages for Ubuntu
 $cfg{"arctica-ubuntu-main"} = {
         fqdn => "packages.arctica-project.org",
-        login => "arctica-admin",
+        login => "arctica-uploader",
         method => "scpb",
         incoming => "/srv/sites/arctica-project.org/packages/ubuntu/incoming/",
         queuedir => "/srv/sites/arctica-project.org/packages/ubuntu/upload/",
@@ -33,7 +33,7 @@ $cfg{"arctica-ubuntu-main"} = {
 ### nightly-built Arctica packages for Ubuntu
 $cfg{"arctica-ubuntu-nightly"} = {
         fqdn => "packages.arctica-project.org",
-        login => "arctica-admin",
+        login => "arctica-uploader",
         method => "scpb",
         incoming => "/srv/sites/arctica-project.org/packages/ubuntu-nightly/incoming/",
         queuedir => "/srv/sites/arctica-project.org/packages/ubuntu-nightly/upload/",
