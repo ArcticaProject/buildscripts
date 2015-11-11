@@ -281,7 +281,7 @@ build_packages() {
 						if echo $line | grep -E "^Files:" 1>/dev/null; then break; fi
 						# each line contains a file that is part of the src:package
 						filename="$(echo $line | cut -d" " -f3-)"
-						cp "${TEMP_DIR}/${filename}" .
+						if [ -n "$filename" ]; then cp "${TEMP_DIR}/${filename}" .; fi
 					done
 					if [ -z "${OTHERMIRROR}" ]; then
 						nice ${SBUILD} ${SBUILD_OPTIONS_64} "${DSCFILE}"
@@ -295,7 +295,7 @@ build_packages() {
 						if echo $line | grep -E "^Files:" 1>/dev/null; then break; fi
 						# each line contains a file that is part of the src:package
 						filename="$(echo $line | cut -d" " -f3-)"
-						cp "${TEMP_DIR}/${filename}" .
+						if [ -n "$filename" ]; then cp "${TEMP_DIR}/${filename}" .; fi
 					done
 					if [ -z "${OTHERMIRROR}" ]; then
 						nice ${SBUILD} ${SBUILD_OPTIONS_32} "${DSCFILE}"
