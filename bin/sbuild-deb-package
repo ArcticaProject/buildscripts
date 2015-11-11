@@ -268,8 +268,9 @@ build_packages() {
 				cd ..
 				DSCFILE="$(pwd)/$(ls -1 "${PROJECT}_"*.dsc | head -n1)"
 
-				SBUILD_OPTIONS_64="-j2 -sAd ${VERSION} -k ${GPG_KEY} -c arctica-${l_CODENAME}"
-				SBUILD_OPTIONS_32="-j2 -sAd ${VERSION} -k ${GPG_KEY} -c arctica-${l_CODENAME}-i386 --arch=i386  --debbuildopts=-B"
+				SBUILD_OPTIONS="-j2 -sAd ${VERSION} -k ${GPG_KEY} --build-dep-resolver=aptitude"
+				SBUILD_OPTIONS_64="${SBUILD_OPTIONS} -c arctica-${l_CODENAME}"
+				SBUILD_OPTIONS_32="${SBUILD_OPTIONS} -c arctica-${l_CODENAME}-i386 --arch=i386  --debbuildopts=-B"
 				if [ -n "${SA_OPTION}" ]; then
 					SBUILD_OPTIONS_64=${SBUILD_OPTIONS}" ${SA_OPTION}"
 				fi
