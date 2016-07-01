@@ -233,13 +233,34 @@ build_packages() {
 				}
 
 				# for Ubuntu version is the codename of the distribution release
-				VERSION="${l_CODENAME}"
+				typeset -l codename="${l_CODENAME}"
 
 				# translate the version name for Debian releases
-				[ "x${l_CODENAME}" = "xsid" ] && VERSION="unstable"
-				#[ "x$l_CODENAME" = "xjessie" ] && VERSION=testing
-				#[ "x$l_CODENAME" = "xwheezy" ] && VERSION=stable
-				#[ "x$l_CODENAME" = "xoldstable" ] && VERSION=oldstable
+				[ "x${l_CODENAME}" = "xsid" ] && codename="unstable"
+				#[ "x$l_CODENAME" = "xjessie" ] && codename=testing
+				#[ "x$l_CODENAME" = "xwheezy" ] && codename=stable
+				#[ "x$l_CODENAME" = "xoldstable" ] && codename=oldstable
+
+				typeset -l numerical_version=""
+				typeset -l -i tmp_ret="1"
+				typeset -l pretty_dist=""
+
+				if [ -n "${l_DIST}" ] && [ "${l_DIST}" = "debian" ]; then
+					pretty_dist="Debian"
+					numerical_version="$("${script_path}/debian-codename-to-version.sh" "${codename}")"
+					tmp_ret="${?}"
+				fi
+
+				if [ -n "${l_DIST}" ] && [ "${l_DIST}" = "ubuntu" ]; then
+					pretty_dist="Ubuntu"
+					numerical_version="$("${script_path}/ubuntu-codename-to-version.sh" "${codename}")"
+					tmp_ret="${?}"
+				fi
+
+				if [ "${tmp_ret}" -ne "0" ]; then
+					echo "Error: unable to map code name \"${codename}\" to Debian or Ubuntu numerical versions. Unknown code name or not applicable to distribution \"${dist_pretty}\"? Aborting." >&2
+					exit 1
+				fi
 
 				# modify the section for non-main package builds
 				[ "x${COMPONENT}" != "xmain" ] && {
@@ -249,9 +270,9 @@ build_packages() {
 
 				# modify changelog for this build
 				if [ "${COMPONENT}" != "${COMPONENT_NIGHTLY}" ]; then
-					dch --distribution "${VERSION}" --force-distribution -l "+git${DATE}.${GITREV}+${l_CODENAME}.${COMPONENT}." "Auto-built ${l_DIST} ${l_CODENAME} package for ${REPOS_SERVER} repository (Git commit: ${GIT_OBJECT_ID})."
+					dch --distribution "${codename}" --force-distribution -l "+git${DATE}.${GITREV}+${numerical_version}.${COMPONENT}." "Auto-built ${pretty_dist} ${l_CODENAME} package for ${REPOS_SERVER} repository (Git commit: ${GIT_OBJECT_ID})."
 				else
-					dch --distribution "${VERSION}" --force-distribution -l "~git${DATE}.${GITREV}+${l_CODENAME}.${COMPONENT}." "Development-Snapshot!!! Auto-built ${l_DIST} ${l_CODENAME} package for ${REPOS_SERVER} repository (Git commit: ${GIT_OBJECT_ID})."
+					dch --distribution "${codename}" --force-distribution -l "~git${DATE}.${GITREV}+${numerical_version}.${COMPONENT}." "Development-Snapshot!!! Auto-built ${pretty_dist} ${l_CODENAME} package for ${REPOS_SERVER} repository (Git commit: ${GIT_OBJECT_ID})."
 				fi
 				mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/"{amd64,i386}
 				OTHERMIRROR=""
@@ -268,7 +289,7 @@ build_packages() {
 				cd ..
 				DSCFILE="$(pwd)/$(ls -1 "${PROJECT}_"*.dsc | head -n1)"
 
-				SBUILD_OPTIONS="-n -j2 -sAd ${VERSION} -k ${GPG_KEY} --build-dep-resolver=aptitude"
+				SBUILD_OPTIONS="-n -j2 -sAd ${codename} -k ${GPG_KEY} --build-dep-resolver=aptitude"
 				SBUILD_OPTIONS_64="${SBUILD_OPTIONS} -c arctica-${l_CODENAME}"
 				SBUILD_OPTIONS_32="${SBUILD_OPTIONS} -c arctica-${l_CODENAME}-i386 --arch=i386  --debbuildopts=-B"
 				if [ -n "${SA_OPTION}" ]; then
