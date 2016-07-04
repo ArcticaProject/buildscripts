@@ -29,10 +29,18 @@ unset CDPATH
 # The return code is either 0, iff mapping was successful,
 # or 1 if the code name is unknown and mapping failed.
 
-typeset -l codename
+# Where supported (BASH 4 and higher), automatically
+# lower-case the codename argument.
+if [ -n "${BASH_VERSINFO[0]}" ] && [ "${BASH_VERSINFO[0]}" -gt 3 ]; then
+	typeset -l codename
+fi
 codename="${1:?"No code name provided."}"
 
-typeset -l -i ret="0"
+if [ -z "${BASH_VERSINFO[0]}" ] || [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
+	codename="$(tr '[:upper:]' '[:lower:]' <<< "${codename}")"
+fi
+
+typeset -i ret="0"
 
 case "${codename}" in
 	# The first version number is actually "fake",
@@ -79,4 +87,4 @@ case "${codename}" in
 	(*) ret="1";;
 esac
 
-return "${ret}"
+exit "${ret}"
