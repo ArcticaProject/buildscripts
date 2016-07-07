@@ -233,13 +233,38 @@ build_packages() {
 				}
 
 				# for Ubuntu version is the codename of the distribution release
-				VERSION="${l_CODENAME}"
+				if [ -n "${BASH_VERSINFO[0]}" ] && [ "${BASH_VERSINFO[0]}" -gt 3 ]; then
+					typeset -l codename="${l_CODENAME}"
+				else
+					typeset codename="$(tr '[:upper:]' '[:lower:]' <<< "${l_CODENAME}")"
+				fi
 
 				# translate the version name for Debian releases
-				[ "x${l_CODENAME}" = "xsid" ] && VERSION="unstable"
-				#[ "x$l_CODENAME" = "xjessie" ] && VERSION=testing
-				#[ "x$l_CODENAME" = "xwheezy" ] && VERSION=stable
-				#[ "x$l_CODENAME" = "xoldstable" ] && VERSION=oldstable
+				[ "x${l_CODENAME}" = "xsid" ] && codename="unstable"
+				#[ "x$l_CODENAME" = "xjessie" ] && codename=testing
+				#[ "x$l_CODENAME" = "xwheezy" ] && codename=stable
+				#[ "x$l_CODENAME" = "xoldstable" ] && codename=oldstable
+
+				typeset numerical_version=""
+				typeset -i tmp_ret="1"
+				typeset pretty_dist=""
+
+				if [ -n "${l_DIST}" ] && [ "${l_DIST}" = "debian" ]; then
+					pretty_dist="Debian"
+					numerical_version="$("${script_path}/debian-codename-to-version.sh" "${codename}")"
+					tmp_ret="${?}"
+				fi
+
+				if [ -n "${l_DIST}" ] && [ "${l_DIST}" = "ubuntu" ]; then
+					pretty_dist="Ubuntu"
+					numerical_version="$("${script_path}/ubuntu-codename-to-version.sh" "${codename}")"
+					tmp_ret="${?}"
+				fi
+
+				if [ "${tmp_ret}" -ne "0" ] || [ -z "${numerical_version}" ]; then
+					echo "Error: unable to map code name \"${codename}\" to Debian or Ubuntu numerical versions. Unknown code name or not applicable to distribution \"${dist_pretty}\"? Aborting." >&2
+					exit 1
+				fi
 
 				# modify the section for non-main package builds
 				[ "x${COMPONENT}" != "xmain" ] && {
@@ -249,24 +274,31 @@ build_packages() {
 
 				# modify changelog for this build
 				if [ "${COMPONENT}" != "${COMPONENT_NIGHTLY}" ]; then
-					dch --distribution "${VERSION}" --force-distribution -l "+git${DATE}.${GITREV}+${l_CODENAME}.${COMPONENT}." "Auto-built ${l_DIST} ${l_CODENAME} package for ${REPOS_SERVER} repository (Git commit: ${GIT_OBJECT_ID})."
+					dch --distribution "${codename}" --force-distribution -l "+git${DATE}.${GITREV}+${numerical_version}.${COMPONENT}." "Auto-built ${pretty_dist} ${l_CODENAME} package for ${REPOS_SERVER} repository (Git commit: ${GIT_OBJECT_ID})."
 				else
-					dch --distribution "${VERSION}" --force-distribution -l "~git${DATE}.${GITREV}+${l_CODENAME}.${COMPONENT}." "Development-Snapshot!!! Auto-built ${l_DIST} ${l_CODENAME} package for ${REPOS_SERVER} repository (Git commit: ${GIT_OBJECT_ID})."
+					dch --distribution "${codename}" --force-distribution -l "~git${DATE}.${GITREV}+${numerical_version}.${COMPONENT}." "Development-Snapshot!!! Auto-built ${pretty_dist} ${l_CODENAME} package for ${REPOS_SERVER} repository (Git commit: ${GIT_OBJECT_ID})."
 				fi
 				mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/"{amd64,i386}
 				OTHERMIRROR=""
 				if [ "x${COMPONENT}" = "x${COMPONENT_NIGHTLY}" ]; then
-					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="--extra-repository=\"deb http://${REPOS_SERVER}/${l_DIST}-nightly ${l_CODENAME} ${COMPONENT_MAIN} ${COMPONENT}\""
+					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST}-nightly ${l_CODENAME} ${COMPONENT_MAIN}"
 				else
-					grep "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="--extra-repository=\"deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} ${COMPONENT}\""
+					grep "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} ${COMPONENT}"
 				fi
 				# create git changelog immediately prior to building the package
 				git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog
 
 				# build the source package
-				dpkg-buildpackage -uc -us -S
+				dpkg-buildpackage -uc -us -S -d
 				cd ..
 				DSCFILE="$(pwd)/$(ls -1 "${PROJECT}_"*.dsc | head -n1)"
+
+				SBUILD_OPTIONS="-n -j2 -sAd ${codename} -k ${GPG_KEY} --build-dep-resolver=aptitude"
+				SBUILD_OPTIONS_64="${SBUILD_OPTIONS} -c arctica-${l_CODENAME}"
+				SBUILD_OPTIONS_32="${SBUILD_OPTIONS} -c arctica-${l_CODENAME}-i386 --arch=i386  --debbuildopts=-B"
+				if [ -n "${SA_OPTION}" ]; then
+					SBUILD_OPTIONS_64=${SBUILD_OPTIONS}" ${SA_OPTION}"
+				fi
 
 				[ "x${SKIP_ARCH}" != "xamd64" ] && grep -Eqs 'Architecture.*(all|any|amd64)' "${TEMP_DIR}/${PROJECT}/debian/control" && {
 					cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/amd64"
@@ -274,9 +306,13 @@ build_packages() {
 						if echo $line | grep -E "^Files:" 1>/dev/null; then break; fi
 						# each line contains a file that is part of the src:package
 						filename="$(echo $line | cut -d" " -f3-)"
-						cp "${TEMP_DIR}/${filename}" .
+						if [ -n "$filename" ]; then cp "${TEMP_DIR}/${filename}" .; fi
 					done
-					nice ${SBUILD} -j2 -sAd "${VERSION}" -k "${GPG_KEY}" -c "arctica-${l_CODENAME}" ${OTHERMIRROR} ${SA_OPTION} "${DSCFILE}"
+					if [ -z "${OTHERMIRROR}" ]; then
+						nice ${SBUILD} ${SBUILD_OPTIONS_64} "${DSCFILE}"
+					else
+						nice ${SBUILD} ${SBUILD_OPTIONS_64} --extra-repository="${OTHERMIRROR}" "${DSCFILE}"
+					fi
 				}
 				[ "x${SKIP_ARCH}" != "xi386" ] && grep -Eqs 'Architecture.*(any|i386)' "${TEMP_DIR}/${PROJECT}/debian/control" && {
 					cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386"
@@ -284,9 +320,13 @@ build_packages() {
 						if echo $line | grep -E "^Files:" 1>/dev/null; then break; fi
 						# each line contains a file that is part of the src:package
 						filename="$(echo $line | cut -d" " -f3-)"
-						cp "${TEMP_DIR}/${filename}" .
+						if [ -n "$filename" ]; then cp "${TEMP_DIR}/${filename}" .; fi
 					done
-					nice ${SBUILD} -j2 -sAd "${VERSION}" -k "${GPG_KEY}" -c "arctica-${l_CODENAME}-i386" ${OTHERMIRROR} --arch=i386 --debbuildopts="-B" "${DSCFILE}"
+					if [ -z "${OTHERMIRROR}" ]; then
+						nice ${SBUILD} ${SBUILD_OPTIONS_32} "${DSCFILE}"
+					else
+						nice ${SBUILD} ${SBUILD_OPTIONS_32} --extra-repository="${OTHERMIRROR}" "${DSCFILE}"
+					fi
 				}
 			done
 		}
