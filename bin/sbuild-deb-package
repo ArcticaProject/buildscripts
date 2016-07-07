@@ -251,13 +251,13 @@ build_packages() {
 
 				if [ -n "${l_DIST}" ] && [ "${l_DIST}" = "debian" ]; then
 					pretty_dist="Debian"
-					numerical_version="$("${script_path}/debian-codename-to-version.sh" "${codename}")"
+					numerical_version="$("debian-codename-to-version.sh" "${codename}")"
 					tmp_ret="${?}"
 				fi
 
 				if [ -n "${l_DIST}" ] && [ "${l_DIST}" = "ubuntu" ]; then
 					pretty_dist="Ubuntu"
-					numerical_version="$("${script_path}/ubuntu-codename-to-version.sh" "${codename}")"
+					numerical_version="$("ubuntu-codename-to-version.sh" "${codename}")"
 					tmp_ret="${?}"
 				fi
 
