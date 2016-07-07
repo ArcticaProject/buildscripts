@@ -43,32 +43,13 @@ fi
 typeset -i ret="0"
 
 case "${codename}" in
-	# The first version number is actually "fake",
-	# but given it's a rolling release,
-	# we can't really do better here.
-	("sid"|"unstable") echo "9999";;
+	# sid | unstable's version number must be
+	# a bit higher than the current testing version
+	# (which is known early in advance to the next
+	# upcoming release).
+	("sid"|"unstable") echo "9.01";;
 
-	# FIXME: add "testing" - but how? It's not really
-	# a stable release on its own, but a rolling
-	# release (see sid/unstable above). Yet, it differs
-	# from sid/unstable by not having one unique
-	# code name, but a floating one of the next
-	# stable release. We know the new release number
-	# beforehand, but mapping "testing" to the
-	# upcoming version number means that "testing"s
-	# version number itself would be floating, creating
-	# problems after each new release and requiring an
-	# update. On the other hand, giving "testing" a
-	# fixed version number such as "999" (smaller than
-	# "unstable"s, yet bigger than anything we encountered
-	# so far) would create an inconsistency:
-	# The "testing" code name would have a different
-	# version number than the code-name-to-be-released-
-	# next.
-	# For now and due to the aforementioned problems,
-	# I decided to not handle the "testing" code name
-	# at all.
-	("stretch") echo "9";;
+	("stretch"|"testing") echo "9";;
 
 	("jessie") echo "8";;
 	("wheezy") echo "7";;
