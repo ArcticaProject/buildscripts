@@ -290,8 +290,9 @@ build_packages() {
 
 				# build the source package
 				dpkg-buildpackage -uc -us -S -d
+				DEBSRCPKG="$(dpkg-parsechangelog -S Source)"
 				cd ..
-				DSCFILE="$(pwd)/$(ls -1 "${PROJECT}_"*.dsc | head -n1)"
+				DSCFILE="$(pwd)/$(ls -1 "${DEBSRCPKG}_"*.dsc | head -n1)"
 
 				SBUILD_OPTIONS="-n -j2 -sAd ${codename} -k ${GPG_KEY} --build-dep-resolver=aptitude"
 				SBUILD_OPTIONS_64="${SBUILD_OPTIONS} -c arctica-${l_CODENAME}"
