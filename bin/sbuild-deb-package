@@ -175,11 +175,11 @@ clear_pkgdist() {
 					[ "x${SKIP_ARCH}" != "x${l_ARCH}" ] && {
 						mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}"
 						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/dupload.conf"
-						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${DEBSRCPKG}_"*.changes
-						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${DEBSRCPKG}_"*.upload
-						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${DEBSRCPKG}_"*.build
-						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${DEBSRCPKG}_"*.dsc
-						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/${DEBSRCPKG}_"*.tar.gz
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/"*_*.changes
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/"*_*.upload
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/"*_*.build
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/"*_*.dsc
+						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/"*_*.tar.gz
 						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/"*.deb
 					}
 				done
