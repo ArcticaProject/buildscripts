@@ -287,9 +287,9 @@ build_packages() {
 				mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/"{amd64,i386}
 				OTHERMIRROR=""
 				if [ "x${COMPONENT}" = "x${COMPONENT_NIGHTLY}" ]; then
-					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST}-nightly ${l_CODENAME} ${COMPONENT_RELEASE}"
+					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST}-nightly ${l_CODENAME} main"
 				else
-					grep "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} ${COMPONENT}"
+					grep "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} main"
 				fi
 				# create git changelog immediately prior to building the package
 				git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog
