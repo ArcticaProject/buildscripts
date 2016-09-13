@@ -29,7 +29,7 @@ DEB_DISTS_SUPPORTED="debian ubuntu"
 DEBIAN_DISTROS="lenny,squeeze,wheezy,jessie,stretch,sid"
 UBUNTU_DISTROS="lucid,precise,trusty,xenial,yakkety"
 
-COMPONENT_MAIN="main"
+COMPONENT_RELEASE="release"
 COMPONENT_NIGHTLY="nightly"
 COMPONENT_BUNDLES="bundle-release1 bundle-release2"
 REPOS_SERVER="packages.mydomain.org"
@@ -38,7 +38,7 @@ GNUPGHOME="${HOME}/.gnupg"
 
 TIMESTAMP=$(date +%s%N)
 
-test -z "${1}" && { echo "usage: $(basename "${0}") [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit 1; }
+test -z "${1}" && { echo "usage: $(basename "${0}") [<subpath>/]<git-project> {release,release/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit 1; }
 
 PREFIX="$(cut -d"-" -f1 <<< "$(basename "${0}")")"
 test -f "${HOME}/.buildscripts/${PREFIX}.conf" && . "${HOME}/.buildscripts/${PREFIX}.conf" || { echo "${0} has no valid context prefix..." >&2; exit 1; }
@@ -85,10 +85,10 @@ set_vars() {
 	CODENAMES="${ARGV2_CODENAME:-${CODENAMES}}"
 	[ -n "${ARGV2_CODENAME}" ] && FORCE_BUILD="yes" || true
 	DATE="${DATE:-$(date +%Y%m%d)}"
-	if [ "x${COMPONENT}" = "x${COMPONENT_MAIN}" ]; then
-		CHECKOUT="${3:-build-main}"
-	elif [ "x${COMPONENT}" = "x${COMPONENT_MAIN}-test" ]; then
-		CHECKOUT="${3:-build-main-test}"
+	if [ "x${COMPONENT}" = "x${COMPONENT_RELEASE}" ]; then
+		CHECKOUT="${3:-release-builds}"
+	elif [ "x${COMPONENT}" = "x${COMPONENT_RELEASE}-test" ]; then
+		CHECKOUT="${3:-release-testbuilds}"
 	elif grep -qs "$COMPONENT" <<< "${COMPONENT_BUNDLES}"; then
 		CHECKOUT="${3:-build-$COMPONENT}"
 	elif [ "x${COMPONENT}" = "x${COMPONENT_NIGHTLY}" ]; then
@@ -272,8 +272,8 @@ build_packages() {
 					exit 1
 				fi
 
-				# modify the section for non-main package builds
-				[ "x${COMPONENT}" != "xmain" ] && {
+				# modify the section for non-release package builds
+				[ "x${COMPONENT}" != "xrelease" ] && {
 					mv -- "debian/control" "debian/control.tmp"
 					sed "s,Section:[\ ]*\(.*\),Section: ${COMPONENT}/\1,g" debian/control.tmp > debian/control
 				}
@@ -287,7 +287,7 @@ build_packages() {
 				mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/"{amd64,i386}
 				OTHERMIRROR=""
 				if [ "x${COMPONENT}" = "x${COMPONENT_NIGHTLY}" ]; then
-					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST}-nightly ${l_CODENAME} ${COMPONENT_MAIN}"
+					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST}-nightly ${l_CODENAME} ${COMPONENT_RELEASE}"
 				else
 					grep "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} ${COMPONENT}"
 				fi

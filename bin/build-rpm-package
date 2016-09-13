@@ -38,7 +38,7 @@ RPM_EXTRA_REPO_MOCK_CONFIG_BASE=""
 RPM_EXTRA_REPO_MOCK_CONFIG_FULL_NAME=""
 
 
-COMPONENT_MAIN="main"
+COMPONENT_RELEASE="release"
 COMPONENT_NIGHTLY="nightly"
 COMPONENT_BUNDLES="bundle-release1 bundle-release2"
 REPOS_SERVER="packages.mydomain.org"
@@ -48,7 +48,7 @@ GNUPGHOME="${HOME}/.gnupg"
 OPENSUSE_DOWNLOAD_URL="http://download.opensuse.org/distribution/#VERSION#/repo/oss/suse/"
 SLE_DOWNLOAD_URL="/srv/mirrors/non-public/sle/#VERSION#/rpms/"
 
-test -z "${1}" && { echo "usage: $(basename "${0}") [<subpath>/]<git-project> {main,main/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit 1; }
+test -z "${1}" && { echo "usage: $(basename "${0}") [<subpath>/]<git-project> {release,release/<codename>,nightly,nightly/<codename>} [<git-checkout>]"; exit 1; }
 
 PREFIX="$(cut -d"-" -f1 <<< "$(basename "${0}")")"
 test -f "${HOME}/.buildscripts/${PREFIX}.conf" && . "${HOME}/.buildscripts/${PREFIX}.conf" || { echo "${0} has no valid context prefix..." >&2; exit 1; }
@@ -147,11 +147,11 @@ set_vars() {
 	CODENAMES="${ARGV2_CODENAME:-${CODENAMES}}"
 	[ -n "${ARGV2_CODENAME}" ] && FORCE_BUILD="yes" || true
 	DATE="${DATE:-$(date +%Y%m%d)}"
-	if [ "x${COMPONENT}" = "x${COMPONENT_MAIN}" ]; then
-		CHECKOUT="${3:-build-main}"
-	elif [ "x${COMPONENT}" = "x${COMPONENT_MAIN}-test" ]; then
-		CHECKOUT="${3:-build-main-test}"
-		COMPONENT="maintest"
+	if [ "x${COMPONENT}" = "x${COMPONENT_RELEASE}" ]; then
+		CHECKOUT="${3:-release-builds}"
+	elif [ "x${COMPONENT}" = "x${COMPONENT_RELEASE}-test" ]; then
+		CHECKOUT="${3:-build-release-test}"
+		COMPONENT="release-testbuilds"
 	elif grep -qs "${COMPONENT}" <<< "${COMPONENT_BUNDLES}"; then
 		CHECKOUT="${3:-build-$COMPONENT}"
 	elif [ "x${COMPONENT}" = "x$COMPONENT_NIGHTLY" ]; then
@@ -306,13 +306,6 @@ create_mock_config () { # MOCK_BASE CUSTOM_REPO COMPONENT TARGET
 			exit 1
 		fi
 	done
-
-	# Rename "main" to "release" and "heuler" to "nightly".
-	if [ "${COMPONENT}" = "main" ]; then
-		COMPONENT="release"
-	elif [ "${COMPONENT}" = "heuler" ]; then
-		COMPONENT="nightly"
-	fi
 
 	# Note: there is no way to check for the component's validity,
 	# as LTS releases have "random" names assigned to them.
