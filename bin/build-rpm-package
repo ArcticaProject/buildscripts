@@ -152,7 +152,7 @@ set_vars() {
 	elif [ "x${COMPONENT}" = "x${COMPONENT_MAIN}-test" ]; then
 		CHECKOUT="${3:-build-main-test}"
 		COMPONENT="maintest"
-	elif grep -qs "${COMPONENT}" <<< "${COMPONENT_RELEASES}"; then
+	elif grep -qs "${COMPONENT}" <<< "${COMPONENT_BUNDLES}"; then
 		CHECKOUT="${3:-build-$COMPONENT}"
 	elif [ "x${COMPONENT}" = "x$COMPONENT_NIGHTLY" ]; then
 		CHECKOUT="${3:-master}"
