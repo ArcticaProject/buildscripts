@@ -515,7 +515,7 @@ prepare_workspace() {
 		git clean -df
 	else
 		cd "$(dirname "${PROJECT_DIR}")"
-		git clone "git://${GIT_HOSTNAME}/${PROJECT_PATH}.git"
+		git clone --no-hardlinks --no-local "git://${GIT_HOSTNAME}/${PROJECT_PATH}.git"
 		cd "${PROJECT}"
 		git checkout --force "${CHECKOUT}" || git checkout --force -b "${CHECKOUT}"
 		git fetch origin upstream:upstream
@@ -603,7 +603,7 @@ build_packages() {
 				chmod -Rf -- 2770 "${TEMP_DIR}"
 
 				cd "$PROJECT_DIR"
-				git clone "${PROJECT_DIR}" "${TEMP_DIR}/${PROJECT}/"
+				git clone --no-hardlinks --no-local "${PROJECT_DIR}" "${TEMP_DIR}/${PROJECT}/"
 				cd "${TEMP_DIR}"
 				GITREV="$(cd "${PROJECT}" && gitrevno && cd - 1>/dev/null)"
 

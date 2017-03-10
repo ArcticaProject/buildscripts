@@ -132,7 +132,7 @@ prepare_workspace() {
 
 	cd ${my_WORKDIR}
 	if [ ! -d ${PROJECT}/.git ]; then
-		git clone "git://${GIT_HOSTNAME}/${PROJECT_PATH}.git"
+		git clone --no-hardlinks --no-local "git://${GIT_HOSTNAME}/${PROJECT_PATH}.git"
 		cd "${PROJECT}"
 		git checkout --force "${CHECKOUT}" || git checkout --force -b "${CHECKOUT}"
 
@@ -221,7 +221,7 @@ build_packages() {
 				chmod 2770 -Rf -- "${TEMP_DIR}"
 
 				cd "${PROJECT_DIR}"
-				git clone "${PROJECT_DIR}" "${TEMP_DIR}/${PROJECT}/"
+				git clone --no-hardlinks --no-local "${PROJECT_DIR}" "${TEMP_DIR}/${PROJECT}/"
 				cd "${TEMP_DIR}/${PROJECT}"
 				git checkout "${CHECKOUT}" || git checkout master
 				find "${PROJECT_DIR}/../" -maxdepth 0 -mindepth 0 -type f | grep -qs "${PROJECT}_"*.orig.tar.gz && cp -- "${PROJECT_DIR}/../${PROJECT}_"*.orig.tar.gz ..
