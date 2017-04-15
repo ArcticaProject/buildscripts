@@ -47,8 +47,8 @@ case "${codename}" in
 	# we can't really do better here.
 	("devel") echo "9999";;
 
+	("zesty") echo "17.04";;
 	("yakkety") echo "16.10";;
-
 	("xenial") echo "16.04";;
 	("wily") echo "15.10";;
 	("vivid") echo "15.04";;
