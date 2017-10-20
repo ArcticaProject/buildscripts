@@ -226,6 +226,11 @@ build_packages() {
 				git clone --no-hardlinks --no-local "${PROJECT_DIR}" "${TEMP_DIR}/${PROJECT}/"
 				cd "${TEMP_DIR}/${PROJECT}"
 				git checkout "${CHECKOUT}" || git checkout master
+				if [ -e .gitmodules ]; then
+					git submodule init
+					git submodule update --force --checkout --recursive
+				fi
+
 				find "${PROJECT_DIR}/../" -maxdepth 0 -mindepth 0 -type f | grep -qs "${PROJECT}_"*.orig.tar.gz && cp -- "${PROJECT_DIR}/../${PROJECT}_"*.orig.tar.gz ..
 				GITREV="$(gitrevno)"
 
