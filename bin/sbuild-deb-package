@@ -34,6 +34,7 @@ COMPONENT_RELEASE="release"
 COMPONENT_NIGHTLY="nightly"
 COMPONENT_BUNDLES="bundle-release1 bundle-release2"
 REPOS_SERVER="packages.mydomain.org"
+REPOS_BASE="/"
 PACKAGES_WITHOUT_OTHERMIRROR="keyring"
 GNUPGHOME="${HOME}/.gnupg"
 
@@ -288,11 +289,11 @@ build_packages() {
 				mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/"{amd64,i386}
 				OTHERMIRROR=""
 				if [ "x${COMPONENT}" = "x${COMPONENT_NIGHTLY}" ]; then
-					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST}-nightly ${l_CODENAME} main"
+					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}${REPOS_BASE}${l_DIST}-nightly ${l_CODENAME} main"
 				elif echo "${COMPONENT_BUNDLES}" | grep -q "${COMPONENT}" 1>/dev/null; then
-					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST}-${COMPONENT} ${l_CODENAME} main"
+					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}${REPOS_BASE}${l_DIST}-${COMPONENT} ${l_CODENAME} main"
 				else
-					grep "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} main"
+					grep "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}${REPOS_BASE}${l_DIST} ${l_CODENAME} main"
 				fi
 				# create git changelog immediately prior to building the package
 				git --no-pager log --since "2 years ago" --format="%ai %aN (%h) %n%n%x09*%w(68,0,10) %s%d%n" > ChangeLog
