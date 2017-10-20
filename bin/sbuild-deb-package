@@ -20,6 +20,7 @@
 export PATH="${HOME}/bin:${PATH}"
 
 GIT_USER="gituser"
+GIT_TRANSPORT="https"
 GIT_HOSTNAME="git.mydomain.org"
 
 DEBEMAIL="firstname.lastname@mydomain.org"
@@ -132,7 +133,7 @@ prepare_workspace() {
 
 	cd ${my_WORKDIR}
 	if [ ! -d ${PROJECT}/.git ]; then
-		git clone --no-hardlinks --no-local "git://${GIT_HOSTNAME}/${PROJECT_PATH}.git"
+		git clone --no-hardlinks --no-local "${GIT_TRANSPORT}://${GIT_HOSTNAME}/${PROJECT_PATH}.git"
 		cd "${PROJECT}"
 		git checkout --force "${CHECKOUT}" || git checkout --force -b "${CHECKOUT}"
 
