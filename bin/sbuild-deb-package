@@ -289,6 +289,8 @@ build_packages() {
 				OTHERMIRROR=""
 				if [ "x${COMPONENT}" = "x${COMPONENT_NIGHTLY}" ]; then
 					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST}-nightly ${l_CODENAME} main"
+				elif echo "${COMPONENT_BUNDLES}" | grep -q "${COMPONENT}" 1>/dev/null; then
+					grep -qs "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST}-${COMPONENT} ${l_CODENAME} main"
 				else
 					grep "${PROJECT}" <<< "${PACKAGE_WITHOUT_OTHERMIRROR}" || OTHERMIRROR="deb http://${REPOS_SERVER}/${l_DIST} ${l_CODENAME} main"
 				fi
