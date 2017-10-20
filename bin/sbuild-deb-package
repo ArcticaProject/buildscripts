@@ -309,6 +309,13 @@ build_packages() {
 				DSCFILE="$(pwd)/$(ls -1 "${DEBSRCPKG}_"*.dsc | head -n1)"
 
 				SBUILD_OPTIONS="-n -j2 -sAd ${codename} -k ${GPG_KEY} --build-dep-resolver=aptitude"
+
+				curl http://${REPOS_SERVER}${REPOS_BASE}/archive.key 2>/dev/null 1> ${TEMP_DIR}/extra-archive.key
+				if head -n1 ${TEMP_DIR}/extra-archive.key | grep -q -E '\-----BEGIN PGP PUBLIC KEY BLOCK-----' &&
+				   tail -n1 ${TEMP_DIR}/extra-archive.key | grep -q -E '\-----END PGP PUBLIC KEY BLOCK-----'; then
+					SBUILD_OPTIONS="${SBUILD_OPTIONS} --extra-repository-key=${TEMP_DIR}/extra-archive.key"
+				fi
+
 				SBUILD_OPTIONS_64="${SBUILD_OPTIONS} -c ${PREFIX}-${l_CODENAME}"
 				SBUILD_OPTIONS_32="${SBUILD_OPTIONS} -c ${PREFIX}-${l_CODENAME}-i386 --arch=i386  --debbuildopts=-B"
 				if [ -n "${SA_OPTION}" ]; then
