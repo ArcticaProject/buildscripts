@@ -136,6 +136,7 @@ prepare_workspace() {
 	if [ ! -d ${PROJECT}/.git ]; then
 		git clone --no-hardlinks --no-local "${GIT_TRANSPORT}://${GIT_HOSTNAME}/${PROJECT_PATH}.git"
 		cd "${PROJECT}"
+		git fetch origin "${CHECKOUT}" || true
 		git checkout --force "${CHECKOUT}" || git checkout --force -b "${CHECKOUT}"
 
 		GIT_OBJECT_ID="$(git rev-parse --verify HEAD)"
