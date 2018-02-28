@@ -290,7 +290,7 @@ build_packages() {
 				if [ "${COMPONENT}" != "${COMPONENT_NIGHTLY}" ]; then
 					dch --distribution "${codename}" --force-distribution -l "+git${DATE}.${GITREV}+${numerical_version}.${COMPONENT}." "Auto-built ${pretty_dist} ${l_CODENAME} package for ${REPOS_SERVER} repository (Git commit: ${GIT_OBJECT_ID})."
 				else
-					dch --distribution "${codename}" --force-distribution -l "~git${DATE}.${GITREV}+${numerical_version}.${COMPONENT}." "Development-Snapshot!!! Auto-built ${pretty_dist} ${l_CODENAME} package for ${REPOS_SERVER} repository (Git commit: ${GIT_OBJECT_ID})."
+					dch --distribution "${codename}" --force-distribution -l "+git${DATE}.${GITREV}+${numerical_version}.${COMPONENT}." "Development-Snapshot!!! Auto-built ${pretty_dist} ${l_CODENAME} package for ${REPOS_SERVER} repository (Git commit: ${GIT_OBJECT_ID})."
 				fi
 				mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/"{amd64,i386}
 				OTHERMIRROR=""
