@@ -47,11 +47,12 @@ case "${codename}" in
 	# a bit higher than the current testing version
 	# (which is known early in advance to the next
 	# upcoming release).
-	("sid"|"unstable") echo "10.01";;
+	("sid"|"unstable") echo "11.01";;
 
-	("buster"|"testing") echo "10";;
+	("bullseye"|"testing") echo "11";;
 
-	("stretch"|"stable") echo "9";;
+	("buster"|"stable") echo "10";;
+	("stretch"|"oldstable") echo "9";;
 	("jessie") echo "8";;
 	("wheezy") echo "7";;
 	("squeeze") echo "6";;
