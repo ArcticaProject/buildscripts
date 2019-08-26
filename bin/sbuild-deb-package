@@ -401,5 +401,6 @@ set_vars "$@" && {
 	fi
 	if [ "x$(basename "${0}")" = "x${PREFIX}-upload-deb-package" ] || [ "x$(basename "${0}")" = "x${PREFIX}-build+upload-deb-package" ]; then
 		upload_packages
+		clear_pkgdist
 	fi
 }
