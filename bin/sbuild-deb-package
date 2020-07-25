@@ -28,7 +28,7 @@ DEBFULLNAME="Firstname Lastname"
 GPG_KEY=""
 DEB_DISTS_SUPPORTED="debian ubuntu"
 DEBIAN_DISTROS="jessie,stretch,buster,bullseye,sid"
-UBUNTU_DISTROS="xenial,bionic,disco,eoan"
+UBUNTU_DISTROS="xenial,bionic,focal"
 
 COMPONENT_RELEASE="release"
 COMPONENT_NIGHTLY="nightly"
