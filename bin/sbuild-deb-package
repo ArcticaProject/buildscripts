@@ -29,6 +29,7 @@ GPG_KEY=""
 DEB_DISTS_SUPPORTED="debian ubuntu"
 DEBIAN_DISTROS="jessie,stretch,buster,bullseye,sid"
 UBUNTU_DISTROS="xenial,bionic,focal"
+SKIP_BUILDS="ubuntu:focal/i386"
 
 COMPONENT_RELEASE="release"
 COMPONENT_NIGHTLY="nightly"
@@ -175,6 +176,9 @@ clear_pkgdist() {
 				test -z "${CODENAMES}" || grep "${CODENAMES}" <<< "${line}" || break
 
 				for l_ARCH in amd64 i386; do
+					if echo " ${SKIP_BUILDS} " | grep -q " ${l_DIST}:${l_CODENAME}/${l_ARCH} "; then
+						echo "### Skipping pkgdist dir cleanup (${l_DIST}:${l_CODENAME}/${l_ARCH}) as requested in SKIP_BUILDS env var."
+					fi
 					[ "x${SKIP_ARCH}" != "x${l_ARCH}" ] && {
 						mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}"
 						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/dupload.conf"
@@ -324,32 +328,47 @@ build_packages() {
 				fi
 
 				[ "x${SKIP_ARCH}" != "xamd64" ] && grep -Eqs 'Architecture.*(all|any|amd64)' "${TEMP_DIR}/${PROJECT}/debian/control" && {
-					cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/amd64"
-					tac ${DSCFILE} | while read line; do
-						if echo $line | grep -E "^Files:" 1>/dev/null; then break; fi
-						# each line contains a file that is part of the src:package
-						filename="$(echo $line | cut -d" " -f3-)"
-						if [ -n "$filename" ]; then cp "${TEMP_DIR}/${filename}" .; fi
-					done
-					if [ -z "${OTHERMIRROR}" ]; then
-						nice ${SBUILD} ${SBUILD_OPTIONS_64} "${DSCFILE}"
+
+					# FIXME: this also skips arch:all builds, which is not what we want...
+					# TODO: do an arch:amd64 -B build here and do extra arch:all -A builds, but this has been broken in sbuild
+					#       for ages... (to my humble experience...)
+					if echo " ${SKIP_BUILDS} " | grep -q " ${l_DIST}:${l_CODENAME}/amd64 "; then
+						echo "### Skipping build (${l_DIST}:${l_CODENAME}/amd64) as requested in SKIP_BUILDS env var."
 					else
-						nice ${SBUILD} ${SBUILD_OPTIONS_64} --extra-repository="${OTHERMIRROR}" "${DSCFILE}"
+						cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/amd64"
+						tac ${DSCFILE} | while read line; do
+							if echo $line | grep -E "^Files:" 1>/dev/null; then break; fi
+							# each line contains a file that is part of the src:package
+							filename="$(echo $line | cut -d" " -f3-)"
+							if [ -n "$filename" ]; then cp "${TEMP_DIR}/${filename}" .; fi
+						done
+						if [ -z "${OTHERMIRROR}" ]; then
+							nice ${SBUILD} ${SBUILD_OPTIONS_64} "${DSCFILE}"
+						else
+							nice ${SBUILD} ${SBUILD_OPTIONS_64} --extra-repository="${OTHERMIRROR}" "${DSCFILE}"
+						fi
 					fi
+
 				}
 				[ "x${SKIP_ARCH}" != "xi386" ] && grep -Eqs 'Architecture.*(any|i386)' "${TEMP_DIR}/${PROJECT}/debian/control" && {
-					cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386"
-					tac ${DSCFILE} | while read line; do
-						if echo $line | grep -E "^Files:" 1>/dev/null; then break; fi
-						# each line contains a file that is part of the src:package
-						filename="$(echo $line | cut -d" " -f3-)"
-						if [ -n "$filename" ]; then cp "${TEMP_DIR}/${filename}" .; fi
-					done
-					if [ -z "${OTHERMIRROR}" ]; then
-						nice ${SBUILD} ${SBUILD_OPTIONS_32} "${DSCFILE}"
+
+					if echo " ${SKIP_BUILDS} " | grep -q " ${l_DIST}:${l_CODENAME}/i386 "; then
+						echo "### Skipping build (${l_DIST}:${l_CODENAME}/i386) as requested in SKIP_BUILDS env var."
 					else
-						nice ${SBUILD} ${SBUILD_OPTIONS_32} --extra-repository="${OTHERMIRROR}" "${DSCFILE}"
+						cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/i386"
+						tac ${DSCFILE} | while read line; do
+							if echo $line | grep -E "^Files:" 1>/dev/null; then break; fi
+							# each line contains a file that is part of the src:package
+							filename="$(echo $line | cut -d" " -f3-)"
+							if [ -n "$filename" ]; then cp "${TEMP_DIR}/${filename}" .; fi
+						done
+						if [ -z "${OTHERMIRROR}" ]; then
+							nice ${SBUILD} ${SBUILD_OPTIONS_32} "${DSCFILE}"
+						else
+							nice ${SBUILD} ${SBUILD_OPTIONS_32} --extra-repository="${OTHERMIRROR}" "${DSCFILE}"
+						fi
 					fi
+
 				}
 			done
 		}
@@ -379,6 +398,10 @@ upload_packages() {
 			test -z "${CODENAMES}" || grep "${CODENAMES}" <<< "${line}" || break
 
 			for l_ARCH in amd64 i386; do
+				if echo " ${SKIP_BUILDS} " | grep -q " ${l_DIST}:${l_CODENAME}/${l_ARCH} "; then
+					echo "### Skipping upload (${l_DIST}:${l_CODENAME}/${l_ARCH}) as requested in SKIP_BUILDS env var."
+					continue
+				fi
 				[ "x${SKIP_ARCH}" != "x${l_ARCH}" ] && {
 					cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}"
 					test -f "./dupload.conf" || ln -s -- "${HOME}/.dupload.conf.${PREFIX}" "./dupload.conf" && true
