@@ -178,8 +178,7 @@ clear_pkgdist() {
 				for l_ARCH in amd64 i386; do
 					if echo " ${SKIP_BUILDS} " | grep -q " ${l_DIST}:${l_CODENAME}/${l_ARCH} "; then
 						echo "### Skipping pkgdist dir cleanup (${l_DIST}:${l_CODENAME}/${l_ARCH}) as requested in SKIP_BUILDS env var."
-					fi
-					[ "x${SKIP_ARCH}" != "x${l_ARCH}" ] && {
+					elif [ "x${SKIP_ARCH}" != "x${l_ARCH}" ]; then
 						mkdir -p -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}"
 						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/dupload.conf"
 						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/"*_*.changes
@@ -188,7 +187,7 @@ clear_pkgdist() {
 						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/"*_*.dsc
 						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/"*_*.tar.gz
 						rm -f -- "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}/"*.deb
-					}
+					fi
 				done
 			done
 		}
@@ -400,13 +399,11 @@ upload_packages() {
 			for l_ARCH in amd64 i386; do
 				if echo " ${SKIP_BUILDS} " | grep -q " ${l_DIST}:${l_CODENAME}/${l_ARCH} "; then
 					echo "### Skipping upload (${l_DIST}:${l_CODENAME}/${l_ARCH}) as requested in SKIP_BUILDS env var."
-					continue
-				fi
-				[ "x${SKIP_ARCH}" != "x${l_ARCH}" ] && {
+				elif [ "x${SKIP_ARCH}" != "x${l_ARCH}" ]; then
 					cd "${PKGDIST}/${l_DIST}/${l_CODENAME}/${l_ARCH}"
 					test -f "./dupload.conf" || ln -s -- "${HOME}/.dupload.conf.${PREFIX}" "./dupload.conf" && true
 					ls -- "${DEBSRCPKG}_"*.changes >/dev/null 2>&1 && dupload --to "${PREFIX}-${l_DIST}-${COMPONENT}" "${DEBSRCPKG}_"*.changes 0<&-
-				}
+				fi
 			done
 		done
 	done
