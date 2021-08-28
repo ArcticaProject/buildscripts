@@ -27,7 +27,7 @@ DEBEMAIL="firstname.lastname@mydomain.org"
 DEBFULLNAME="Firstname Lastname"
 GPG_KEY=""
 DEB_DISTS_SUPPORTED="debian ubuntu"
-DEBIAN_DISTROS="jessie,stretch,buster,bullseye,sid"
+DEBIAN_DISTROS="jessie,stretch,buster,bullseye,bookworm,sid"
 UBUNTU_DISTROS="xenial,bionic,focal"
 SKIP_BUILDS="ubuntu:focal/i386"
 
