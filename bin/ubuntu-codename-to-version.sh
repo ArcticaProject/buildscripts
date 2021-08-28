@@ -47,6 +47,7 @@ case "${codename}" in
 	# we can't really do better here.
 	("devel") echo "9999";;
 
+	("hirsute") echo "21.04";;
 	("groovy") echo "20.10";;
 	("focal") echo "20.04";;
 	("eoan") echo "19.10";;
